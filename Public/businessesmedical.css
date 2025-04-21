@@ -1,0 +1,1197 @@
+:root {
+    --primary-color: #007bff;
+    --secondary-color: #e74c3c;
+    --background-color: #f2fcfc;
+}
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+  
+
+body {
+    background-color: var(--background-color);    
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0px;
+    padding: 0px;
+    background-color: #f2fcfc;
+    text-align: center;
+}
+
+#motivationLink {
+    position: relative;
+    text-decoration: none;
+    color: white;
+    font-weight: normal;
+}
+
+#motivationLink:hover {
+    font-weight: bold;
+    color: tomato;
+}
+
+
+.toggle-btn {
+    cursor: pointer;
+    color: #007BFF;
+    text-decoration: underline;
+}
+
+.toggle-btn:hover {
+    color: #0056b3;
+}
+
+
+.follow-button {
+    background-color: var(--primary-color);
+}
+
+
+
+
+
+/* Hide the forms by default */
+.forms-container {
+    display: none;
+    
+}
+
+/* Show the forms when the corresponding link is clicked */
+.adverte-link:hover + .forms-container .adverte-form,
+.notice-link:hover + .forms-container .notice-form {
+    display: block;
+}
+
+/* Container for the advertisement and notice links */
+.form-links {
+   
+    position: absolute;
+    top: 30px; /* Adjust based on your design */
+    left: 5;
+    margin-left: 60px;
+    width: 80px;    
+    margin-top: 100px;
+    display: none; /* Initially hidden */
+    opacity: 0;
+    pointer-events: none; /* Prevent interaction when hidden */
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* Display links when hovering over advertisement section */
+.advertisement-link:hover + .form-links, 
+.form-links:hover {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;  /*Allow interaction */
+}
+#advertisement, #notice {
+    font-size: 24px;
+
+}
+.form-links li {
+    line-height: 1;    
+}
+
+/* Ensure forms are properly styled */
+.adverte-form, .notice-form {
+    display: none;
+    position: relative; /* Needed for positioning the close button */
+    background: #f4f4f4;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+/* Modal styles */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Fixed at the top */
+    z-index: 500; /* Stay on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scrolling if needed */
+    background-color: rgba(0, 0, 0, 0.4); /* Background overlay */
+    padding-top: 50px; /* Adjust for top spacing */
+} 
+
+/* Modal content */
+.modal-content {
+    background-color: white;
+    flex-direction: column;
+
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Width of the modal */
+    max-width: 600px; /* Maximum width */
+    position: relative; /* Position relative to the modal itself */
+}
+
+/* Close button */
+.close-btn {
+    width: 50px;
+    color:black;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+
+/* Keep existing styles for the dropdowns (left and right) */
+#select-advert-notice {
+    position: relative;    
+    
+}
+
+/* Make sure the modal for displaying submitted data is on top of other content */
+#submittedDataModal {
+    display: none;  /* Hidden initially */
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    z-index: 9999; /* Ensure it appears above other content */
+}
+
+/* Style for data display: Advertise and Notice entries */
+/* Modal Style */
+#dataModal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+/* Modal Content */
+#modalContent {
+    padding: 10px;
+    text-align: justify;
+    max-height: 400px;
+    overflow-y: auto;
+    width: 600px;
+}
+
+/* Close button for modal */
+.modal-close {
+    position: absolute;
+    width:30px;
+    top: 10px;
+    right: 10px;
+    background-color: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+ 
+
+form input,
+form select,
+form textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box; /* Ensure proper padding and border within width */
+}
+input, select, button {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+  }
+  
+  button {
+    padding: 10px;
+    font-size: 1rem;
+  }
+  
+
+form button:hover {
+    background-color: #45a049;
+}
+
+/* Dropdown style */
+.select-advert-notice {
+    margin-top: 20px;
+    padding: 8px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Initially hide the extended content */
+#detailsAdvert, #detailsNotice {
+    width: 400px;
+    padding: 10px;
+}
+
+/* For 'more' and 'less' text */
+.toggle-details {
+    color: #007BFF;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.hidden {
+    display: none;
+}
+
+.expanded {
+    height: 100px;
+    overflow: auto;
+}
+
+#adverteForm, #noticeForm {
+    width: 500px;
+    background-color: gold;
+}
+#adTitle, #adEmail, #adPhone, #adPeriod {
+    width: 350px;
+}
+#noticeTitle, #noticeEmail, #noticePhone, #noticePeriod {
+    width: 350px;
+}
+
+
+#adDescription, #noticeDescription {
+    margin-top: 10px;
+    width: 400px;
+    border: 1px solid;
+}
+.category-modal {
+    display: none;
+    position: fixed;
+
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color:rgba(0, 0, 0, 0.5);
+}
+
+.category-modal-content {
+    background-color: white;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 50%;
+    text-align: center;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.category-close {
+    color: red;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+/* General styles for close buttons */
+.close-btn-adverte, 
+.close-btn-notice {
+    position: absolute;
+    width: 30px;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: red;
+}
+.message-button-close {
+    margin-top: -35px;
+    height: 39px;
+    width: 39px;
+    background-color: gray;
+    color: gray;
+    font-size: 28px;
+    /*font-weight: bold; */
+    position: absolute;
+    top: 0px;
+    right: 10px;
+    cursor: pointer; 
+}
+/* Ensure forms are positioned correctly */
+.adverte-form, 
+.notice-form {
+    position: relative;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background: white;
+}
+
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f4f4f4;
+}
+
+
+nav {
+    margin-top: -64px;
+    margin-left: 20px;
+   
+   
+}
+nav ul  { 
+    display: flex; 
+    gap: 0px; 
+    margin-left: 100px;
+}
+
+
+nav a {
+    text-decoration: none;    
+    font-size: 16px;
+    font-weight: bold;
+   
+}
+nav a:hover {
+    color: white;
+}
+nav ul li:hover {
+    background-color: rgb(226, 201, 86);   
+}
+
+@media (max-width: 600px) {
+    nav ul {
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+.header {
+    
+    display: flex;    
+    align-items: center;   
+    background-color: blue;
+    height: 150px;
+    color: white;
+    margin: 0px;
+    padding-left: 20px;
+    gap: 400px;
+  }
+  /* Responsive adjustments for smaller screens */
+/* Responsive adjustments for smaller screens */
+@media screen and (max-width: 768px) {
+    .header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+  
+    .logo {
+        height: 90px;
+        max-width: 100%;
+        object-fit: contain;
+      }
+      
+  
+    #pageTitle {
+      font-size: 1.5rem;
+      word-wrap: break-word;
+      padding: 0 0px;
+    } 
+  
+    nav ul {
+      flex-direction: row;
+      align-items: center;
+    }
+  
+    
+  
+   
+  
+    .form-container {
+      flex-direction: column;
+    }
+  
+    .left, .right {
+      width: 100%;
+      padding: 10px;
+    }
+  
+    select, input, button {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+  }
+
+  #pageTitle {
+    font-size: 36px;
+    text-align: center;
+    margin: 10px auto;
+    word-wrap: break-word;
+    max-width: 90vw;
+  }
+  #pageTitle {
+    margin: 0;
+    line-height: 100px;      
+  }
+  
+  @media (max-width: 768px) {
+    #map,
+    #slideshowContainer {
+      position: relative !important; /* Ensure it flows naturally in layout */
+      width: 100% !important;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      z-index: 1; /* Don't rise above others */
+    }
+  
+    #map {
+      height: 300px; /* Or adjust as you wish */
+      max-height: 50vh;
+      overflow: hidden;
+    }
+  
+    #pageTitle {
+      position: absolute !important;
+      z-index: 2; /* Ensures it's above map */
+      
+    }
+  }
+  
+  
+  
+  #map {
+    height: 400px;
+    border: 1px solid #ccc;
+    display: flex; 
+    width: 600px;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+  #slideshowContainer {
+    position: absolute;
+    top: 200px;
+    right: 30px;    
+    width: 500px; /* Adjust width as needed */
+    height: 300px; /* Adjust height as needed */
+    margin-left: 20px; /* Space between map and slideshow */
+    z-index: 2;
+    margin-top: 0px;
+    background-color: white;
+     padding: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    text-align: justified;    
+    align-items: center;
+   
+    align-items: center;
+    justify-content: center;
+  }
+  @media (max-width: 768px) {
+    #slideshowContainer {
+      position: relative !important;  /* Cancel absolute positioning */
+      top: auto !important;           /* Cancel top offset */
+      right: auto;
+      width: 100% !important;
+      height: auto;
+      margin: 10px 0;
+      z-index: 2;
+    }
+  }
+  
+  
+  
+  .logo {
+    height: 90px;
+    margin: 0 20px;
+    display: flex;
+    z-index: 5;
+  }
+  
+  .logo:hover {
+    transform: scale(1.1);
+  }
+  
+  /* Responsive adjustments for small screens */
+  @media (max-width: 768px) {
+    .logo {
+      height: 70px; /* Slightly smaller for mobile, optional */
+      margin: 10px auto;
+      display: block;
+      position: relative;
+      z-index: 5;
+    }
+  
+    header {
+      width: 100%;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 0;
+    }
+  }
+  
+  
+  
+ 
+  
+    
+h2 {
+    font-size: 1.5em;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    
+    
+}
+li {
+    background: #ddd;
+    
+    margin: 5px;
+    padding: 10px;
+    border-radius: 5px;
+}
+nav ul li  {
+background-color: blue;
+color: white; 
+}
+nav ul li a {   
+    color: white;     
+    }
+
+/* Container for the buttons and viewer count */
+.top-right-buttons {
+    position: absolute;
+    margin-top: 95px;
+    top: 20px; 
+    right: 20px;
+    display: flex;    
+    align-items: center;
+    gap: 15px;  /* Space between buttons and viewer count */
+    /*z-index: 1000;*/
+}
+
+/* Follow button */
+.follow-button {
+    margin-top: 50px;
+    margin-left: 20px;
+    margin-right: 0;
+    padding: 5px 8px;
+    background-color: #007bff;
+    color: white;    
+    border: none;
+    width: 100px;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+/* Follower count */
+.follower-count {
+    font-size: 14px;
+    color: #333;
+    font-weight: bold;
+    margin-top: 20px;
+    margin-right: 0;
+}
+
+/* Follow button hover effect */
+.follow-button:hover {
+    background-color: #0056b3;
+}
+.follow-button:focus,
+.notice-link:focus,
+.adverte-link:focus {
+    outline: 3px solid #ff6600; /* Adding focus state */
+}
+
+
+/* Viewer count */
+.viewer-count {
+    font-size: 14px;
+    color: #333;
+    font-weight: bold;
+    margin-top: 20px;
+    margin-right: 0;
+}
+
+.search-container {
+   
+    display: flex;
+    align-items: center; /* Align the input and button vertically */
+   
+}
+
+#searchQuery {
+    margin-top: 0px;; /* Space between input and button */
+   
+}
+#searchLocation {
+    width: 80px;
+    background-color: gray;
+    margin-left: 0px;
+}
+.select-container {
+    display: flex; /* Aligns select and button in the same row */
+    align-items: center; /* Keeps them vertically aligned */   
+}
+#regionFilter {     
+    height: 35px;
+    border-radius: 8px;
+    margin-right: 0px;  
+}
+#searchButton {
+    margin-top: 0px;
+    width: 80px;
+    background-color: green;
+    color: white;
+    margin-left: 0px;
+}
+.language-dropdown {
+    position: absolute;    
+    top: 20px;
+    right: 20px;
+}
+.language-dropdown select {
+    padding: 5px;
+    font-size: 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+.filter-section {
+   
+    margin-left: 20px;
+    width: 400px;       
+}
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: space-between;
+    padding: 1rem;
+  }
+  
+  .left, .right {
+    flex: 1 1 45%; /* 2 items per row on wider screens */
+    min-width: 300px; /* fallback min size */
+  }
+  
+  @media (max-width: 768px) {
+    .left, .right {
+      flex: 1 1 100%; /* Full width on small screens */
+    }
+  }
+  
+.left, .right {
+    flex: 1 1 45%; /* 2 items per row on wider screens */
+    min-width: 300px; /* fallback min size */
+    background: lightseagreen
+  }
+  
+  @media (max-width: 768px) {
+    .left, .right {
+      flex: 1 1 100%; /* Full width on small screens */
+    }
+  }
+
+
+#cityFilter,
+#selectCategory {
+    display: inline-block; 
+    padding: 0px;
+    width: 200px;
+    height: 30px;
+    font-size: 16px;
+}
+
+#filtersContainer {    
+    display: flex;
+    justify-content: center;
+    gap: 10px; /* Adjust spacing between the dropdowns */
+    
+}
+
+
+
+/* Centering the Form and Ads */
+.form-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+    margin: 0 auto;
+    position: relative;
+}
+#newAdvertMessage, #newNoticeMessage {
+    display: flex;
+}
+#advertButtonOnClick, #noticeButtonOnClick {
+    display: flex; 
+} 
+
+/* Form Styling */
+form {
+    background: white;
+    width: 250px;
+    padding: 8px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Add transition to ad-box for smooth fade effect */
+.ad-box {
+    width: 590px;
+    height: 500px;
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #333;
+    flex-shrink: 0;
+    transition: opacity 1s ease-in-out;
+    opacity: 1;
+    
+    /* PERFORMANCE OPTIMIZATION */
+    will-change: transform, opacity;
+    overflow: hidden; /* Prevent unwanted scrollbar flickering during animation */
+}
+
+#ad-container {
+    position: relative;
+}
+
+#ad-box {
+    position: absolute;
+    transition: opacity 1s ease;
+    opacity: 0;
+}
+
+/* Slide-out animation */
+@keyframes slideOutDown {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+}
+
+.ad-slide-out {
+    animation: slideOutDown 0.6s ease forwards;
+}
+#ad-box {
+    position: absolute;
+    transition: opacity 1s ease;
+    opacity: 0;
+}
+
+#AdvertAd {
+    margin-left: 170px;
+    font-size: 50px;
+    color: white; 
+    background-color: blueviolet; 
+
+}
+#noticeAd {
+    margin-right: 15px;
+    font-size: 50px;
+    color: white;
+    background-color: blueviolet;
+    
+}
+
+.ad-slide-out {
+    animation: slideOutDown 0.6s ease forwards;
+}
+
+.clickable-message {
+    display: block;
+    text-align: justify;
+    line-height: 1.6;
+    word-break: break-word;   
+    padding: 20px;
+    font-family: sans-serif;
+}
+
+#name, #industryOrService, #location, #contact_info {
+    width: 100%;
+    max-width: 230px;
+}
+
+
+#slideshow {
+    position: relative;  
+    width: 100%;
+    max-width: 600px;
+    margin: auto;
+    overflow: hidden;
+}
+
+.slide {
+    display: none;
+    padding: 20px;
+    box-sizing: border-box;
+    text-align: justify;
+}
+
+.slide.active {
+    display: block;
+}
+
+@media (max-width: 768px) {
+    #slideshowContainer {
+      padding: 10px;
+    }
+  }
+.dot-container {
+    position: absolute; /* Position the dots at the bottom of the slideshow */
+    bottom: 10px; /* Adjust the space from the bottom */
+    left: 50%; /* Center align horizontally */
+    transform: translateX(-50%); /* Correct for exact centering */
+    text-align: center;
+    padding: 10px;
+    width: 100%;
+    z-index: 2; /* Ensure dots are always on top of slides */
+}
+/* Dot Navigation Styles */
+.dot {
+    height: 10px;
+    width: 10px;
+    margin: 0 5px;
+    background-color: #bbb;
+    border-radius: 50%;
+    display: inline-block;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+
+.dot.active {
+    background-color: #717171;
+}
+
+/* Modal Container */
+#widerView {
+    display: none;
+    position: fixed;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 20px;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    width: 60%;
+    max-width: 500px;
+    z-index: 1000;
+}
+
+/* Modal Close Button */
+.close-wider-view {
+    cursor: pointer;
+    font-weight: bold;
+    float: right;
+    font-size: 16px;
+    color: red;
+}
+
+/* Dark Background Overlay */
+#widerView::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); 
+    z-index: -1;
+}
+
+
+/* Optionally style text inside the ad (adjust to fit your design) */
+#medicalAd, #businessAd {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;  /* Text color for your ads */
+    font-size: 20px;  /* Adjust font size */
+    font-weight: bold;
+}
+
+/* If you want dots to be displayed below the ad */
+.dotContainer {
+    margin-top: 15px;
+    padding: 5px 0;
+}
+
+.dot:hover {
+    background-color: #717171;
+}
+
+input, #selectLanguage, #type, #regionFilter, .left #medicalCategoryFilter, .right #businessCategoryFilter, #medicalCategory, #businessCategory, button {
+    display: block;
+    width: 250px; 
+    margin: 10px auto;   
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 15px;
+    cursor: pointer; 
+       
+}
+#register {
+    background-color: green;
+}
+
+
+button {    
+    color: black;
+    background-color: white;
+    cursor: pointer; 
+   
+}
+button:hover {
+    background: tomato;
+}
+
+ /* Chat Header Styling */
+.chat-header {
+    font-size: 14px;
+    margin-bottom: 10px;
+    
+}
+
+#chattersList {
+    font-weight: bold;
+    color: #007bff;
+}
+
+
+.message-icon {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: rgb(80, 206, 223);
+    padding: 10px; /* Reduced padding to make the icon smaller */
+    cursor: pointer;
+    box-shadow: 1px 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    /*z-index: 9999; */
+    border-radius: 50%; /* Keep the icon round */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /*position: relative; */
+    width: 40px;  /* Set width to make the icon smaller */
+    height: 40px; /* Set height to make the icon smaller */
+}
+
+/* Tooltip for message icon */
+.message-icon::after {
+    content: "Click to Chat";
+    position: absolute;
+    bottom: 120%; /* Position the tooltip above the icon */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: black;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* Show tooltip only when hovering */
+.message-icon:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+.message-box {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 300px;
+    max-height: 500px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    display: none;
+    flex-direction: column;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.message-button-close {
+    position: absolute;
+    top: 25px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    font-weight: bold;
+    color: #999;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.message-button-close:hover {
+    color: #333;
+}
+.message-buttons {
+    margin-top: 4px;
+    gap: 8px;
+}
+
+
+.message-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 40px 10px 10px 10px; /* Add top padding so content doesn't hide under the close button */    
+}
+.message-content p {
+    text-align: justify;
+}
+.message-thread p,
+.comment p {
+    text-align: justify;
+    margin-bottom: 6px;
+}
+
+
+.message-input,
+.send-message {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.message-input {
+    resize: none;
+    padding: 8px;
+    height: 60px;
+    border: none;
+    border-top: 1px solid #eee;
+}
+
+.send-message {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 0;
+    border: none;
+    border-top: 1px solid #eee;
+    cursor: pointer;
+}
+
+.message-thread p,
+.comment p {
+    text-align: justify;
+    line-height: 1.5;
+    font-size: 14px;
+}
+
+
+.reply-box textarea {
+    width: 100%;
+    padding: 5px;
+    resize: none;
+}
+
+.reply-send {
+    display: none;
+    width: 5px; /* Hidden, since we're using Enter to submit replies */
+}
+
+.replies-container {
+    margin-left: 20px;   
+}
+.reply-button {    
+    margin-left: 5px;
+}
+.edit-button, .save-button, .reply-button {
+    display: flex;
+    border: none;
+    width: 100px;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+  
+/* Footer */
+#footer {
+    background: #333;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+}
+footer .social-icons a {
+    color: white;
+    margin: 0 0.5rem;
+    font-size: 16px;
+    transition: transform 0.3s;
+   
+}
+footer .social-icons a:hover {
+    transform: scale(1.2);
+    color: #4facfe;
+} 
+.email-address {
+    text-transform: lowercase !important;
+}
+@media (max-width: 768px) {
+    .top-right-buttons {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+

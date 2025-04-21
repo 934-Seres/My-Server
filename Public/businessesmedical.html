@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical & Business Directory</title>
+    <!-- Leaflet.js Library (For Maps) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">    
+    <link rel="stylesheet" href="businessesmedical.css">
+    <!--<link rel="stylesheet" href="advertnotice.css">-->
+</head>
+<body>  
+    <div class="header">
+        <img src="./photos/logo.png" alt="MBD logo" class="logo">
+        <h1 id="pageTitle">PAWRUGA WEBSITE</h1>
+    </div>
+      
+    <nav aria-label="Main Navigation" role="menubar">
+        <ul role="menu" aria-labelledby="navigation-links">
+            <li id="home" role="none">
+                <a href="businessesmedical.html#home" role="menuitem">Home</a>
+            </li>
+            
+            <li id="advertisementIntention" role="none">
+                <a href="businessesmedical.html" class="advertisement-link" role="menuitem" 
+                   aria-haspopup="true" aria-expanded="false" id="advertisementButton">
+                    Advertisement
+                </a>
+                
+                <!-- Dropdown menu -->
+                <ul class="form-links" role="menu" aria-labelledby="advertisementButton">
+                    <li role="none"><a href="#" class="adverte-link" role="menuitem">Adverte</a></li>
+                    <li role="none"><a href="#" class="notice-link" role="menuitem">Notice</a></li>
+                </ul>
+    
+                <!-- Modal for Advertise form -->
+                <div id="adverteModal" class="modal" role="dialog" aria-labelledby="adverteForm" aria-hidden="true">
+                    <div class="modal-content">
+                        <button class="close-btn" id="close-adverte" aria-label="Close Advertise Form">&times;</button>
+                        <form id="adverteForm">
+                            <input type="text" name="name" placeholder="Name of Organiztion:" required aria-label="Advertiser Name">
+                            <div class="details-container">
+                                <input type="text" name="details" id="detailsAdvert" placeholder="Details:" required aria-label="Advertise Details">
+                                <span id="moreDetailsAdvert" class="toggle-details" role="button" tabindex="0" aria-expanded="false">more...</span>
+                            </div>
+                            <button type="submit">Submit Advertise</button>
+                        </form>
+                    </div>
+                </div>
+    
+                <!-- Modal for Notice form -->
+                <div id="noticeModal" class="modal" role="dialog" aria-labelledby="noticeForm" aria-hidden="true">
+                    <div class="modal-content">
+                        <button class="close-btn" id="close-notice" aria-label="Close Notice Form">&times;</button>
+                        <form id="noticeForm">
+                            <input type="text" name="name" placeholder="Name of Organization:" required aria-label="Notice Submitter Name">
+                            <div class="details-container">
+                                <input type="text" name="details" id="detailsNotice" placeholder="Details:" required aria-label="Notice Details">
+                                <span id="moreDetailsNotice" class="toggle-details" role="button" tabindex="0" aria-expanded="false">more...</span>
+                            </div>
+                            <button type="submit">Submit Notice</button>
+                        </form>
+                    </div>
+                </div>
+            </li>
+            
+            <li role="none">
+                <a href="#contact" role="menuitem">Contact</a>
+            </li>
+            <li role="none">
+                <a href="motivation.html" target="_blank" id="motivationLink" role="menuitem" title="Motivation behind the Medical Business Directory">Motivation</a>
+            </li>  
+            <li role="none">
+                <a href="news.html" target="_blank" id="newsLink" role="menuitem" title="Click to see business news">BNews
+                  <span class="tooltip"></span>
+                </a>
+              </li>       
+                        
+        </ul>
+    </nav>    
+    
+    <div class="language-dropdown">
+        <select name="selectLanguage" id="languageSelect" aria-label="Select language">
+            <option id="defaultLangOption" value="" disabled selected>Select Language...</option>
+            <option value="en">English</option>
+            <option value="am">አማርኛ</option>
+            <option value="om">Afaan Oromoo</option>
+            <option value="af">Afar</option>
+            <option value="ti">ትግርኛ (Tigrigna)</option>
+            <option value="so">Soomaali</option>
+            <option value="ar">عربي(Arabic)</option>
+        </select>
+    </div>
+      
+       
+    <!-- Search and Filter Section -->
+    <div class="filter-section">
+        <div class="search-container">          
+            <input list="cityList" id="searchQuery" placeholder="Search or select a city..." oninput="updateLocation()">
+                <datalist id="cityList">                    
+                    <option value="Adama" data-lat="8.5406" data-lon="39.2680">Adama</option>
+                    <option value="Addis Ababa" data-lat="9.0331" data-lon="38.7501">Addis Ababa</option>
+                    <option value="Arba Minchi" data-lat="6.0405" data-lon="37.5504">Arba Minchi</option>
+                    <option value="Assosa" data-lat="10.0660" data-lon="34.5331">Assosa</option>
+                    <option value="Bahirdar" data-lat="11.5936" data-lon="37.3900">Bahirdar</option>
+                    <option value="Dessie" data-lat="11.1333" data-lon="39.6333">Dessie</option>
+                    <option value="Dire Dawa" data-lat="9.6001" data-lon="41.8661">Dire Dawa</option>
+                    <option value="Gambella" data-lat="8.2500" data-lon="34.5833">Gambella</option>
+                    <option value="Gondar" data-lat="12.6033" data-lon="37.4522">Gondar</option>
+                    <option value="Harar" data-lat="9.3103" data-lon="42.1256">Harar</option>
+                    <option value="Hawassa" data-lat="7.0621" data-lon="38.4760">Hawassa</option>
+                    <option value="Jigjiga" data-lat="9.3500" data-lon="42.8000">Jigjiga</option>
+                    <option value="Jimma" data-lat="7.6761" data-lon="36.8344">Jimma</option>
+                    <option value="Jinka" data-lat="5.6500" data-lon="36.6500">Jinka</option>
+                    <option value="Mekele" data-lat="13.4967" data-lon="39.4753">Mekele</option>
+                    <option value="Semera" data-lat="11.8000" data-lon="41.0000">Semara</option>
+                    <option value="Wolita Sodo" data-lat="6.8344" data-lon="37.7500">Wolita Sodo</option>                 
+                </datalist>         
+            <button type="button" id="searchButton" onclick="searchLocation()">Search Location</button>
+        </div>
+    
+        <!-- Display Latitude & Longitude -->
+        <div id="locationInfo">Latitude: - | Longitude: -</div>    
+        <!-- Map Container -->
+        <div id="map">Map will be displayed here</div>
+        <div id="topRightButtons" class="top-right-buttons">
+            <button type="button" id="followButton" class="follow-button">Follow</button>
+            <div id="followerCount" class="follower-count">Followers: 0</div>
+            <div id="viewerCount" class="viewer-count">Viewers: 0</div>            
+        </div>
+        
+        <!-- Slideshow Container from registration form-->
+        
+        <div id="slideshowContainer">
+            <div id="filtersContainer">
+                <select name="cityFilter" id="cityFilter" aria-label="Select City">                    
+                    <option value="All Cities">All Cities</option>
+                    <option value="Adama">Adama</option>
+                    <option value="Addis Ababa">Addis Ababa</option>
+                    <option value="Arba Minchi">Arba Minchi</option>
+                    <option value="Assosa">Assosa</option>
+                    <option value="Bahirdar">Bahirdar</option>
+                    <option value="Dessie">Dessie</option>
+                    <option value="Dire Dawa">Dire Dawa</option>
+                    <option value="Gambella">Gambella</option>
+                    <option value="Gondar">Gondar</option>
+                    <option value="Harar">Harar</option>
+                    <option value="Hawassa">Hawassa</option>
+                    <option value="Jigjiga">Jigjiga</option>
+                    <option value="Jimma">Jimma</option>
+                    <option value="Jinka">Jinka</option>
+                    <option value="Mekele">Mekele</option>
+                    <option value="Semera">Semera</option>
+                    <option value="Wolita Sodo">Wolita Sodo</option>
+                </select>
+             
+            </div>
+
+            <!-- Modal for displaying stored data -->
+            <div id="dataModal">            
+                <div id="modalContent">                
+                      
+                    <!-- Data will be inserted here dynamically -->                    
+                </div>               
+                              
+               <button type="button" class="modal-close">&times;</button>   
+             </div> 
+        <!-- slideshow for stored data display and default slideshow-->
+            <div id="slideshow"></div> 
+            <div id="dotContainer" class="dot-container"></div> 
+        </div>  
+        
+    </div> 
+      
+    <!-- Listings Section -->
+    <div class="container">
+        <div class="left">
+            <h2 id="subtitlem">Medical Services</h2>
+            <select name="selectMedicalCategory" id="medicalCategoryFilter" aria-label="Select Medical Category">
+                <option>Select Medical Category</option>
+                <option value="general">General Health Service</option>
+                <option value="dental">Dental Health Service</option>
+                <option value="eye">Eye Medication</option>
+                <option value="heart">Heart Health service</option>
+                <option value="kidney">Kidney Health Service</option>  
+                             
+            </select>          
+        </div>               
+        <div class="right">
+            <h2>Business Organizations</h2>           
+            <select name="selectBusinesscategory" id="businessCategoryFilter" aria-label="Select Business Category">
+                <option>Select business Category</option>
+                <option value="consulting">consulting Service</option>
+                <option value="internationalHotel">International Hotel Services</option>
+                <option value="noninternationalHotel">Non-International Hotel Service</option>
+                <option value="factoryproduct">Factory Products</option>
+                <option value="importer">Importers</option>
+                            
+                
+            </select>
+            <ul id="businessList"></ul> 
+            <!--Form Model for adverts and notce links in Advertisement -->
+          <div id="categoryDataModal" class="category-modal">            
+                <div class="category-modal-content">
+                    <span class="category-close">&times;</span> 
+                    <h2>Stored User Data</h2>
+                    <div id="categoryModalDetails"></div>
+                </div> 
+            </div> 
+             <!-- Notices Data -->      
+             </section>             
+                <select name="advertNotice" class="select-advert-notice" aria-label="Advert or Notice">
+                    <option>Select Advert or Notice</option>
+                    <option value="advert">Advertises</option>
+                    <option value="notice">Notices</option>
+                </select> 
+          
+            
+            
+           <!-- <button id="mnoticeDemand">View Notification Requests</button>
+             Notice Requests 
+            <div id="noticeDemand" class="modal">
+                <button type="button" class="close-btn-noticeDemand">&times;</button>                
+                <ul id="noticeList"></ul>
+            </div> -->
+         </div>
+
+        </div>      
+
+    </div>
+        <!-- User Registration Form -->
+    <h2 id="registerTitle">Register Your Business/Medical Entity</h2>
+               <!-- Registration Form -->              
+         
+                 <div class="form-container">
+                    <div class="ad-container">
+                        <div id="advertisement">
+                            <h3>Advertisements</h3>
+                            <div id="securityContainer">
+                                <input type="text" id="username" placeholder="Username">
+                                <input type="password" id="password" placeholder="Password">                               
+                            </div>
+                            
+                            
+                        </div>
+                
+                        <!-- Advertisement Section -->
+                        <div id="advertInputContainer">
+                            <input type="text" id="newAdvertMessage" placeholder="Enter advertisement">
+                            <button type="button" onclick="addAdvertMessage()">Add Advertisement</button>
+                        </div>
+                
+                        <div class="ad-box" id="AdvertAd">Customers are searching where you are!!!</div> 
+                        <button type="button" id="deleteAdvertBtn" onclick="removeAdvert()">❌</button>
+                        <div id="advertDots" class="dotContainer"></div>
+                    </div>
+                
+                <form id="registrationForm">
+                    <input type="text" id="name" placeholder="Name of Organization" lang="en" required>
+                    <!--<span id="moreDetailsname" class="toggle-details">more...</span> -->
+                    <select name="categoryType" id="type" aria-label="Select Category" required>
+                        <option value="" disabled Selected>Select Category</option>
+                        <option value="medical">Medical Service</option>
+                        <option value="business">Business Organization</option>
+                    </select>
+                    <input type="text" id="industryOrService" placeholder="Service/Industry" lang="en" required>
+                    <input type="text" id="licenseNumber" placeholder="License Number" lang="en" required>
+                    <input type="text" id="location" placeholder="Area/Zone" lang="en" required>
+                    <input type="text" id="contact_info" placeholder="Phone/email" lang="en" required>        
+                    <select name=selectCities" id="regionFilter" class="regionFilter" aria-label="Select Cities" required>
+                        <option value="" disabled Selected>Select Cities</option>                
+                        <option value="Adama">Adama</option>
+                        <option value="Addis Ababa">Addis Ababa</option>
+                        <option value="Arba Minchi">Arba Minchi</option>
+                        <option value="Assosa">Assosa</option>
+                        <option value="Bahirdar">Bahirdar</option>
+                        <option value="Dessie">Dessie</option>
+                        <option value="Dire Dawa">Dire Dawa</option>
+                        <option value="Gambella">Gambella</option>
+                        <option value="Gondar">Gondar</option>
+                        <option value="Harar">Harar</option>
+                        <option value="Hawassa">Hawassa</option>
+                        <option value="Jigjiga">Jigjiga</option>
+                        <option value="Jimma">Jimma</option>
+                        <option value="Jinka">Jinka</option>
+                        <option value="Mekele">Mekele</option>
+                        <option value="Semera">Semera</option>
+                        <option value="Wolita Sodo">Wolita Sodo</option>                                                
+                    </select> 
+                    
+                    <select name="selectMedicalCategory" id="medicalCategory" aria-label="Select Medical category" required>
+                        <option value="" disabled selected>Select Medical Category</option>
+                        <option value="general">General Health Service</option>
+                        <option value="dental">Dental Health Service</option>
+                        <option value="eye">Eye Medication</option>
+                        <option value="heart">Heart Health service</option>
+                        <option value="kidney">Kidney Health Service</option>
+                        <option value="other">Other(Specify)</option>                         
+
+                    </select>
+                    <select name="selectBusinessCategory" id="businessCategory" aria-label="Select Business category" required>
+                        <option value="" disabled selected>Select business Category</option>
+                        <option value="consulting">consulting Service</option>
+                        <option value="internationalHotel">International Hotel Services</option>
+                        <option value="noninternationalHotel">Non-International Hotel Service</option>
+                        <option value="factoryproduct">Factory Products</option>
+                        <option value="importer">Importers</option>
+                        <option value="others">Other(Specify)</option>
+                    </select>
+                    <button type="submit" id="register">Register/Submit</button>
+                </form>
+                
+                
+              
+                
+                <div class="ad-container-notification">
+                    <div id="notice">
+                        <h3>Notices</h3>
+                        <div id="loginContainer">                            
+                            <button type="button" id="loginButton" onclick="login()">Login</button>
+                        </div>
+                        
+                        <button type="button" onclick="logout()">Logout</button>
+                        
+                    </div>            
+                    <!-- Notice Section -->
+                    <div id="noticeInputContainer">
+                        <input type="text" id="newNoticeMessage" placeholder="Enter notice">
+                        <button type="button" onclick="addNoticeMessage()">Add Notice</button>
+                    </div>
+            
+                    <div class="ad-box" id="noticeAd">Reach Wide!/Any Notices?</div>
+                    <button type="button" id="deleteNoticeBtn" onclick="removeNotice()">❌</button>
+                    <div id="noticeDots" class="dotContainer"></div>
+                </div>
+            
+                <!-- Admin Toggle Button (Only Admin Can Use) -->
+                
+            </div>
+            </div>
+            </div>           
+        
+        <!-- Chat Header to Display Active Chatters -->
+    <div id="chatHeader" class="chat-header">
+        <p><strong>Chatters:</strong> <span id="chattersList">None</span></p>
+    </div>
+    <!-- Message Icon -->
+    <div id="messageIcon" class="message-icon">
+        <i class="fa fa-comment"></i>
+    </div> 
+
+    <!-- Message Box -->
+    <div id="messageBox" class="message-box">
+        <button type="button" class="message-button-close">&times;</button>
+        
+        <!-- Message Thread -->
+        <div id="messageContent" class="message-content"></div>
+
+        <!-- New Message Input -->
+        <textarea id="messageInput" class="message-input" placeholder="Type your message..."></textarea>
+        <button type="button" id="sendMessage" class="send-message">Send</button>
+    </div>
+
+    <footer id="footer">
+        <p>© 2025 Business & Medical Directory</p>
+        <div id="contact">
+            <h3>Contact</h3>
+        </div>
+        
+        <div class="social-icons">
+            <a href="#" title="Phone Address"><i class="fas fa-phone">+251 938 0874 39</i></a>       
+            <a href="mailto:aragaw007@gmail.com" title="Email Address">
+                <i class="fas fa-envelope"></i> aragaw007@gmail.com
+            </a>
+        </div>
+        
+    </footer>    
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    
+    <script src="businessesmedical.js"></script>
+    <script src="Server.js"></script>
+   <!-- <script src="advertnotice.js"></script>-->
+    
+</body>
+</html>
