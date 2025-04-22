@@ -1,5 +1,4 @@
-// Load environment variables
-require('dotenv').config();
+('dotenv').config(); // Load environment variables
 
 const express = require('express');
 const session = require('express-session');
@@ -55,14 +54,13 @@ app.get('/check-owner', (req, res) => {
     res.json({ isOwner: !!req.session.isOwner });
 });
 
-// --- Production/Development mode check ---
-if (process.env.NODE_ENV === 'production') {
-    console.log('Running in production mode');
-} else {
-    console.log('Running in development mode');
-}
-
-// Start the server
-app.listen(PORT, () => {
+// Fix for 502 Bad Gateway: Bind to correct host and port
+const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });
+
+// Fix for timeout errors: Increase server timeout values
+server.keepAliveTimeout = 120000; // 120 seconds
+server.headersTimeout = 120000;   // 120 seconds
+
+module.exports = server;
