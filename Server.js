@@ -1,4 +1,5 @@
-('dotenv').config(); // Load environment variables
+// Load environment variables
+require('dotenv').config();
 
 const express = require('express');
 const session = require('express-session');
@@ -53,6 +54,13 @@ app.post('/logout', (req, res) => {
 app.get('/check-owner', (req, res) => {
     res.json({ isOwner: !!req.session.isOwner });
 });
+
+// --- Production/Development mode check ---
+if (process.env.NODE_ENV === 'production') {
+    console.log('Running in production mode');
+} else {
+    console.log('Running in development mode');
+}
 
 // Start the server
 app.listen(PORT, () => {
