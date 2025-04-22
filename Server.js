@@ -1,4 +1,4 @@
-('dotenv').config(); // Load environment variables
+require('dotenv').config();  // This is how you load environment variables
 
 const express = require('express');
 const session = require('express-session');
