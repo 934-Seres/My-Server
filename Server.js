@@ -28,9 +28,16 @@ app.use(session({
         secure: process.env.NODE_ENV === 'production', // Cookies are secure in production (use HTTPS)
     },
 }));
+const path = require('path');
 
-// Serve static files (HTML, CSS, JS) from the 'public' folder
-app.use(express.static(__dirname + '/public'));
+// Serve static files from the "public" directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/public/businessesmedical.html'); // Update path if necessary
+});
+
 
 // --- Login route ---
 app.post('/login', (req, res) => {
