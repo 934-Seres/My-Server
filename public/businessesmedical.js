@@ -3,7 +3,7 @@ const originalText=myHeader.textContent;
 const updatedText="Medical & Business Directory";
 myHeader.addEventListener('mouseover', function(){
     myHeader.textContent=updatedText;
-    myHeader.style.backgroundColor='blue';
+   
 });
 myHeader.addEventListener('mouseout', function(){
     myHeader.textContent=originalText;

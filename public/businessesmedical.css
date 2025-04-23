@@ -25,13 +25,9 @@ body {
 #motivationLink {
     position: relative;
     text-decoration: none;
-    color: white;
+    background-color: white;
+    color: black;
     font-weight: normal;
-}
-
-#motivationLink:hover {
-    font-weight: bold;
-    color: tomato;
 }
 
 
@@ -70,7 +66,7 @@ body {
 .form-links {
    
     position: absolute;
-    top: 30px; /* Adjust based on your design */
+    top: 125px; /* Adjust based on your design */
     left: 5;
     margin-left: 60px;
     width: 80px;    
@@ -399,17 +395,62 @@ nav ul li:hover {
       align-items: center;
     }
   }
+
+  nav[role="menubar"] {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap; /* This allows items to wrap instead of overflow */
+    background-color: #f8f8f8;
+    padding: 10px;
+}
+
+nav[role="menubar"] ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap; /* allow wrapping */
+    gap: 10px;
+}
+
+nav[role="menubar"] li {
+    margin: 5px;
+}
+
+@media (max-width: 600px) {
+    nav[role="menubar"] ul {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    nav[role="menubar"] {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    nav[role="menubar"] a {
+        display: block;
+        width: 100%;
+        text-align: center;
+    }
+}
+
 .header {
-    
     display: flex;    
     align-items: center;   
-    background-color: blue;
+    background-color: #0056b3; /* friendlier blue */
     height: 150px;
     color: white;
     margin: 0px;
     padding-left: 20px;
     gap: 400px;
-  }
+}
+
+nav[role="menubar"] {
+    background-color: #0056b3; /* same as header */
+    color: white;
+}
+
   /* Responsive adjustments for smaller screens */
 /* Responsive adjustments for smaller screens */
 @media screen and (max-width: 768px) {
@@ -424,6 +465,7 @@ nav ul li:hover {
         height: 90px;
         max-width: 100%;
         object-fit: contain;
+        
       }
       
   
@@ -431,6 +473,8 @@ nav ul li:hover {
       font-size: 1.5rem;
       word-wrap: break-word;
       padding: 0 0px;
+      margin-bottom: 10px;
+      background-color: #0056b3;
     } 
   
     nav ul {
@@ -457,17 +501,7 @@ nav ul li:hover {
     }
   }
 
-  #pageTitle {
-    font-size: 36px;
-    text-align: center;
-    margin: 10px auto;
-    word-wrap: break-word;
-    max-width: 90vw;
-  }
-  #pageTitle {
-    margin: 0;
-    line-height: 100px;      
-  }
+  
   
   @media (max-width: 768px) {
     #map,
@@ -593,11 +627,11 @@ li {
     border-radius: 5px;
 }
 nav ul li  {
-background-color: blue;
+background-color: #f8f8f8;;
 color: white; 
 }
 nav ul li a {   
-    color: white;     
+    color: black;     
     }
 
 /* Container for the buttons and viewer count */
