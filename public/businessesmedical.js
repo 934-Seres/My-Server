@@ -1061,4 +1061,180 @@ function toggleOwnerUI(isOwner) {
 
 
 
-<script src="/socket.io/socket.io.js"></script>
+document.addEventListener("DOMContentLoaded", function () {
+    const messageBox = document.getElementById("messageBox");
+    const messageIcon = document.getElementById("messageIcon");
+    const closeButton = document.querySelector(".message-button-close");
+    const messageInput = document.getElementById("messageInput");
+    const sendMessage = document.getElementById("sendMessage");
+    const messageContent = document.getElementById("messageContent");
+
+    messageIcon.addEventListener("click", () => {
+        messageBox.style.display = "flex";
+    });
+
+    closeButton.addEventListener("click", () => {
+        messageBox.style.display = "none";
+    });
+
+    sendMessage.addEventListener("click", sendMainMessage);
+
+    messageInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendMainMessage();
+        }
+    });
+
+    function sendMainMessage() {
+        const text = messageInput.value.trim();
+        if (text !== "") {
+            const messageElement = createMessageElement(text);
+            messageContent.appendChild(messageElement);
+            messageInput.value = "";
+            messageContent.scrollTop = messageContent.scrollHeight;
+        }
+    }
+
+    function createMessageElement(text, isReply = false) {
+        const container = document.createElement("div");
+        container.classList.add(isReply ? "comment" : "message-thread");
+
+        const messageText = document.createElement("p");
+        messageText.textContent = text;
+        container.appendChild(messageText);
+
+        const buttonsWrapper = document.createElement("div");
+        buttonsWrapper.classList.add("message-buttons"); // keep this class for styling
+        buttonsWrapper.style.display = "flex";
+        buttonsWrapper.style.justifyContent = "flex-end";
+        buttonsWrapper.style.gap = "5px"; // optional space between buttons
+
+
+        const replyBtn = document.createElement("button");
+        replyBtn.textContent = "Reply...";
+        replyBtn.classList.add("reply-button");
+
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "Edit";
+        editBtn.classList.add("edit-button");
+
+        buttonsWrapper.appendChild(replyBtn);
+        buttonsWrapper.appendChild(editBtn);
+        container.appendChild(buttonsWrapper);
+
+
+        const replyBox = document.createElement("div");
+        replyBox.classList.add("reply-box");
+        replyBox.style.display = "none";
+
+        const replyInput = document.createElement("textarea");
+        replyInput.classList.add("reply-input");
+        replyInput.placeholder = "Write a reply...";
+        replyBox.appendChild(replyInput);
+
+        const replySend = document.createElement("button");
+        replySend.classList.add("reply-send");
+        replyBox.appendChild(replySend);
+
+        container.appendChild(replyBox);
+
+        const repliesContainer = document.createElement("div");
+        repliesContainer.classList.add("replies-container");
+        container.appendChild(repliesContainer);
+
+        replyBtn.addEventListener("click", () => {
+            replyBox.style.display = replyBox.style.display === "none" ? "block" : "none";
+            replyInput.focus();
+        });
+
+        replyInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                const replyText = replyInput.value.trim();
+                if (replyText !== "") {
+                    const replyElement = createMessageElement(replyText, true);
+                    repliesContainer.appendChild(replyElement);
+                    replyInput.value = "";
+                    replyBox.style.display = "none";
+                }
+            }
+        });
+
+        editBtn.addEventListener("click", () => {
+            const currentText = messageText.textContent;
+            const editTextarea = document.createElement("textarea");
+            editTextarea.classList.add("edit-textarea");
+            editTextarea.value = currentText;
+
+            const saveBtn = document.createElement("button");
+            saveBtn.textContent = "Save";
+            saveBtn.classList.add("save-button");
+
+            // Replace text and button with textarea and save
+            container.replaceChild(editTextarea, messageText);
+            editBtn.style.display = "none";
+            buttonsWrapper.appendChild(saveBtn);
+
+            saveBtn.addEventListener("click", () => {
+                const newText = editTextarea.value.trim();
+                if (newText !== "") {
+                    messageText.textContent = newText;
+                    container.replaceChild(messageText, editTextarea);
+                    buttonsWrapper.removeChild(saveBtn);
+                    editBtn.style.display = "flex";
+                }
+            });
+        });
+
+        return container;
+    }
+});
+
+  
+const socket = io(); // Connect to the backend via Socket.IO
+
+// Viewer count updates
+socket.on('viewerCountUpdate', (count) => {
+    const viewerElement = document.getElementById('viewerCount');
+    if (viewerElement) viewerElement.textContent = `Viewers: ${count}`;
+});
+
+// Follower count updates
+socket.on('followerCountUpdate', (count) => {
+    const followerElement = document.getElementById('followerCount');
+    if (followerElement) followerElement.textContent = `Followers: ${count}`;
+});
+
+// Follow / Unfollow button functionality
+const followButton = document.getElementById('followButton');
+if (followButton) {
+    followButton.addEventListener('click', function () {
+        if (followButton.textContent === 'Follow') {
+            socket.emit('follow');
+            followButton.textContent = 'Unfollow';
+            alert('You followed the website!');
+        } else {
+            socket.emit('unfollow');
+            followButton.textContent = 'Follow';
+            alert('You unfollowed the website!');
+        }
+    });
+}
+
+// Active chatters list near the footer
+const username = 'Guest' + Math.floor(Math.random() * 10000); // Random guest name
+socket.emit('joinChat', username); // Notify server when joining
+
+// Remove user from chat when they leave the page
+window.addEventListener('beforeunload', () => {
+    socket.emit('leaveChat', username);
+});
+
+// Update active chatters list on UI
+socket.on('activeChattersUpdate', (chatters) => {
+    const chattersList = document.getElementById('chattersList');
+    if (chattersList) {
+        chattersList.textContent = chatters.length > 0 ? chatters.join(', ') : 'None';
+    }
+});
