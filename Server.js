@@ -1,5 +1,4 @@
-require('dotenv').config(); // Load environment variables
-
+require('dotenv').config();
 const path = require('path');
 const express = require('express');
 const session = require('express-session');
@@ -9,6 +8,9 @@ const http = require('http');
 const socketIO = require('socket.io');
 
 const app = express();
+const server = http.createServer(app);
+const io = socketIO(server, { cors: { origin: '*' } });
+
 const PORT = process.env.PORT || 3000;
 
 const OWNER_USERNAME = process.env.OWNER_USERNAME;
@@ -22,12 +24,9 @@ app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: {
-        secure: process.env.NODE_ENV === 'production',
-    },
+    cookie: { secure: process.env.NODE_ENV === 'production' },
 }));
 
-// Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
@@ -53,50 +52,50 @@ app.get('/check-owner', (req, res) => {
     res.json({ isOwner: !!req.session.isOwner });
 });
 
-const server = http.createServer(app);
-const io = socketIO(server, {
-  cors: { origin: '*' }
-});
-
+// ==== SOCKET.IO ====
 let totalViewers = 0;
 let totalFollowers = 0;
-let activeUsers = [];
+let activeChatters = [];
 
 io.on('connection', (socket) => {
-  totalViewers++;
-  io.emit('viewerCountUpdate', totalViewers);
-
-  socket.on('follow', () => {
-    totalFollowers++;
-    io.emit('followerCountUpdate', totalFollowers);
-  });
-
-  socket.on('unfollow', () => {
-    if (totalFollowers > 0) totalFollowers--;
-    io.emit('followerCountUpdate', totalFollowers);
-  });
-
-  socket.on('joinChat', (username) => {
-    if (!activeUsers.includes(username)) activeUsers.push(username);
-    io.emit('activeChattersUpdate', activeUsers);
-  });
-
-  socket.on('leaveChat', (username) => {
-    activeUsers = activeUsers.filter(user => user !== username);
-    io.emit('activeChattersUpdate', activeUsers);
-  });
-
-  socket.on('disconnect', () => {
-    totalViewers--;
+    totalViewers++;
     io.emit('viewerCountUpdate', totalViewers);
-  });
-});
 
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running with Socket.IO at http://localhost:${PORT}`);
+    socket.on('follow', () => {
+        totalFollowers++;
+        io.emit('followerCountUpdate', totalFollowers);
+    });
+
+    socket.on('unfollow', () => {
+        if (totalFollowers > 0) totalFollowers--;
+        io.emit('followerCountUpdate', totalFollowers);
+    });
+
+    socket.on('joinChat', (username) => {
+        if (!activeChatters.includes(username)) {
+            activeChatters.push(username);
+            io.emit('activeChattersUpdate', activeChatters);
+        }
+    });
+
+    socket.on('leaveChat', (username) => {
+        activeChatters = activeChatters.filter(user => user !== username);
+        io.emit('activeChattersUpdate', activeChatters);
+    });
+
+    socket.on('sendMessage', (messageData) => {
+        io.emit('newMessage', messageData); // broadcast to everyone
+    });
+
+    socket.on('disconnect', () => {
+        totalViewers--;
+        io.emit('viewerCountUpdate', totalViewers);
+    });
 });
 
 server.keepAliveTimeout = 120000;
 server.headersTimeout = 120000;
 
-module.exports = server;
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+});
