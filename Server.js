@@ -1,3 +1,6 @@
+import path from 'path';
+export default server;
+
 require('dotenv').config();  // This is how you load environment variables
 
 const express = require('express');
@@ -32,7 +35,7 @@ app.use(session({
 // Serve static files from the "public" directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-const path = require('path');
+
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'businessesmedical.html'));
