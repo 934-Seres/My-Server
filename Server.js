@@ -9,15 +9,15 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const OWNER_USERNAME = process.env.OWNER_USERNAME || 'admin';
-const OWNER_PASSWORD = process.env.OWNER_PASSWORD || 'secret123';
+const OWNER_USERNAME = process.env.OWNER_USERNAME;
+const OWNER_PASSWORD = process.env.OWNER_PASSWORD;
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'super-secret-key',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
