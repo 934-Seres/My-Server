@@ -1,10 +1,12 @@
 require('dotenv').config(); // Load environment variables
 
-const path = require('path'); // Moved back to CommonJS
+const path = require('path');
 const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const http = require('http');
+const socketIO = require('socket.io');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -51,8 +53,47 @@ app.get('/check-owner', (req, res) => {
     res.json({ isOwner: !!req.session.isOwner });
 });
 
-const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+const server = http.createServer(app);
+const io = socketIO(server, {
+  cors: { origin: '*' }
+});
+
+let totalViewers = 0;
+let totalFollowers = 0;
+let activeUsers = [];
+
+io.on('connection', (socket) => {
+  totalViewers++;
+  io.emit('viewerCountUpdate', totalViewers);
+
+  socket.on('follow', () => {
+    totalFollowers++;
+    io.emit('followerCountUpdate', totalFollowers);
+  });
+
+  socket.on('unfollow', () => {
+    if (totalFollowers > 0) totalFollowers--;
+    io.emit('followerCountUpdate', totalFollowers);
+  });
+
+  socket.on('joinChat', (username) => {
+    if (!activeUsers.includes(username)) activeUsers.push(username);
+    io.emit('activeChattersUpdate', activeUsers);
+  });
+
+  socket.on('leaveChat', (username) => {
+    activeUsers = activeUsers.filter(user => user !== username);
+    io.emit('activeChattersUpdate', activeUsers);
+  });
+
+  socket.on('disconnect', () => {
+    totalViewers--;
+    io.emit('viewerCountUpdate', totalViewers);
+  });
+});
+
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running with Socket.IO at http://localhost:${PORT}`);
 });
 
 server.keepAliveTimeout = 120000;

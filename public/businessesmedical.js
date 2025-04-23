@@ -1192,108 +1192,39 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
   
- // Initialize viewer count and follower count
-let viewerCount = 0;
-let followerCount = 0;
+const socket = io();
 
-// Simulate viewers (this can be updated dynamically or tracked using backend)
-viewerCount++;
-document.getElementById('viewerCount').textContent = `Viewers: ${viewerCount}`;
+// Update viewer count
+socket.on('viewerCountUpdate', count => {
+    document.getElementById('viewerCount').textContent = `Viewers: ${count}`;
+});
 
-// Initialize follower count from local storage or backend (set to 0 initially)
-if (localStorage.getItem('followers')) {
-    followerCount = parseInt(localStorage.getItem('followers'));
-} else {
-    localStorage.setItem('followers', followerCount);
-}
+// Update follower count
+socket.on('followerCountUpdate', count => {
+    document.getElementById('followerCount').textContent = `Followers: ${count}`;
+});
 
-document.getElementById('followerCount').textContent = `Followers: ${followerCount}`;
-
-// Follow/Unfollow functionality
-document.getElementById('followButton').addEventListener('click', function() {
-    const followButton = document.getElementById('followButton');
-    
-    if (followButton.textContent === 'Follow') {
-        followButton.textContent = 'Unfollow';
-        followerCount++;  // Increment follower count
-        localStorage.setItem('followers', followerCount);  // Store updated follower count
-        document.getElementById('followerCount').textContent = `Followers: ${followerCount}`;
+// On follow button click
+document.getElementById('followButton').addEventListener('click', () => {
+    const btn = document.getElementById('followButton');
+    if (btn.textContent === 'Follow') {
+        btn.textContent = 'Unfollow';
+        socket.emit('follow');
         alert('You followed the website!');
-    } else if (followButton.textContent === 'Unfollow') {
-        if (followerCount > 0) {
-            followButton.textContent = 'Follow';
-            followerCount--;  // Decrement follower count
-            localStorage.setItem('followers', followerCount);  // Store updated follower count
-            document.getElementById('followerCount').textContent = `Followers: ${followerCount}`;
-            alert('You unfollowed the website!');
-        }
+    } else {
+        btn.textContent = 'Follow';
+        socket.emit('unfollow');
+        alert('You unfollowed the website!');
     }
 });
-// Simulated list of online users (this can be fetched from a database or backend system)
-let onlineUsers = ['John', 'Jane', 'Mike']; // Initial online users
 
-// Function to display online users in the list
-function displayOnlineUsers() {
-    const userList = document.getElementById('userList');
-    userList.innerHTML = ''; // Clear the current list
-    onlineUsers.forEach(user => {
-        let listItem = document.createElement('li');
-        listItem.textContent = user; // Add username to the list
-        userList.appendChild(listItem);
-    });
-}
-
-
-
-// Example function to simulate adding a new user to the online users list
-function addOnlineUser(username) {
-    if (!onlineUsers.includes(username)) {
-        onlineUsers.push(username);
-        displayOnlineUsers(); // Update the online users list
-    }
-}
-
-// Example function to simulate removing a user from the online users list
-function removeOnlineUser(username) {
-    onlineUsers = onlineUsers.filter(user => user !== username);
-    displayOnlineUsers(); // Update the online users list
-}
-
-// Initial call to display online users
-displayOnlineUsers();
-
-// Simulate adding and removing users
-setTimeout(() => addOnlineUser('Alice'), 2000); // Add 'Alice' after 2 seconds
-setTimeout(() => removeOnlineUser('Mike'), 4000); // Remove 'Mike' after 4 seconds
-// Simulated active chatters list (this could be fetched dynamically in a real app)
-let activeChatters = [];  // Array to hold users currently chatting
-
-// Function to display the list of active chatters in the header
-function displayActiveChatters() {
+// Online chatters
+socket.on('activeChattersUpdate', (chatters) => {
     const chattersList = document.getElementById('chattersList');
-    if (activeChatters.length === 0) {
-        chattersList.textContent = 'None';
-    } else {
-        chattersList.textContent = activeChatters.join(', ');
-    }
-}
+    chattersList.textContent = chatters.length ? chatters.join(', ') : 'None';
+});
 
-
-
-// Example function to remove a user from active chatters if they stop chatting (e.g., after a timeout)
-function removeUserFromChatters(username) {
-    activeChatters = activeChatters.filter(user => user !== username);
-    displayActiveChatters();  // Update the chatters list in the header
-}
-
-// Example of user sending a message (you can replace with actual user handling)
-setTimeout(() => {
-    activeChatters.push('Alice');
-    displayActiveChatters();  // Display Alice as active chatter
-}, 2000);
-
-// Example of removing Alice after a short time
-setTimeout(() => {
-    removeUserFromChatters('Alice');
-}, 5000);
+// Simulate joining chat
+setTimeout(() => socket.emit('joinChat', 'Alice'), 2000);
+setTimeout(() => socket.emit('leaveChat', 'Alice'), 5000);
 
