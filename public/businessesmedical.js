@@ -1060,7 +1060,7 @@ function toggleOwnerUI(isOwner) {
 
 
 
-const socket = io(); // connect to server
+
 document.addEventListener("DOMContentLoaded", function () {
     const messageBox = document.getElementById("messageBox");
     const messageIcon = document.getElementById("messageIcon");
@@ -1114,7 +1114,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const replyBtn = document.createElement("button");
         replyBtn.textContent = "Reply...";
         replyBtn.classList.add("reply-button");
-        
 
         const editBtn = document.createElement("button");
         editBtn.textContent = "Edit";
@@ -1193,7 +1192,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
   
-//const socket = io(); // Connect to the backend via Socket.IO
+const socket = io(); // Connect to the backend via Socket.IO
 
 // Viewer count updates
 socket.on('viewerCountUpdate', (count) => {
