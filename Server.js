@@ -78,56 +78,24 @@ function saveFollowerCount() {
 }
 
 io.on('connection', (socket) => {
-    totalViewers++;
-    io.emit('viewerCountUpdate', totalViewers);
-    socket.emit('followerCountUpdate', totalFollowers);
+  totalViewers++;
+  io.emit('viewerCountUpdate', totalViewers);
+  socket.emit('followerCountUpdate', totalFollowers);
 
-    // Handle follow/unfollow events
-    socket.on('follow', () => {
-        totalFollowers++;
-        saveFollowerCount();
-        io.emit('followerCountUpdate', totalFollowers);
-    });
+  // Handle message events
+  socket.on('sendMessage', ({ sender, text }) => {
+      const message = { sender, text };
+      // Broadcast the message to all clients
+      io.emit('newMessage', message);
+  });
 
-    socket.on('unfollow', () => {
-        if (totalFollowers > 0) totalFollowers--;
-        saveFollowerCount();
-        io.emit('followerCountUpdate', totalFollowers);
-    });
-
-    // Handle chat join/leave
-    socket.on('joinChat', (username) => {
-        if (!activeUsers.includes(username)) activeUsers.push(username);
-        io.emit('activeChattersUpdate', activeUsers);
-    });
-
-    socket.on('leaveChat', (username) => {
-        activeUsers = activeUsers.filter(user => user !== username);
-        io.emit('activeChattersUpdate', activeUsers);
-    });
-
-    // Handle new message
-    socket.on('sendMessage', ({ sender, text }) => {
-        const id = Date.now().toString();  // Unique ID for the message
-        io.emit('newMessage', { id, sender, text });
-    });
-
-    // Handle reply messages
-    socket.on('sendReply', ({ sender, text, parentId }) => {
-        const id = Date.now().toString();  // Unique ID for the reply
-        io.emit('newReply', { id, sender, text, parentId });
-    });
-
-    // Handle message edits
-    socket.on('editMessage', ({ id, newText }) => {
-        io.emit('messageEdited', { id, newText });
-    });
-
-    socket.on('disconnect', () => {
-        totalViewers--;
-        io.emit('viewerCountUpdate', totalViewers);
-    });
+  // Handle disconnect events
+  socket.on('disconnect', () => {
+      totalViewers--;
+      io.emit('viewerCountUpdate', totalViewers);
+  });
 });
+
 
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running with Socket.IO at http://localhost:${PORT}`);

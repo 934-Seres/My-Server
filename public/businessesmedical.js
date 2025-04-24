@@ -1069,6 +1069,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const sendMessage = document.getElementById("sendMessage");
     const messageContent = document.getElementById("messageContent");
 
+    const socket = io();  // Initialize socket connection
+
     messageIcon.addEventListener("click", () => {
         messageBox.style.display = "flex";
     });
@@ -1089,9 +1091,12 @@ document.addEventListener("DOMContentLoaded", function () {
     function sendMainMessage() {
         const text = messageInput.value.trim();
         if (text !== "") {
+            // Emit message to the server
+            socket.emit("sendMessage", { sender: "User", text: text });
+
+            // Create the message element and append to the message content area
             const messageElement = createMessageElement(text);
             messageContent.appendChild(messageElement);
-           
             messageContent.scrollTop = messageContent.scrollHeight;
         }
         messageInput.value = "";
@@ -1106,11 +1111,10 @@ document.addEventListener("DOMContentLoaded", function () {
         container.appendChild(messageText);
 
         const buttonsWrapper = document.createElement("div");
-        buttonsWrapper.classList.add("message-buttons"); // keep this class for styling
+        buttonsWrapper.classList.add("message-buttons");
         buttonsWrapper.style.display = "flex";
         buttonsWrapper.style.justifyContent = "flex-end";
-        buttonsWrapper.style.gap = "5px"; // optional space between buttons
-
+        buttonsWrapper.style.gap = "5px";
 
         const replyBtn = document.createElement("button");
         replyBtn.textContent = "Reply...";
@@ -1123,7 +1127,6 @@ document.addEventListener("DOMContentLoaded", function () {
         buttonsWrapper.appendChild(replyBtn);
         buttonsWrapper.appendChild(editBtn);
         container.appendChild(buttonsWrapper);
-
 
         const replyBox = document.createElement("div");
         replyBox.classList.add("reply-box");
@@ -1172,7 +1175,6 @@ document.addEventListener("DOMContentLoaded", function () {
             saveBtn.textContent = "Save";
             saveBtn.classList.add("save-button");
 
-            // Replace text and button with textarea and save
             container.replaceChild(editTextarea, messageText);
             editBtn.style.display = "none";
             buttonsWrapper.appendChild(saveBtn);
@@ -1190,6 +1192,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
         return container;
     }
+
+    // Listen for incoming messages from other clients
+    socket.on("newMessage", (message) => {
+        const { sender, text } = message;
+        const messageElement = createMessageElement(text);
+        messageContent.appendChild(messageElement);
+        messageContent.scrollTop = messageContent.scrollHeight;
+    });
 });
 
   
