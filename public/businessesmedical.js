@@ -1091,9 +1091,10 @@ document.addEventListener("DOMContentLoaded", function () {
         if (text !== "") {
             const messageElement = createMessageElement(text);
             messageContent.appendChild(messageElement);
-            messageInput.value = "";
+           
             messageContent.scrollTop = messageContent.scrollHeight;
         }
+        messageInput.value = "";
     }
 
     function createMessageElement(text, isReply = false) {
