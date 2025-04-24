@@ -81,6 +81,18 @@ io.on('connection', (socket) => {
   totalViewers++;
   io.emit('viewerCountUpdate', totalViewers);
   socket.emit('followerCountUpdate', totalFollowers);
+  socket.on('follow', () => {
+    totalFollowers++;
+    saveFollowerCount(); // persist to file
+    io.emit('followerCountUpdate', totalFollowers); // notify all clients
+});
+
+  socket.on('unfollow', () => {
+      if (totalFollowers > 0) totalFollowers--;
+      saveFollowerCount(); // persist to file
+      io.emit('followerCountUpdate', totalFollowers); // notify all clients
+  });
+
 
   // Handle message events
   socket.on('sendMessage', ({ sender, text }) => {
