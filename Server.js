@@ -110,11 +110,10 @@ io.on('connection', (socket) => {
         io.emit('activeChattersUpdate', activeUsers);
     });
 
-    // Chat message broadcasting
-    socket.on('chatMessage', (text) => {
-        io.emit('chatMessage', text);
-    });
-
+    socket.on('sendMessage', ({ text }) => {
+      io.emit('newMessage', { text }); // this matches your frontend listener: socket.on("newMessage", ...)
+  });
+  
     socket.on('disconnect', () => {
         totalViewers--;
         io.emit('viewerCountUpdate', totalViewers);
