@@ -109,15 +109,21 @@ io.on('connection', (socket) => {
         activeUsers = activeUsers.filter(user => user !== username);
         io.emit('activeChattersUpdate', activeUsers);
     });
-
-    socket.on('sendMessage', ({ text }) => {
-    io.emit('newMessage', { text }); // this matches your frontend listener: socket.on("newMessage", ...)
-});
-
+    
+  
     socket.on('disconnect', () => {
         totalViewers--;
         io.emit('viewerCountUpdate', totalViewers);
     });
+    socket.on('sendMessage', ({ sender, text }) => {
+    io.emit('newMessage', { sender, text });
+});
+
+socket.on('sendReply', ({ sender, text, parentId }) => {
+    io.emit('newReply', { sender, text, parentId });
+});
+
+  
 });
 
 server.listen(PORT, '0.0.0.0', () => {
