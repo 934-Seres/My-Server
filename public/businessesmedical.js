@@ -1097,21 +1097,21 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function sendMainMessage() {
-        const text = messageInput.value.trim();
-        if (text !== "") {
-            // Append locally first
-            const messageElement = createMessageElement(text);
-            messageContent.appendChild(messageElement);
-            messageContent.scrollTop = messageContent.scrollHeight;
-    
-            // Then emit to other clients
-            socket.emit("sendMessage", { text });
-    
-            // Clear input
-            messageInput.value = "";
-        }
+    const text = messageInput.value.trim();
+    if (text !== "") {
+        // Append locally first
+        const messageElement = createMessageElement(text);
+        messageContent.appendChild(messageElement);
+        messageContent.scrollTop = messageContent.scrollHeight;
+
+        // Then emit to other clients
+        socket.emit("sendMessage", { text });
+
+        // Clear input
+        messageInput.value = "";
     }
-    
+}
+
     // ✅ On receiving message from any client
     socket.on("newMessage", ({ text }) => {
         const messageElement = createMessageElement(text);
