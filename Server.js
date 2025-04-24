@@ -54,9 +54,11 @@ app.get('/check-owner', (req, res) => {
     res.json({ isOwner: !!req.session.isOwner });
 });
 
+
+//
 const server = http.createServer(app);
 const io = socketIO(server, {
-    cors: { origin: '*' }
+  cors: { origin: '*' }
 });
 
 let totalViewers = 0;
@@ -83,43 +85,44 @@ function saveFollowerCount() {
 }
 
 io.on('connection', (socket) => {
-    totalViewers++;
-    io.emit('viewerCountUpdate', totalViewers);
+  totalViewers++;
+  io.emit('viewerCountUpdate', totalViewers);
 
-    socket.emit('followerCountUpdate', totalFollowers); // sync follower count on connect
+  socket.emit('followerCountUpdate', totalFollowers); // sync follower count on connect
 
-    socket.on('follow', () => {
-        totalFollowers++;
-        saveFollowerCount();
-        io.emit('followerCountUpdate', totalFollowers);
-    });
-
-    socket.on('unfollow', () => {
-        if (totalFollowers > 0) totalFollowers--;
-        saveFollowerCount();
-        io.emit('followerCountUpdate', totalFollowers);
-    });
-
-    socket.on('joinChat', (username) => {
-        if (!activeUsers.includes(username)) activeUsers.push(username);
-        io.emit('activeChattersUpdate', activeUsers);
-    });
-
-    socket.on('leaveChat', (username) => {
-        activeUsers = activeUsers.filter(user => user !== username);
-        io.emit('activeChattersUpdate', activeUsers);
-    });
-    
-  
-    socket.on('disconnect', () => {
-        totalViewers--;
-        io.emit('viewerCountUpdate', totalViewers);
-    });
-    socket.on('sendReply', ({ text, originalMessage }) => {
-      io.emit('newReply', { text, originalMessage });
+  socket.on('follow', () => {
+    totalFollowers++;
+    saveFollowerCount();
+    io.emit('followerCountUpdate', totalFollowers);
   });
-  
+
+  socket.on('unfollow', () => {
+    if (totalFollowers > 0) totalFollowers--;
+    saveFollowerCount();
+    io.emit('followerCountUpdate', totalFollowers);
+  });
+
+  socket.on('joinChat', (username) => {
+    if (!activeUsers.includes(username)) activeUsers.push(username);
+    io.emit('activeChattersUpdate', activeUsers);
+  });
+
+  socket.on('leaveChat', (username) => {
+    activeUsers = activeUsers.filter(user => user !== username);
+    io.emit('activeChattersUpdate', activeUsers);
+  });
+
+  // ✅ NEW: Handle chat message broadcasting
+  socket.on("chatMessage", (text) => {
+    io.emit("chatMessage", text); // Broadcast to all connected clients
+  });
+
+  socket.on('disconnect', () => {
+    totalViewers--;
+    io.emit('viewerCountUpdate', totalViewers);
+  });
 });
+
 
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running with Socket.IO at http://localhost:${PORT}`);
