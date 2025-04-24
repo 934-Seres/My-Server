@@ -118,6 +118,10 @@ io.on('connection', (socket) => {
         totalViewers--;
         io.emit('viewerCountUpdate', totalViewers);
     });
+    socket.on('sendReply', ({ text, originalMessage }) => {
+      io.emit('newReply', { text, originalMessage });
+  });
+  
 });
 
 server.listen(PORT, '0.0.0.0', () => {
