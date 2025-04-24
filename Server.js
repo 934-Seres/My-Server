@@ -1,6 +1,7 @@
 require('dotenv').config(); // Load environment variables
 
 const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
@@ -53,6 +54,8 @@ app.get('/check-owner', (req, res) => {
     res.json({ isOwner: !!req.session.isOwner });
 });
 
+
+//
 const server = http.createServer(app);
 const io = socketIO(server, {
   cors: { origin: '*' }
@@ -62,17 +65,40 @@ let totalViewers = 0;
 let totalFollowers = 0;
 let activeUsers = [];
 
+// Load follower count from file if available
+const followersFile = path.join(__dirname, 'followers.json');
+if (fs.existsSync(followersFile)) {
+    try {
+        const data = fs.readFileSync(followersFile);
+        totalFollowers = JSON.parse(data).count || 0;
+    } catch (error) {
+        console.error('Error reading followers file:', error);
+    }
+}
+
+function saveFollowerCount() {
+    try {
+        fs.writeFileSync(followersFile, JSON.stringify({ count: totalFollowers }));
+    } catch (error) {
+        console.error('Error writing followers file:', error);
+    }
+}
+
 io.on('connection', (socket) => {
   totalViewers++;
   io.emit('viewerCountUpdate', totalViewers);
 
+  socket.emit('followerCountUpdate', totalFollowers); // sync follower count on connect
+
   socket.on('follow', () => {
     totalFollowers++;
+    saveFollowerCount();
     io.emit('followerCountUpdate', totalFollowers);
   });
 
   socket.on('unfollow', () => {
     if (totalFollowers > 0) totalFollowers--;
+    saveFollowerCount();
     io.emit('followerCountUpdate', totalFollowers);
   });
 
