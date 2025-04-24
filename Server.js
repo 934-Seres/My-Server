@@ -109,10 +109,7 @@ io.on('connection', (socket) => {
         activeUsers = activeUsers.filter(user => user !== username);
         io.emit('activeChattersUpdate', activeUsers);
     });
-
-    socket.on('sendMessage', ({ text }) => {
-      io.emit('newMessage', { text }); // this matches your frontend listener: socket.on("newMessage", ...)
-  });
+    
   
     socket.on('disconnect', () => {
         totalViewers--;
