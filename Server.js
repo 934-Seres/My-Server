@@ -1,5 +1,4 @@
-require('dotenv').config(); // Load environment variables
-
+require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
 const express = require('express');
@@ -23,12 +22,9 @@ app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: {
-        secure: process.env.NODE_ENV === 'production',
-    },
+    cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
 
-// Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
@@ -63,7 +59,6 @@ let totalViewers = 0;
 let totalFollowers = 0;
 let activeUsers = [];
 
-// Load follower count from file if available
 const followersFile = path.join(__dirname, 'followers.json');
 if (fs.existsSync(followersFile)) {
     try {
@@ -85,9 +80,9 @@ function saveFollowerCount() {
 io.on('connection', (socket) => {
     totalViewers++;
     io.emit('viewerCountUpdate', totalViewers);
+    socket.emit('followerCountUpdate', totalFollowers);
 
-    socket.emit('followerCountUpdate', totalFollowers); // sync follower count on connect
-
+    // Handle follow/unfollow events
     socket.on('follow', () => {
         totalFollowers++;
         saveFollowerCount();
@@ -100,6 +95,7 @@ io.on('connection', (socket) => {
         io.emit('followerCountUpdate', totalFollowers);
     });
 
+    // Handle chat join/leave
     socket.on('joinChat', (username) => {
         if (!activeUsers.includes(username)) activeUsers.push(username);
         io.emit('activeChattersUpdate', activeUsers);
@@ -109,21 +105,28 @@ io.on('connection', (socket) => {
         activeUsers = activeUsers.filter(user => user !== username);
         io.emit('activeChattersUpdate', activeUsers);
     });
-    
-  
+
+    // Handle new message
+    socket.on('sendMessage', ({ sender, text }) => {
+        const id = Date.now().toString();  // Unique ID for the message
+        io.emit('newMessage', { id, sender, text });
+    });
+
+    // Handle reply messages
+    socket.on('sendReply', ({ sender, text, parentId }) => {
+        const id = Date.now().toString();  // Unique ID for the reply
+        io.emit('newReply', { id, sender, text, parentId });
+    });
+
+    // Handle message edits
+    socket.on('editMessage', ({ id, newText }) => {
+        io.emit('messageEdited', { id, newText });
+    });
+
     socket.on('disconnect', () => {
         totalViewers--;
         io.emit('viewerCountUpdate', totalViewers);
     });
-    socket.on('sendMessage', ({ sender, text }) => {
-    io.emit('newMessage', { sender, text });
-});
-
-socket.on('sendReply', ({ sender, text, parentId }) => {
-    io.emit('newReply', { sender, text, parentId });
-});
-
-  
 });
 
 server.listen(PORT, '0.0.0.0', () => {
@@ -132,5 +135,3 @@ server.listen(PORT, '0.0.0.0', () => {
 
 server.keepAliveTimeout = 120000;
 server.headersTimeout = 120000;
-
-module.exports = server;
