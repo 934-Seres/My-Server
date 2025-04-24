@@ -1060,10 +1060,8 @@ function toggleOwnerUI(isOwner) {
 
 
 
-
+const socket = io(); // connect to server
 document.addEventListener("DOMContentLoaded", function () {
-    const socket = io(); // Connect via Socket.IO
-
     const messageBox = document.getElementById("messageBox");
     const messageIcon = document.getElementById("messageIcon");
     const closeButton = document.querySelector(".message-button-close");
@@ -1071,55 +1069,33 @@ document.addEventListener("DOMContentLoaded", function () {
     const sendMessage = document.getElementById("sendMessage");
     const messageContent = document.getElementById("messageContent");
 
-    // ✅ Open message box when icon clicked
-    if (messageIcon && messageBox) {
-        messageIcon.addEventListener("click", () => {
-            messageBox.style.display = "flex";
-        });
-    }
-
-    // ✅ Close message box
-    if (closeButton && messageBox) {
-        closeButton.addEventListener("click", () => {
-            messageBox.style.display = "none";
-        });
-    }
-
-    // ✅ Send message button
-    if (sendMessage && messageInput) {
-        sendMessage.addEventListener("click", sendMainMessage);
-        messageInput.addEventListener("keydown", function (e) {
-            if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendMainMessage();
-            }
-        });
-    }
-
-    function sendMainMessage() {
-    const text = messageInput.value.trim();
-    if (text !== "") {
-        // Append locally first
-        const messageElement = createMessageElement(text);
-        messageContent.appendChild(messageElement);
-        messageContent.scrollTop = messageContent.scrollHeight;
-
-        // Then emit to other clients
-        socket.emit("sendMessage", { text });
-
-        // Clear input
-        messageInput.value = "";
-    }
-}
-
-    // ✅ On receiving message from any client
-    socket.on("newMessage", ({ text }) => {
-        const messageElement = createMessageElement(text);
-        messageContent.appendChild(messageElement);
-        messageContent.scrollTop = messageContent.scrollHeight;
+    messageIcon.addEventListener("click", () => {
+        messageBox.style.display = "flex";
     });
 
-    // ✅ Create full message thread with edit/reply
+    closeButton.addEventListener("click", () => {
+        messageBox.style.display = "none";
+    });
+
+    sendMessage.addEventListener("click", sendMainMessage);
+
+    messageInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendMainMessage();
+        }
+    });
+
+    function sendMainMessage() {
+        const text = messageInput.value.trim();
+        if (text !== "") {
+            const messageElement = createMessageElement(text);
+            messageContent.appendChild(messageElement);
+            messageInput.value = "";
+            messageContent.scrollTop = messageContent.scrollHeight;
+        }
+    }
+
     function createMessageElement(text, isReply = false) {
         const container = document.createElement("div");
         container.classList.add(isReply ? "comment" : "message-thread");
@@ -1129,10 +1105,11 @@ document.addEventListener("DOMContentLoaded", function () {
         container.appendChild(messageText);
 
         const buttonsWrapper = document.createElement("div");
-        buttonsWrapper.classList.add("message-buttons");
+        buttonsWrapper.classList.add("message-buttons"); // keep this class for styling
         buttonsWrapper.style.display = "flex";
         buttonsWrapper.style.justifyContent = "flex-end";
-        buttonsWrapper.style.gap = "5px";
+        buttonsWrapper.style.gap = "5px"; // optional space between buttons
+
 
         const replyBtn = document.createElement("button");
         replyBtn.textContent = "Reply...";
@@ -1146,6 +1123,7 @@ document.addEventListener("DOMContentLoaded", function () {
         buttonsWrapper.appendChild(editBtn);
         container.appendChild(buttonsWrapper);
 
+
         const replyBox = document.createElement("div");
         replyBox.classList.add("reply-box");
         replyBox.style.display = "none";
@@ -1157,7 +1135,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const replySend = document.createElement("button");
         replySend.classList.add("reply-send");
-        replySend.textContent = "Send";
         replyBox.appendChild(replySend);
 
         container.appendChild(replyBox);
@@ -1194,6 +1171,7 @@ document.addEventListener("DOMContentLoaded", function () {
             saveBtn.textContent = "Save";
             saveBtn.classList.add("save-button");
 
+            // Replace text and button with textarea and save
             container.replaceChild(editTextarea, messageText);
             editBtn.style.display = "none";
             buttonsWrapper.appendChild(saveBtn);
@@ -1212,8 +1190,9 @@ document.addEventListener("DOMContentLoaded", function () {
         return container;
     }
 });
+
   
-const socket = io(); // Connect to the backend via Socket.IO
+//const socket = io(); // Connect to the backend via Socket.IO
 
 // Viewer count updates
 socket.on('viewerCountUpdate', (count) => {
