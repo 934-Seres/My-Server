@@ -95,21 +95,17 @@ io.on('connection', (socket) => {
         io.emit('followerCountUpdate', totalFollowers);
     });
 
-    // === Messaging ===
-    socket.on('sendMessage', ({ sender, text }) => {
-        const message = { sender, text };
-        io.emit('newMessage', message);
-    });
+   // Listen for 'sendMessage' event from the client
+socket.on('sendMessage', ({ sender, text, messageId }) => {
+    // Broadcast the message to all connected clients, including the unique messageId
+    io.emit('newMessage', { sender, text, messageId });
+});
 
-    // === Replies ===
-    socket.on('sendReply', ({ sender, replyText, originalMessage }) => {
-        const replyData = {
-            sender,
-            replyText,
-            originalMessage
-        };
-        io.emit('newReply', replyData);
-    });
+// Handle replies
+socket.on('sendReply', ({ originalMessage, replyText, sender, messageId }) => {
+    // Broadcast the reply to all connected clients, including the messageId of the original message
+    io.emit('newReply', { originalMessage, replyText, sender, messageId });
+});
 
     socket.on('disconnect', () => {
         totalViewers--;
