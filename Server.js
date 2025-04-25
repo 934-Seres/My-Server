@@ -101,11 +101,10 @@ socket.on('sendMessage', ({ sender, text, messageId }) => {
     io.emit('newMessage', { sender, text, messageId });
 });
 
-// Handle replies
-socket.on('sendReply', ({ originalMessage, replyText, sender, messageId }) => {
-    // Broadcast the reply to all connected clients, including the messageId of the original message
-    io.emit('newReply', { originalMessage, replyText, sender, messageId });
+socket.on('sendReply', ({ replyText, sender, messageId }) => {
+    io.emit('newReply', { replyText, sender, messageId });
 });
+
 
     socket.on('disconnect', () => {
         totalViewers--;

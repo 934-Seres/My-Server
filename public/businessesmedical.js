@@ -1183,8 +1183,16 @@ function createMessageElement(text, isReply = false, sender = '', messageId = ''
                 replyInput.value = "";
                 replyBox.style.display = "none";
 
-                // Emit the reply to the server with message ID
-                socket.emit('sendReply', { originalMessage: text, replyText, sender: 'You', messageId });
+                socket.on("newReply", ({ replyText, sender, messageId }) => {
+                    const parent = document.querySelector(`[data-message-id="${messageId}"]`);
+                    if (parent) {
+                        const repliesContainer = parent.querySelector(".replies-container");
+                        const replyElement = createMessageElement(replyText, true, sender);
+                        repliesContainer.appendChild(replyElement);
+                    }
+                });
+                
+
             }
         }
     });  
