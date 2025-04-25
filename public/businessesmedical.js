@@ -1244,22 +1244,29 @@ function attachFollowButtonListener() {
 // Call this function when the page initially loads
 attachFollowButtonListener();
 
-// In case your DOM is dynamically updated (e.g., with new replies), reattach the listener
-socket.on('newReply', (data) => {
+socket.on("newReply", (data) => {
     const { originalMessage, replyText, sender } = data;
 
+    // Select all message threads
     const messages = document.querySelectorAll(".message-thread");
+
+    // Iterate through each message and find the one to reply to
     messages.forEach(msg => {
         const p = msg.querySelector("p");
+        
+        // Check if this message is the one being replied to (by matching original message text)
         if (p && p.textContent === originalMessage) {
             const repliesContainer = msg.querySelector(".replies-container");
+
+            // Create a new reply element and append it to the replies container
             const replyElement = createMessageElement(replyText, true);
+
+            // Add sender's name to the reply (optional)
+            replyElement.textContent = `${sender}: ${replyText}`;
+
             repliesContainer.appendChild(replyElement);
         }
     });
-
-    // Reattach the event listener after adding new replies or modifying the DOM
-    attachFollowButtonListener();
 });
 
 
