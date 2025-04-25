@@ -1181,20 +1181,20 @@ function createMessageElement(text, isReply = false, sender = '', messageId = ''
                 const replyElement = createMessageElement(replyText, true, 'You');
                 repliesContainer.appendChild(replyElement);
                 replyInput.value = "";
-                replyBox.style.display = "none";
-
-                socket.on("newReply", ({ replyText, sender, messageId }) => {
-                    const parent = document.querySelector(`[data-message-id="${messageId}"]`);
-                    if (parent) {
-                        const repliesContainer = parent.querySelector(".replies-container");
-                        const replyElement = createMessageElement(replyText, true, sender);
-                        repliesContainer.appendChild(replyElement);
-                    }
-                });
+                replyBox.style.display = "none";             
                 
 
             }
         }
+                    // Listen for incoming messages from other clients
+            socket.on("newReply", (reply) => {
+                const { sender, text, messageId } = reply;
+                const replyElement = createMessageElement(replyText, false, sender, messageId);
+                replyContent.appendChild(replyElement);
+                // Emit the message with the unique message ID to the server
+
+                replyContent.scrollTop = replyContent.scrollHeight;
+            });
     });  
 
     editBtn.addEventListener("click", () => {
@@ -1239,8 +1239,16 @@ function createMessageElement(text, isReply = false, sender = '', messageId = ''
     });
 });
 
-
   
+/*socket.on("newReply", ({ replyText, sender, messageId }) => {
+    const parent = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (parent) {
+        const repliesContainer = parent.querySelector(".replies-container");
+        const replyElement = createMessageElement(replyText, true, sender);
+        repliesContainer.appendChild(replyElement);
+    }
+});*/
+ 
 const socket = io(); // Connect to the backend via Socket.IO
 
 // Viewer count updates
