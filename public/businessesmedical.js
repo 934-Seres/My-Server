@@ -1096,69 +1096,72 @@ document.addEventListener("DOMContentLoaded", function () {
     messageInput.value = "";
 }
 
-    function createMessageElement(text, isReply = false) {
-        const container = document.createElement("div");
-        container.classList.add(isReply ? "comment" : "message-thread");
+  function createMessageElement(text, isReply = false, sender = '') {
+    const container = document.createElement("div");
+    container.classList.add(isReply ? "comment" : "message-thread");
 
-        const messageText = document.createElement("p");
-        messageText.textContent = text;
-        container.appendChild(messageText);
+    const messageText = document.createElement("p");
+    messageText.textContent = isReply ? `${sender}: ${text}` : text; // Add sender to the reply text
+    container.appendChild(messageText);
 
-        const buttonsWrapper = document.createElement("div");
-        buttonsWrapper.classList.add("message-buttons");
-        buttonsWrapper.style.display = "flex";
-        buttonsWrapper.style.justifyContent = "flex-end";
-        buttonsWrapper.style.gap = "5px";
+    const buttonsWrapper = document.createElement("div");
+    buttonsWrapper.classList.add("message-buttons");
+    buttonsWrapper.style.display = "flex";
+    buttonsWrapper.style.justifyContent = "flex-end";
+    buttonsWrapper.style.gap = "5px";
 
-        const replyBtn = document.createElement("button");
-        replyBtn.textContent = "Reply...";
-        replyBtn.classList.add("reply-button");
+    const replyBtn = document.createElement("button");
+    replyBtn.textContent = "Reply...";
+    replyBtn.classList.add("reply-button");
 
-        const editBtn = document.createElement("button");
-        editBtn.textContent = "Edit";
-        editBtn.classList.add("edit-button");
-        editBtn.type = "button";  // Add this line to prevent default form submission
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "Edit";
+    editBtn.classList.add("edit-button");
+    editBtn.type = "button";  // Prevent form submission
 
-        buttonsWrapper.appendChild(replyBtn);
-        buttonsWrapper.appendChild(editBtn);
-        container.appendChild(buttonsWrapper);
+    buttonsWrapper.appendChild(replyBtn);
+    buttonsWrapper.appendChild(editBtn);
+    container.appendChild(buttonsWrapper);
 
-        const replyBox = document.createElement("div");
-        replyBox.classList.add("reply-box");
-        replyBox.style.display = "none";
+    const replyBox = document.createElement("div");
+    replyBox.classList.add("reply-box");
+    replyBox.style.display = "none";
 
-        const replyInput = document.createElement("textarea");
-        replyInput.classList.add("reply-input");
-        replyInput.placeholder = "Write a reply...";
-        replyBox.appendChild(replyInput);
+    const replyInput = document.createElement("textarea");
+    replyInput.classList.add("reply-input");
+    replyInput.placeholder = "Write a reply...";
+    replyBox.appendChild(replyInput);
 
-        const replySend = document.createElement("button");
-        replySend.classList.add("reply-send");
-        replyBox.appendChild(replySend);
+    const replySend = document.createElement("button");
+    replySend.classList.add("reply-send");
+    replyBox.appendChild(replySend);
 
-        container.appendChild(replyBox);
+    container.appendChild(replyBox);
 
-        const repliesContainer = document.createElement("div");
-        repliesContainer.classList.add("replies-container");
-        container.appendChild(repliesContainer);
+    const repliesContainer = document.createElement("div");
+    repliesContainer.classList.add("replies-container");
+    container.appendChild(repliesContainer);
 
-        replyBtn.addEventListener("click", () => {
-            replyBox.style.display = replyBox.style.display === "none" ? "block" : "none";
-            replyInput.focus();
-        });
+    replyBtn.addEventListener("click", () => {
+        replyBox.style.display = replyBox.style.display === "none" ? "block" : "none";
+        replyInput.focus();
+    });
 
-        replyInput.addEventListener("keydown", function (e) {
-            if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                const replyText = replyInput.value.trim();
-                if (replyText !== "") {
-                    const replyElement = createMessageElement(replyText, true);
-                    repliesContainer.appendChild(replyElement);
-                    replyInput.value = "";
-                    replyBox.style.display = "none";
-                }
+    replyInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            const replyText = replyInput.value.trim();
+            if (replyText !== "") {
+                const replyElement = createMessageElement(replyText, true, 'You');
+                repliesContainer.appendChild(replyElement);
+                replyInput.value = "";
+                replyBox.style.display = "none";
+
+                // Emit the reply to the server
+                socket.emit('sendReply', { originalMessage: text, replyText, sender: 'You' });
             }
-        });
+        }
+    });  
 
         editBtn.addEventListener("click", () => {
             const currentText = messageText.textContent;
@@ -1259,15 +1262,13 @@ socket.on("newReply", (data) => {
             const repliesContainer = msg.querySelector(".replies-container");
 
             // Create a new reply element and append it to the replies container
-            const replyElement = createMessageElement(replyText, true);
-
-            // Add sender's name to the reply (optional)
-            replyElement.textContent = `${sender}: ${replyText}`;
+            const replyElement = createMessageElement(replyText, true, sender);
 
             repliesContainer.appendChild(replyElement);
         }
     });
 });
+
 
 
 // Active chatters list near the footer
