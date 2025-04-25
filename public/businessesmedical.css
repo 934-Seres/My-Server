@@ -25,8 +25,7 @@ body {
 #motivationLink {
     position: relative;
     text-decoration: none;
-    background-color: white;
-    color: black;
+   
     font-weight: normal;
 }
 
@@ -627,11 +626,11 @@ li {
     border-radius: 5px;
 }
 nav ul li  {
-background-color: #f8f8f8;;
+background-color: #0056b3;
 color: white; 
 }
 nav ul li a {   
-    color: black;     
+    color: white;     
     }
 
 /* Container for the buttons and viewer count */
