@@ -1124,12 +1124,14 @@ if (messageText !== "") {
 function createMessageElement(text, isReply = false, sender = '', messageId = '') {
     const container = document.createElement("div");
     container.classList.add(isReply ? "comment" : "message-thread");
+
     if (messageId) container.setAttribute('data-message-id', messageId);  // Add unique message ID
 
     const messageText = document.createElement("p");
     messageText.textContent = isReply ? `${sender}: ${text}` : text;
     container.appendChild(messageText);
 
+    // Buttons wrapper
     const buttonsWrapper = document.createElement("div");
     buttonsWrapper.classList.add("message-buttons");
     buttonsWrapper.style.display = "flex";
@@ -1143,12 +1145,13 @@ function createMessageElement(text, isReply = false, sender = '', messageId = ''
     const editBtn = document.createElement("button");
     editBtn.textContent = "Edit";
     editBtn.classList.add("edit-button");
-    editBtn.type = "button";  // Prevent form submission
+    editBtn.type = "button";
 
     buttonsWrapper.appendChild(replyBtn);
     buttonsWrapper.appendChild(editBtn);
     container.appendChild(buttonsWrapper);
 
+    // Reply input box
     const replyBox = document.createElement("div");
     replyBox.classList.add("reply-box");
     replyBox.style.display = "none";
@@ -1164,39 +1167,38 @@ function createMessageElement(text, isReply = false, sender = '', messageId = ''
 
     container.appendChild(replyBox);
 
+    // Container for replies
     const repliesContainer = document.createElement("div");
     repliesContainer.classList.add("replies-container");
     container.appendChild(repliesContainer);
 
+    // Show/hide reply box
     replyBtn.addEventListener("click", () => {
         replyBox.style.display = replyBox.style.display === "none" ? "block" : "none";
         replyInput.focus();
     });
 
+    // Send reply on Enter
     replyInput.addEventListener("keydown", function (e) {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             const replyText = replyInput.value.trim();
             if (replyText !== "") {
-                const replyElement = createMessageElement(replyText, true, 'You');
-                repliesContainer.appendChild(replyElement);
+                const parentId = container.getAttribute('data-message-id');
                 replyInput.value = "";
-                replyBox.style.display = "none";             
-                
+                replyBox.style.display = "none";
 
+                // Send to server only — do not append immediately
+                socket.emit('sendReply', {
+                    messageId: parentId,
+                    replyText,
+                    sender: 'You'
+                });
             }
         }
-                    // Listen for incoming messages from other clients
-            socket.on("newReply", (reply) => {
-                const { sender, text, messageId } = reply;
-                const replyElement = createMessageElement(replyText, false, sender, messageId);
-                replyContent.appendChild(replyElement);
-                // Emit the message with the unique message ID to the server
+    });
 
-                replyContent.scrollTop = replyContent.scrollHeight;
-            });
-    });  
-
+    // Edit functionality
     editBtn.addEventListener("click", () => {
         const currentText = messageText.textContent;
         const editTextarea = document.createElement("textarea");
@@ -1219,7 +1221,7 @@ function createMessageElement(text, isReply = false, sender = '', messageId = ''
                 buttonsWrapper.removeChild(saveBtn);
                 editBtn.style.display = "flex";
 
-                // Optionally emit the updated message to the server with messageId
+                // Emit the edited message to the server
                 socket.emit('updateMessage', { newText, messageId });
             }
         });
@@ -1227,6 +1229,14 @@ function createMessageElement(text, isReply = false, sender = '', messageId = ''
 
     return container;
 }
+    socket.on("newReply", ({ replyText, sender, messageId }) => {
+        const parent = document.querySelector(`[data-message-id="${messageId}"]`);
+        if (parent) {
+            const repliesContainer = parent.querySelector(".replies-container");
+            const replyElement = createMessageElement(replyText, true, sender);
+            repliesContainer.appendChild(replyElement);
+        }
+    });
 
     // Listen for incoming messages from other clients
     socket.on("newMessage", (message) => {
