@@ -1095,13 +1095,39 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     messageInput.value = "";
 }
+// Function to generate a unique message ID
+function generateUniqueId() {
+    return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
 
-  function createMessageElement(text, isReply = false, sender = '') {
+// Send message when the user presses Enter or clicks "Send"
+
+const messageText = messageInput.value.trim(); // Get the message text from the input
+
+if (messageText !== "") {
+    const sender = 'You'; // Set sender's name or fetch dynamically
+
+    // Generate a unique ID for the message
+    const messageId = generateUniqueId();
+
+    // Optionally, you can display the message locally on the sender's UI before it's broadcasted
+    const messageElement = createMessageElement(messageText, false, sender, messageId);
+    document.getElementById('messagesContainer').appendChild(messageElement); // Assuming a container to append messages
+
+    // Emit the message with the unique message ID to the server
+    socket.emit('sendMessage', { sender, text: messageText, messageId });
+
+    // Clear the input field after sending
+    messageInput.value = '';
+}
+
+function createMessageElement(text, isReply = false, sender = '', messageId = '') {
     const container = document.createElement("div");
     container.classList.add(isReply ? "comment" : "message-thread");
+    if (messageId) container.setAttribute('data-message-id', messageId);  // Add unique message ID
 
     const messageText = document.createElement("p");
-    messageText.textContent = isReply ? `${sender}: ${text}` : text; // Add sender to the reply text
+    messageText.textContent = isReply ? `${sender}: ${text}` : text;
     container.appendChild(messageText);
 
     const buttonsWrapper = document.createElement("div");
@@ -1157,45 +1183,50 @@ document.addEventListener("DOMContentLoaded", function () {
                 replyInput.value = "";
                 replyBox.style.display = "none";
 
-                // Emit the reply to the server
-                socket.emit('sendReply', { originalMessage: text, replyText, sender: 'You' });
+                // Emit the reply to the server with message ID
+                socket.emit('sendReply', { originalMessage: text, replyText, sender: 'You', messageId });
             }
         }
     });  
 
-        editBtn.addEventListener("click", () => {
-            const currentText = messageText.textContent;
-            const editTextarea = document.createElement("textarea");
-            editTextarea.classList.add("edit-textarea");
-            editTextarea.value = currentText;
+    editBtn.addEventListener("click", () => {
+        const currentText = messageText.textContent;
+        const editTextarea = document.createElement("textarea");
+        editTextarea.classList.add("edit-textarea");
+        editTextarea.value = currentText;
 
-            const saveBtn = document.createElement("button");
-            saveBtn.textContent = "Save";
-            saveBtn.classList.add("save-button");
+        const saveBtn = document.createElement("button");
+        saveBtn.textContent = "Save";
+        saveBtn.classList.add("save-button");
 
-            container.replaceChild(editTextarea, messageText);
-            editBtn.style.display = "none";
-            buttonsWrapper.appendChild(saveBtn);
+        container.replaceChild(editTextarea, messageText);
+        editBtn.style.display = "none";
+        buttonsWrapper.appendChild(saveBtn);
 
-            saveBtn.addEventListener("click", () => {
-                const newText = editTextarea.value.trim();
-                if (newText !== "") {
-                    messageText.textContent = newText;
-                    container.replaceChild(messageText, editTextarea);
-                    buttonsWrapper.removeChild(saveBtn);
-                    editBtn.style.display = "flex";
-                }
-            });
+        saveBtn.addEventListener("click", () => {
+            const newText = editTextarea.value.trim();
+            if (newText !== "") {
+                messageText.textContent = newText;
+                container.replaceChild(messageText, editTextarea);
+                buttonsWrapper.removeChild(saveBtn);
+                editBtn.style.display = "flex";
+
+                // Optionally emit the updated message to the server with messageId
+                socket.emit('updateMessage', { newText, messageId });
+            }
         });
+    });
 
-        return container;
-    }
+    return container;
+}
 
     // Listen for incoming messages from other clients
     socket.on("newMessage", (message) => {
-        const { sender, text } = message;
-        const messageElement = createMessageElement(text);
+        const { sender, text, messageId } = message;
+        const messageElement = createMessageElement(text, false, sender, messageId);
         messageContent.appendChild(messageElement);
+        // Emit the message with the unique message ID to the server
+    
         messageContent.scrollTop = messageContent.scrollHeight;
     });
 });
