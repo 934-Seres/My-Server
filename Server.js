@@ -101,8 +101,8 @@ socket.on('sendMessage', ({ sender, text, messageId }) => {
     io.emit('newMessage', { sender, text, messageId });
 });
 
-socket.on('sendReply', ({ replyText, sender, messageId }) => {
-    io.emit('newReply', { replyText, sender, messageId });
+socket.on('sendReply', ({ messageId, replyText, sender }) => {
+    io.emit('newReply', { messageId, replyText, sender });
 });
 
 
