@@ -78,34 +78,46 @@ function saveFollowerCount() {
 }
 
 io.on('connection', (socket) => {
-  totalViewers++;
-  io.emit('viewerCountUpdate', totalViewers);
-  socket.emit('followerCountUpdate', totalFollowers);
-  socket.on('follow', () => {
-    totalFollowers++;
-    saveFollowerCount(); // persist to file
-    io.emit('followerCountUpdate', totalFollowers); // notify all clients
-});
+    totalViewers++;
+    io.emit('viewerCountUpdate', totalViewers);
+    socket.emit('followerCountUpdate', totalFollowers);
 
-  socket.on('unfollow', () => {
-      if (totalFollowers > 0) totalFollowers--;
-      saveFollowerCount(); // persist to file
-      io.emit('followerCountUpdate', totalFollowers); // notify all clients
-  });
+    socket.on('follow', () => {
+        totalFollowers++;
+        saveFollowerCount();
+        io.emit('followerCountUpdate', totalFollowers);
+    });
 
+    socket.on('unfollow', () => {
+        if (totalFollowers > 0) totalFollowers--;
+        saveFollowerCount();
+        io.emit('followerCountUpdate', totalFollowers);
+    });
 
-  // Handle message events
-  socket.on('sendMessage', ({ sender, text }) => {
-      const message = { sender, text };
-      // Broadcast the message to all clients
-      io.emit('newMessage', message);
-  });
+    // Handle main messages
+    socket.on('sendMessage', ({ sender, text }) => {
+        const message = { sender, text };
+        io.emit('newMessage', message);
+    });
+    socket.on("sendReply", (data) => {
+        io.emit("newReply", data); // Broadcast reply to all clients
+    });
+  
 
-  // Handle disconnect events
-  socket.on('disconnect', () => {
-      totalViewers--;
-      io.emit('viewerCountUpdate', totalViewers);
-  });
+    // 🔥 NEW: Handle reply messages
+    socket.on('sendReply', ({ sender, replyText, originalMessage }) => {
+        const replyData = {
+            sender,
+            replyText,
+            originalMessage
+        };
+        io.emit('newReply', replyData);
+    });
+
+    socket.on('disconnect', () => {
+        totalViewers--;
+        io.emit('viewerCountUpdate', totalViewers);
+    });
 });
 
 
