@@ -1088,13 +1088,13 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    function sendMainMessage() {
-        const text = messageInput.value.trim();
-        if (text !== "") {
-            socket.emit("sendMessage", { sender: "User", text: text });
-        }
-        messageInput.value = "";
+   function sendMainMessage() {
+    const text = messageInput.value.trim();
+    if (text !== "") {
+        socket.emit("sendMessage", { sender: "User", text: text });
     }
+    messageInput.value = "";
+}
 
     function createMessageElement(text, isReply = false) {
         const container = document.createElement("div");
@@ -1117,7 +1117,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const editBtn = document.createElement("button");
         editBtn.textContent = "Edit";
         editBtn.classList.add("edit-button");
-        editBtn.type = "button";  // Add this line to prevent default form submission        
+        editBtn.type = "button";  // Add this line to prevent default form submission
 
         buttonsWrapper.appendChild(replyBtn);
         buttonsWrapper.appendChild(editBtn);
@@ -1152,16 +1152,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 e.preventDefault();
                 const replyText = replyInput.value.trim();
                 if (replyText !== "") {
-                    const originalMessage = messageText.textContent;
-        
-                    // Emit reply to server
-                    socket.emit("sendReply", {
-                        originalMessage: originalMessage,
-                        replyText: replyText,
-                        sender: "User", // Replace with actual sender name if you have one
-                    });
-        
-                    // Locally append the reply
                     const replyElement = createMessageElement(replyText, true);
                     repliesContainer.appendChild(replyElement);
                     replyInput.value = "";
@@ -1169,7 +1159,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             }
         });
-        
+
         editBtn.addEventListener("click", () => {
             const currentText = messageText.textContent;
             const editTextarea = document.createElement("textarea");
@@ -1199,27 +1189,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Listen for incoming messages from other clients
-    // On receiving, append the message:
-socket.on("newMessage", (message) => {
-    const { text } = message;
-    const messageElement = createMessageElement(text);
-    messageContent.appendChild(messageElement);
-    messageContent.scrollTop = messageContent.scrollHeight;
-});
-});
-socket.on("newReply", (data) => {
-    const { originalMessage, replyText, sender } = data;
-
-    const messages = document.querySelectorAll(".message-thread");
-    messages.forEach(msg => {
-        const p = msg.querySelector("p");
-        if (p && p.textContent === originalMessage) {
-            const repliesContainer = msg.querySelector(".replies-container");
-            const replyElement = createMessageElement(replyText, true);
-            repliesContainer.appendChild(replyElement);
-        }
+    socket.on("newMessage", (message) => {
+        const { sender, text } = message;
+        const messageElement = createMessageElement(text);
+        messageContent.appendChild(messageElement);
+        messageContent.scrollTop = messageContent.scrollHeight;
     });
 });
+
 
   
 const socket = io(); // Connect to the backend via Socket.IO
@@ -1236,9 +1213,10 @@ socket.on('followerCountUpdate', (count) => {
     if (followerElement) followerElement.textContent = `Followers: ${count}`;
 });
 
-const followButton = document.getElementById('followBtn');
-if (followButton) {
-    followButton.addEventListener('click', function () {
+// Define the handler function outside so it can be referenced later
+const followButtonHandler = function () {
+    const followButton = document.getElementById('followBtn');
+    if (followButton) {
         if (followButton.textContent === 'Follow') {
             socket.emit('follow');
             followButton.textContent = 'Unfollow';
@@ -1248,8 +1226,42 @@ if (followButton) {
             followButton.textContent = 'Follow';
             alert('You unfollowed the website!');
         }
-    });
+    }
+};
+
+// Function to add the event listener safely
+function attachFollowButtonListener() {
+    const followButton = document.getElementById('followBtn');
+    if (followButton) {
+        // Remove any existing listener first (if any)
+        followButton.removeEventListener('click', followButtonHandler);
+
+        // Add the new listener
+        followButton.addEventListener('click', followButtonHandler);
+    }
 }
+
+// Call this function when the page initially loads
+attachFollowButtonListener();
+
+// In case your DOM is dynamically updated (e.g., with new replies), reattach the listener
+socket.on('newReply', (data) => {
+    const { originalMessage, replyText, sender } = data;
+
+    const messages = document.querySelectorAll(".message-thread");
+    messages.forEach(msg => {
+        const p = msg.querySelector("p");
+        if (p && p.textContent === originalMessage) {
+            const repliesContainer = msg.querySelector(".replies-container");
+            const replyElement = createMessageElement(replyText, true);
+            repliesContainer.appendChild(replyElement);
+        }
+    });
+
+    // Reattach the event listener after adding new replies or modifying the DOM
+    attachFollowButtonListener();
+});
+
 
 // Active chatters list near the footer
 const username = 'Guest' + Math.floor(Math.random() * 10000); // Random guest name
