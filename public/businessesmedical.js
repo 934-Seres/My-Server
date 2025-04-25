@@ -1236,8 +1236,7 @@ socket.on('followerCountUpdate', (count) => {
     if (followerElement) followerElement.textContent = `Followers: ${count}`;
 });
 
-// Follow / Unfollow button functionality
-const followButton = document.getElementById('followButton');
+const followButton = document.getElementById('followBtn');
 if (followButton) {
     followButton.addEventListener('click', function () {
         if (followButton.textContent === 'Follow') {

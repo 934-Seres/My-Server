@@ -82,6 +82,7 @@ io.on('connection', (socket) => {
     io.emit('viewerCountUpdate', totalViewers);
     socket.emit('followerCountUpdate', totalFollowers);
 
+    // === Viewer Count and Follower Count ===
     socket.on('follow', () => {
         totalFollowers++;
         saveFollowerCount();
@@ -94,17 +95,13 @@ io.on('connection', (socket) => {
         io.emit('followerCountUpdate', totalFollowers);
     });
 
-    // Handle main messages
+    // === Messaging ===
     socket.on('sendMessage', ({ sender, text }) => {
         const message = { sender, text };
         io.emit('newMessage', message);
     });
-    socket.on("sendReply", (data) => {
-        io.emit("newReply", data); // Broadcast reply to all clients
-    });
-  
 
-    // 🔥 NEW: Handle reply messages
+    // === Replies ===
     socket.on('sendReply', ({ sender, replyText, originalMessage }) => {
         const replyData = {
             sender,
@@ -119,6 +116,7 @@ io.on('connection', (socket) => {
         io.emit('viewerCountUpdate', totalViewers);
     });
 });
+
 
 
 server.listen(PORT, '0.0.0.0', () => {
