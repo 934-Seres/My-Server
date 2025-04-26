@@ -1062,7 +1062,24 @@ function toggleOwnerUI(isOwner) {
 // --- Initialize Socket.IO connection ---
 const socket = io(); 
 
-// --- Helper function: Format time ago ---
+/// Update time for small screen (optional)
+function updateMessageTime(timestamp) {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const timeSpan = document.querySelector(".message-time");
+
+    if (timeSpan) {
+        timeSpan.textContent = ` (${formatTimeAgo(timestamp)})`;
+
+        // If the screen is small, adjust the text size dynamically
+        if (window.innerWidth <= 768) {
+            timeSpan.style.fontSize = '12px';
+        } else {
+            timeSpan.style.fontSize = '14px';
+        }
+    }
+}
+
 function formatTimeAgo(timestamp) {
     const now = Date.now();
     const diff = now - timestamp;
@@ -1075,6 +1092,7 @@ function formatTimeAgo(timestamp) {
     const days = Math.floor(hours / 24);
     return `${days} day${days !== 1 ? 's' : ''} ago`;
 }
+
 
 // --- Viewer Count ---
 socket.on('viewerCountUpdate', (count) => {
