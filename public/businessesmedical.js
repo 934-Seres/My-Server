@@ -1106,6 +1106,7 @@ window.addEventListener('beforeunload', () => {
     socket.emit('leaveChat', username);
 });
 
+// --- Chatters List ---
 socket.on('activeChattersUpdate', (chatters) => {
     const chattersList = document.getElementById('chattersList');
     if (chattersList) {
@@ -1121,7 +1122,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const sendMessage = document.getElementById("sendMessage");
     const messageContent = document.getElementById("messageContent");
 
-    const socket = io();  // Initialize socket connection
+   
 
     messageIcon.addEventListener("click", () => {
         messageBox.style.display = "flex";
@@ -1166,6 +1167,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const days = Math.floor(hours / 24);
         return `${days} day${days !== 1 ? 's' : ''} ago`;
     }
+    
     
     function createMessageElement(text, isReply = false, sender = 'Someone', messageId = '', timestamp = Date.now()) {
         const container = document.createElement('div');
