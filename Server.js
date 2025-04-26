@@ -122,8 +122,9 @@ io.on('connection', (socket) => {
     
 
     socket.on('sendReply', ({ replyText, messageId }) => {
-        socket.broadcast.emit('newReply', { replyText, sender: socket.username || 'Someone', messageId });
+        io.emit('newReply', { replyText, sender: socket.username || 'Someone', messageId });
     });
+    
     
 
     socket.on('updateMessage', ({ newText, messageId }) => {
