@@ -1241,14 +1241,6 @@ function createMessageElement(text, isReply = false, sender = '', messageId = ''
 });
 
   
-/*socket.on("newReply", ({ replyText, sender, messageId }) => {
-    const parent = document.querySelector(`[data-message-id="${messageId}"]`);
-    if (parent) {
-        const repliesContainer = parent.querySelector(".replies-container");
-        const replyElement = createMessageElement(replyText, true, sender);
-        repliesContainer.appendChild(replyElement);
-    }
-});*/
  
 const socket = io(); // Connect to the backend via Socket.IO
 
@@ -1294,29 +1286,6 @@ function attachFollowButtonListener() {
 
 // Call this function when the page initially loads
 attachFollowButtonListener();
-
-socket.on("newReply", (data) => {
-    const { originalMessage, replyText, sender } = data;
-
-    // Select all message threads
-    const messages = document.querySelectorAll(".message-thread");
-
-    // Iterate through each message and find the one to reply to
-    messages.forEach(msg => {
-        const p = msg.querySelector("p");
-        
-        // Check if this message is the one being replied to (by matching original message text)
-        if (p && p.textContent === originalMessage) {
-            const repliesContainer = msg.querySelector(".replies-container");
-
-            // Create a new reply element and append it to the replies container
-            const replyElement = createMessageElement(replyText, true, sender);
-
-            repliesContainer.appendChild(replyElement);
-        }
-    });
-});
-
 
 
 // Active chatters list near the footer
