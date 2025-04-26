@@ -1125,11 +1125,15 @@ window.addEventListener('beforeunload', () => {
     socket.emit('leaveChat', username);
 });
 
-// --- Chatters List ---
 socket.on('activeChattersUpdate', (chatters) => {
     const chattersList = document.getElementById('chattersList');
     if (chattersList) {
-        chattersList.textContent = chatters.length > 0 ? chatters.join(', ') : 'None';
+        if (chatters.length > 0) {
+            const formattedChatters = chatters.map(c => `${c.username} (${c.deviceInfo})`);
+            chattersList.textContent = formattedChatters.join(', ');
+        } else {
+            chattersList.textContent = 'None';
+        }
     }
 });
 
@@ -1189,11 +1193,18 @@ document.addEventListener("DOMContentLoaded", function () {
     function createMessageElement(text, isReply = false, sender = 'Someone', messageId = '', timestamp = Date.now()) {
         const container = document.createElement('div');
         container.classList.add(isReply ? "comment" : "message-thread");
-        container.setAttribute('data-message-id', messageId);
-
+        container.setAttribute('data-message-id', messageId); // Attach messageId for replies
+    
         const messageText = document.createElement("p");
         messageText.textContent = isReply ? `${sender}: ${text}` : text;
-        container.appendChild(messageText);
+        
+        const timeSpan = document.createElement("span");
+        timeSpan.classList.add("message-time");
+        timeSpan.textContent = ` (${formatTimeAgo(timestamp)})`; // 🕒 Add time
+    
+        messageText.appendChild(timeSpan); // Add time after message
+        container.appendChild(messageText);   
+       
 
         const buttonsWrapper = document.createElement("div");
         buttonsWrapper.classList.add("message-buttons");
@@ -1253,8 +1264,11 @@ document.addEventListener("DOMContentLoaded", function () {
     socket.on("newMessage", (message) => {
         const { sender, text, messageId } = message;
         const messageElement = createMessageElement(text, false, sender, messageId);
-        messageContent.appendChild(messageElement); 
-        messageContent.scrollTop = messageContent.scrollHeight;
+        messageContent.appendChild(messageElement);
+        messageContent.scrollTo({
+            top: messageContent.scrollHeight,
+            behavior: "smooth"
+        });
     });
 
     socket.on("newReply", ({ replyText, sender, messageId }) => {

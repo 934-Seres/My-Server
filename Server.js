@@ -58,7 +58,7 @@ const io = socketIO(server, {
 // === Initializations ===
 let totalViewers = 0;
 let totalFollowers = 0;
-let activeUsers = []; // <- for Active Chatters List
+let activeUsers = []; // NOW stores objects { username, deviceInfo }
 
 const followersFile = path.join(__dirname, 'followers.json');
 if (fs.existsSync(followersFile)) {
@@ -86,21 +86,25 @@ io.on('connection', (socket) => {
     socket.emit('followerCountUpdate', totalFollowers);
 
     let currentUser = `Guest${Math.floor(Math.random() * 10000)}`; // Default username
-    socket.username = currentUser; // Attach default username to the socket
+    let currentDevice = "Unknown Device";
+
+    socket.username = currentUser;
 
     socket.on('joinChat', ({ username, deviceInfo }) => {
         currentUser = username || currentUser;
-        socket.username = `${currentUser} (${deviceInfo})`; 
-        if (!activeUsers.includes(socket.username)) {
-            activeUsers.push(socket.username);
+        currentDevice = deviceInfo || "Unknown Device";
+
+        socket.username = currentUser;
+        socket.deviceInfo = currentDevice;
+
+        if (!activeUsers.find(u => u.username === currentUser)) {
+            activeUsers.push({ username: currentUser, deviceInfo: currentDevice });
             io.emit('activeChattersUpdate', activeUsers);
         }
     });
-    
-    
 
     socket.on('leaveChat', (username) => {
-        activeUsers = activeUsers.filter(user => user !== username);
+        activeUsers = activeUsers.filter(user => user.username !== username);
         io.emit('activeChattersUpdate', activeUsers);
     });
 
@@ -117,16 +121,23 @@ io.on('connection', (socket) => {
         io.emit('followerCountUpdate', totalFollowers);
     });
 
-    socket.on('sendMessage', ({ text, messageId }) => {
-        io.emit('newMessage', { text, sender: socket.username || 'Someone', messageId });
+    socket.on('sendMessage', ({ text, messageId, timestamp }) => {
+        io.emit('newMessage', { 
+            text, 
+            sender: socket.username || 'Someone', 
+            messageId,
+            timestamp: timestamp || Date.now()
+        });
     });
-    
 
-    socket.on('sendReply', ({ replyText, messageId }) => {
-        io.emit('newReply', { replyText, sender: socket.username || 'Someone', messageId });
+    socket.on('sendReply', ({ replyText, messageId, timestamp }) => {
+        io.emit('newReply', { 
+            replyText, 
+            sender: socket.username || 'Someone', 
+            messageId,
+            timestamp: timestamp || Date.now()
+        });
     });
-    
-    
 
     socket.on('updateMessage', ({ newText, messageId }) => {
         io.emit('updateMessage', { newText, messageId });
@@ -139,7 +150,7 @@ io.on('connection', (socket) => {
         totalViewers--;
         io.emit('viewerCountUpdate', totalViewers);
 
-        activeUsers = activeUsers.filter(user => user !== socket.username);
+        activeUsers = activeUsers.filter(user => user.username !== socket.username);
         io.emit('activeChattersUpdate', activeUsers);
     });
 });
