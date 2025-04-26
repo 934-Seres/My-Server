@@ -1060,9 +1060,9 @@ function toggleOwnerUI(isOwner) {
 
 
 // --- Initialize Socket.IO connection ---
-const socket = io(); 
+const socket = io();
 
-/// Update time for small screen (optional)
+// --- Update time for small screen (optional) ---
 function updateMessageTime(timestamp) {
     const now = Date.now();
     const diff = now - timestamp;
@@ -1092,7 +1092,6 @@ function formatTimeAgo(timestamp) {
     const days = Math.floor(hours / 24);
     return `${days} day${days !== 1 ? 's' : ''} ago`;
 }
-
 
 // --- Viewer Count ---
 socket.on('viewerCountUpdate', (count) => {
@@ -1198,9 +1197,9 @@ document.addEventListener("DOMContentLoaded", function () {
     function sendMainMessage() {
         const text = messageInput.value.trim();
         if (text !== "") {
-            const sender = username; 
-            const messageId = generateUniqueId();  
-            socket.emit("sendMessage", { text, messageId });
+            const sender = username;
+            const messageId = generateUniqueId();
+            socket.emit("sendMessage", { text, messageId, sender });
             messageInput.value = "";
         }
     }
@@ -1218,7 +1217,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const messageText = document.createElement("p");
         messageText.classList.add("message-text");
         messageText.textContent = isReply ? `${sender}: ${text}` : text;
-        
+
         const timeSpan = document.createElement("span");
         timeSpan.classList.add("message-time");
         timeSpan.textContent = ` (${formatTimeAgo(timestamp)})`;
@@ -1236,7 +1235,12 @@ document.addEventListener("DOMContentLoaded", function () {
         replyBtn.textContent = "Reply...";
         replyBtn.classList.add("reply-button");
 
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "Edit";
+        editBtn.classList.add("edit-button");
+
         buttonsWrapper.appendChild(replyBtn);
+        buttonsWrapper.appendChild(editBtn);
         container.appendChild(buttonsWrapper);
 
         const replyBox = document.createElement("div");
@@ -1264,6 +1268,13 @@ document.addEventListener("DOMContentLoaded", function () {
             replyInput.focus();
         });
 
+        editBtn.addEventListener("click", () => {
+            const newText = prompt("Edit your message:", text);
+            if (newText !== null) {
+                socket.emit('updateMessage', { newText, messageId });
+            }
+        });
+
         replyInput.addEventListener("keydown", function (e) {
             if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -1279,23 +1290,26 @@ document.addEventListener("DOMContentLoaded", function () {
         return container;
     }
 
-    socket.on("newMessage", (message) => {
-        const { sender, text, messageId, timestamp } = message;
-        const messageElement = createMessageElement(text, false, sender, messageId, timestamp);
-        messageContent.appendChild(messageElement);
-        messageContent.scrollTo({
-            top: messageContent.scrollHeight,
-            behavior: "smooth"
-        });
+    socket.on('newMessage', ({ text, sender, messageId, timestamp }) => {
+        const newMessage = createMessageElement(text, false, sender, messageId, timestamp);
+        messageContent.appendChild(newMessage);
     });
 
-    socket.on("newReply", ({ replyText, sender, messageId, timestamp }) => {
-        const parent = document.querySelector(`[data-message-id="${messageId}"]`);
-        if (parent) {
-            const repliesContainer = parent.querySelector(".replies-container");
-            const label = (sender === username) ? "You" : sender;
-            const replyElement = createMessageElement(replyText, true, label, '', timestamp);
-            repliesContainer.appendChild(replyElement);
+    socket.on('newReply', ({ replyText, sender, messageId, timestamp }) => {
+        const reply = createMessageElement(replyText, true, sender, messageId, timestamp);
+        const parentMessage = document.querySelector(`[data-message-id='${messageId}'] .replies-container`);
+        if (parentMessage) {
+            parentMessage.appendChild(reply);
+        }
+    });
+
+    socket.on('updateMessage', ({ newText, messageId }) => {
+        const messageElement = document.querySelector(`[data-message-id='${messageId}']`);
+        if (messageElement) {
+            const messageText = messageElement.querySelector('.message-text');
+            if (messageText) {
+                messageText.textContent = newText;
+            }
         }
     });
 });

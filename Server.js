@@ -58,9 +58,13 @@ const io = socketIO(server, {
 // === Initializations ===
 let totalViewers = 0;
 let totalFollowers = 0;
-let activeUsers = []; // NOW stores objects { username, deviceInfo }
+let activeUsers = []; // Now stores objects { username, deviceInfo }
+let messages = []; // Array to store messages
 
 const followersFile = path.join(__dirname, 'followers.json');
+const messagesFile = path.join(__dirname, 'messages.json');
+
+// Read followers count if file exists
 if (fs.existsSync(followersFile)) {
     try {
         const data = fs.readFileSync(followersFile);
@@ -70,11 +74,31 @@ if (fs.existsSync(followersFile)) {
     }
 }
 
+// Read messages from file if exists
+if (fs.existsSync(messagesFile)) {
+    try {
+        const data = fs.readFileSync(messagesFile);
+        messages = JSON.parse(data) || [];
+    } catch (error) {
+        console.error('Error reading messages file:', error);
+    }
+}
+
+// Save followers count to file
 function saveFollowerCount() {
     try {
         fs.writeFileSync(followersFile, JSON.stringify({ count: totalFollowers }));
     } catch (error) {
-        console.error('Error writing followers file:', error);
+        console.error('Error saving followers file:', error);
+    }
+}
+
+// Save messages to file
+function saveMessages() {
+    try {
+        fs.writeFileSync(messagesFile, JSON.stringify(messages, null, 2));
+    } catch (error) {
+        console.error('Error saving messages:', error);
     }
 }
 
@@ -108,7 +132,6 @@ io.on('connection', (socket) => {
         io.emit('activeChattersUpdate', activeUsers);
     });
 
-    // --- Follow/Unfollow Management ---
     socket.on('follow', () => {
         totalFollowers++;
         saveFollowerCount();
@@ -121,30 +144,57 @@ io.on('connection', (socket) => {
         io.emit('followerCountUpdate', totalFollowers);
     });
 
+    // Load all messages when the user connects
+    socket.emit('loadMessages', messages);
+
+    // Send new message
     socket.on('sendMessage', ({ text, messageId, timestamp }) => {
-        io.emit('newMessage', { 
-            text, 
-            sender: socket.username || 'Someone', 
+        const newMessage = {
+            text,
+            sender: socket.username || 'Someone',
             messageId,
-            timestamp: timestamp || Date.now()
-        });
+            timestamp: timestamp || Date.now(),
+            replies: [] // prepare for replies inside
+        };
+
+        // Push new message to the messages array
+        messages.push(newMessage);
+        
+        // Save messages to the file (or database)
+        saveMessages();
+        
+        // Emit the new message to all connected clients
+        io.emit('newMessage', newMessage);
     });
 
+    // Send reply to message
     socket.on('sendReply', ({ replyText, messageId, timestamp }) => {
-        io.emit('newReply', { 
-            replyText, 
-            sender: socket.username || 'Someone', 
+        const reply = {
+            replyText,
+            sender: socket.username || 'Someone',
             messageId,
             timestamp: timestamp || Date.now()
-        });
+        };
+
+        // Find the message to add the reply
+        const parentMessage = messages.find(m => m.messageId === messageId);
+        if (parentMessage) {
+            parentMessage.replies.push(reply);
+            saveMessages(); // Save updated messages array to file
+            io.emit('newReply', { ...reply, messageId });
+        }
     });
 
     socket.on('updateMessage', ({ newText, messageId }) => {
-        io.emit('updateMessage', { newText, messageId });
-        console.log(`[Edit] Message ${messageId} updated to: ${newText}`);
+        const message = messages.find(m => m.messageId === messageId);
+        if (message) {
+            message.text = newText;
+            saveMessages();
+            io.emit('updateMessage', { newText, messageId });
+            console.log(`[Edit] Message ${messageId} updated to: ${newText}`);
+        }
     });
 
-    // --- Disconnect Event ---
     socket.on('disconnect', () => {
         console.log(`A user disconnected: ${socket.username}`);
         totalViewers--;
