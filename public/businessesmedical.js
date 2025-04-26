@@ -1059,7 +1059,59 @@ function toggleOwnerUI(isOwner) {
 }
 
 
+// --- Initialize Socket.IO connection ---
+const socket = io(); 
 
+// --- Viewer Count ---
+socket.on('viewerCountUpdate', (count) => {
+    const viewerElement = document.getElementById('viewerCount');
+    if (viewerElement) viewerElement.textContent = `Viewers: ${count}`;
+});
+
+// --- Follower Count and Follow Button ---
+const followButtonHandler = function () {
+    const followButton = document.getElementById('followBtn');
+    if (followButton) {
+        if (followButton.textContent === 'Follow') {
+            socket.emit('follow');
+            followButton.textContent = 'Unfollow';
+            alert('You followed the website!');
+        } else {
+            socket.emit('unfollow');
+            followButton.textContent = 'Follow';
+            alert('You unfollowed the website!');
+        }
+    }
+};
+
+function attachFollowButtonListener() {
+    const followButton = document.getElementById('followBtn');
+    if (followButton) {
+        followButton.removeEventListener('click', followButtonHandler);
+        followButton.addEventListener('click', followButtonHandler);
+    }
+}
+attachFollowButtonListener();
+
+socket.on('followerCountUpdate', (count) => {
+    const followerElement = document.getElementById('followerCount');
+    if (followerElement) followerElement.textContent = `Followers: ${count}`;
+});
+
+// --- Active Chatters ---
+const username = 'Guest' + Math.floor(Math.random() * 10000); 
+socket.emit('joinChat', username);
+
+window.addEventListener('beforeunload', () => {
+    socket.emit('leaveChat', username);
+});
+
+socket.on('activeChattersUpdate', (chatters) => {
+    const chattersList = document.getElementById('chattersList');
+    if (chattersList) {
+        chattersList.textContent = chatters.length > 0 ? chatters.join(', ') : 'None';
+    }
+});
 
 document.addEventListener("DOMContentLoaded", function () {
     const messageBox = document.getElementById("messageBox");
@@ -1088,219 +1140,122 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-   function sendMainMessage() {
-    const text = messageInput.value.trim();
-    if (text !== "") {
-        socket.emit("sendMessage", { sender: "User", text: text });
-    }
-    messageInput.value = "";
-}
-// Function to generate a unique message ID
-function generateUniqueId() {
-    return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-}
+    function sendMainMessage() {
+        const text = messageInput.value.trim();
+        if (text !== "") {
+            const sender = username;  // use username instead of "User"
+            const messageId = generateUniqueId();  // create ID
+            socket.emit("sendMessage", { text, messageId });
 
-// Send message when the user presses Enter or clicks "Send"
-
-const messageText = messageInput.value.trim(); // Get the message text from the input
-
-if (messageText !== "") {
-    const sender = 'You'; // Set sender's name or fetch dynamically
-
-    // Generate a unique ID for the message
-    const messageId = generateUniqueId();
-
-    // Optionally, you can display the message locally on the sender's UI before it's broadcasted
-    const messageElement = createMessageElement(messageText, false, sender, messageId);
-    document.getElementById('messagesContainer').appendChild(messageElement); // Assuming a container to append messages
-
-    // Emit the message with the unique message ID to the server
-    socket.emit('sendMessage', { sender, text: messageText, messageId });
-
-    // Clear the input field after sending
-    messageInput.value = '';
-}
-
-function createMessageElement(text, isReply = false, sender = '', messageId = '') {
-    const container = document.createElement("div");
-    container.classList.add(isReply ? "comment" : "message-thread");
-    if (messageId) container.setAttribute('data-message-id', messageId);  // Add unique message ID
-
-    const messageText = document.createElement("p");
-    messageText.textContent = isReply ? `${sender}: ${text}` : text;
-    container.appendChild(messageText);
-
-    const buttonsWrapper = document.createElement("div");
-    buttonsWrapper.classList.add("message-buttons");
-    buttonsWrapper.style.display = "flex";
-    buttonsWrapper.style.justifyContent = "flex-end";
-    buttonsWrapper.style.gap = "5px";
-
-    const replyBtn = document.createElement("button");
-    replyBtn.textContent = "Reply...";
-    replyBtn.classList.add("reply-button");
-
-    const editBtn = document.createElement("button");
-    editBtn.textContent = "Edit";
-    editBtn.classList.add("edit-button");
-    editBtn.type = "button";  // Prevent form submission
-
-    buttonsWrapper.appendChild(replyBtn);
-    buttonsWrapper.appendChild(editBtn);
-    container.appendChild(buttonsWrapper);
-
-    const replyBox = document.createElement("div");
-    replyBox.classList.add("reply-box");
-    replyBox.style.display = "none";
-
-    const replyInput = document.createElement("textarea");
-    replyInput.classList.add("reply-input");
-    replyInput.placeholder = "Write a reply...";
-    replyBox.appendChild(replyInput);
-
-    const replySend = document.createElement("button");
-    replySend.classList.add("reply-send");
-    replyBox.appendChild(replySend);
-
-    container.appendChild(replyBox);
-
-    const repliesContainer = document.createElement("div");
-    repliesContainer.classList.add("replies-container");
-    container.appendChild(repliesContainer);
-
-    replyBtn.addEventListener("click", () => {
-        replyBox.style.display = replyBox.style.display === "none" ? "block" : "none";
-        replyInput.focus();
-    });
-
-    replyInput.addEventListener("keydown", function (e) {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            const replyText = replyInput.value.trim();
-            if (replyText !== "") {
-                const replyElement = createMessageElement(replyText, true, 'You');
-                repliesContainer.appendChild(replyElement);
-                replyInput.value = "";
-                replyBox.style.display = "none";             
-                
-
-            }
+            messageInput.value = "";
         }
-     // Listen for incoming messages from other clients
-     socket.on("newReply", ({ replyText, sender, messageId }) => {
-        const parent = document.querySelector(`[data-message-id="${messageId}"]`);
-        if (parent) {
-            const repliesContainer = parent.querySelector(".replies-container");
-            const replyElement = createMessageElement(replyText, true, sender);
-            repliesContainer.appendChild(replyElement);
-         }
-    });
-                    
-    });  
+    }
 
-    editBtn.addEventListener("click", () => {
-        const currentText = messageText.textContent;
-        const editTextarea = document.createElement("textarea");
-        editTextarea.classList.add("edit-textarea");
-        editTextarea.value = currentText;
-
-        const saveBtn = document.createElement("button");
-        saveBtn.textContent = "Save";
-        saveBtn.classList.add("save-button");
-
-        container.replaceChild(editTextarea, messageText);
-        editBtn.style.display = "none";
-        buttonsWrapper.appendChild(saveBtn);
-
-        saveBtn.addEventListener("click", () => {
-            const newText = editTextarea.value.trim();
-            if (newText !== "") {
-                messageText.textContent = newText;
-                container.replaceChild(messageText, editTextarea);
-                buttonsWrapper.removeChild(saveBtn);
-                editBtn.style.display = "flex";
-
-                // Optionally emit the updated message to the server with messageId
-                socket.emit('updateMessage', { newText, messageId });
-            }
+    function generateUniqueId() {
+        return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    }
+    function formatTimeAgo(timestamp) {
+        const now = Date.now();
+        const diff = now - timestamp;
+    
+        if (diff < 60000) return 'just now'; // less than 1 minute
+        const minutes = Math.floor(diff / 60000);
+        if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+        const days = Math.floor(hours / 24);
+        return `${days} day${days !== 1 ? 's' : ''} ago`;
+    }
+    
+    function createMessageElement(text, isReply = false, sender = 'Someone', messageId = '', timestamp = Date.now()) {
+        const container = document.createElement('div');
+        container.classList.add(isReply ? "comment" : "message-thread");
+        container.setAttribute('data-message-id', messageId); // Attach messageId for replies
+    
+        const messageText = document.createElement("p");
+        messageText.textContent = isReply ? `${sender}: ${text}` : text;
+        container.appendChild(messageText);
+    
+        // Add "Reply" button
+        const buttonsWrapper = document.createElement("div");
+        buttonsWrapper.classList.add("message-buttons");
+        buttonsWrapper.style.display = "flex";
+        buttonsWrapper.style.justifyContent = "flex-end";
+        buttonsWrapper.style.gap = "5px";
+    
+        const replyBtn = document.createElement("button");
+        replyBtn.textContent = "Reply...";
+        replyBtn.classList.add("reply-button");
+    
+        buttonsWrapper.appendChild(replyBtn);
+        container.appendChild(buttonsWrapper);
+    
+        // Add reply container
+        const replyBox = document.createElement("div");
+        replyBox.classList.add("reply-box");
+        replyBox.style.display = "none";
+    
+        const replyInput = document.createElement("textarea");
+        replyInput.classList.add("reply-input");
+        replyInput.placeholder = "Write a reply...";
+        replyBox.appendChild(replyInput);
+    
+        const replySend = document.createElement("button");
+        replySend.classList.add("reply-send");
+        replySend.textContent = "Send Reply";
+        replyBox.appendChild(replySend);
+    
+        container.appendChild(replyBox);
+    
+        const repliesContainer = document.createElement("div");
+        repliesContainer.classList.add("replies-container");
+        container.appendChild(repliesContainer);
+    
+        // Handle Reply button click (toggle reply input visibility)
+        replyBtn.addEventListener("click", () => {
+            replyBox.style.display = replyBox.style.display === "none" ? "block" : "none";
+            replyInput.focus();
         });
-    });
+            // Handle sending the reply when Enter key is pressed
+        replyInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" && !e.shiftKey) {  // Ensure "Enter" key is pressed and not "Shift+Enter"
+                e.preventDefault(); // Prevent default action (new line)
+                const replyText = replyInput.value.trim();
+                if (replyText !== "") {
+                    const replyElement = createMessageElement(replyText, true, 'You', messageId);
+                    repliesContainer.appendChild(replyElement);
+                    replyInput.value = "";  // Clear the input
+                    replyBox.style.display = "none";  // Hide the reply box
 
-    return container;
-}
+                    // Emit the reply to the server
+                    socket.emit('sendReply', { replyText, messageId });
+                }
+            }
+        });       
+        
+        return container;
+    }
+    
 
-    // Listen for incoming messages from other clients
     socket.on("newMessage", (message) => {
         const { sender, text, messageId } = message;
         const messageElement = createMessageElement(text, false, sender, messageId);
-        messageContent.appendChild(messageElement);
-        // Emit the message with the unique message ID to the server
-    
+        messageContent.appendChild(messageElement); 
         messageContent.scrollTop = messageContent.scrollHeight;
     });
-});
 
-  
- 
-const socket = io(); // Connect to the backend via Socket.IO
-
-// Viewer count updates
-socket.on('viewerCountUpdate', (count) => {
-    const viewerElement = document.getElementById('viewerCount');
-    if (viewerElement) viewerElement.textContent = `Viewers: ${count}`;
-});
-
-// Follower count updates
-socket.on('followerCountUpdate', (count) => {
-    const followerElement = document.getElementById('followerCount');
-    if (followerElement) followerElement.textContent = `Followers: ${count}`;
-});
-
-// Define the handler function outside so it can be referenced later
-const followButtonHandler = function () {
-    const followButton = document.getElementById('followBtn');
-    if (followButton) {
-        if (followButton.textContent === 'Follow') {
-            socket.emit('follow');
-            followButton.textContent = 'Unfollow';
-            alert('You followed the website!');
-        } else {
-            socket.emit('unfollow');
-            followButton.textContent = 'Follow';
-            alert('You unfollowed the website!');
+    socket.on("newReply", ({ replyText, sender, messageId }) => {
+        const parent = document.querySelector(`[data-message-id="${messageId}"]`);
+        if (parent) {
+            const repliesContainer = parent.querySelector(".replies-container");
+            const label = (sender === yourUsername) ? "You" : sender; 
+            const replyElement = createMessageElement(replyText, true, label);
+            repliesContainer.appendChild(replyElement);
         }
-    }
-};
-
-// Function to add the event listener safely
-function attachFollowButtonListener() {
-    const followButton = document.getElementById('followBtn');
-    if (followButton) {
-        // Remove any existing listener first (if any)
-        followButton.removeEventListener('click', followButtonHandler);
-
-        // Add the new listener
-        followButton.addEventListener('click', followButtonHandler);
-    }
-}
-
-// Call this function when the page initially loads
-attachFollowButtonListener();
-
-
-// Active chatters list near the footer
-const username = 'Guest' + Math.floor(Math.random() * 10000); // Random guest name
-socket.emit('joinChat', username); // Notify server when joining
-
-// Remove user from chat when they leave the page
-window.addEventListener('beforeunload', () => {
-    socket.emit('leaveChat', username);
+    });
+    
 });
 
-// Update active chatters list on UI
-socket.on('activeChattersUpdate', (chatters) => {
-    const chattersList = document.getElementById('chattersList');
-    if (chattersList) {
-        chattersList.textContent = chatters.length > 0 ? chatters.join(', ') : 'None';
-    }
-});
+
+// No duplicate socket.io initializations outside
+// All the viewers/followers/chatters code you had below remains fine.

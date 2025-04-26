@@ -340,27 +340,52 @@
             </div>
             </div>
             </div>           
-        
-        <!-- Chat Header to Display Active Chatters -->
-    <div id="chatHeader" class="chat-header">
-        <p><strong>Chatters:</strong> <span id="chattersList">None</span></p>
-    </div>
-    <!-- Message Icon -->
-    <div id="messageIcon" class="message-icon">
-        <i class="fa fa-comment"></i>
-    </div> 
+                    
+<!-- Message Icon (Chat Button) -->
+<div id="messageIcon" class="message-icon">
+    💬
+</div>
 
-    <!-- Message Box -->
-    <div id="messageBox" class="message-box">
-        <button type="button" class="message-button-close">&times;</button>
-        
-        <!-- Message Thread -->
-        <div id="messageContent" class="message-content"></div>
+<!-- Chat Box -->
+<div id="messageBox" class="message-box">
 
-        <!-- New Message Input -->
-        <textarea id="messageInput" class="message-input" placeholder="Type your message..."></textarea>
-        <button type="button" id="sendMessage" class="send-message">Send</button>
+    <!-- Close Button -->
+    <button class="message-button-close">&times;</button>
+
+    <!-- Message Display Area -->
+    <div id="messageContent" class="message-content"></div>
+
+    <!-- Message Input Area -->
+    <textarea id="messageInput" class="message-input" placeholder="Type your message..."></textarea>
+    <button id="sendMessage" class="send-message">Send</button>
+</div>
+
+<!-- Hidden Template for Messages -->
+<template id="messageTemplate">
+    <div class="message-thread" data-message-id="">
+
+        <!-- Message Text -->
+        <p class="message-text"></p>
+
+        <!-- Buttons for Reply and Edit -->
+        <div class="message-buttons" style="display: flex; justify-content: flex-end;">
+            <button class="reply-button" type="button">Reply...</button>
+            <button class="edit-button" type="button">Edit</button>
+        </div>
+
+        <!-- Reply Box (Hidden by default) -->
+        <div class="reply-box" style="display: none;">
+            <textarea class="reply-input" placeholder="Write a reply..."></textarea>
+            <button class="reply-send" type="button">Send Reply</button>
+        </div>
+
+        <!-- Container for Replies -->
+        <div class="replies-container"></div>
     </div>
+</template>
+
+    
+        
 
     <footer id="footer">
         <p>© 2025 Business & Medical Directory</p>

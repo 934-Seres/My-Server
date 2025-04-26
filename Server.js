@@ -55,9 +55,10 @@ const io = socketIO(server, {
     cors: { origin: '*' }
 });
 
+// === Initializations ===
 let totalViewers = 0;
 let totalFollowers = 0;
-let activeUsers = [];
+let activeUsers = []; // <- for Active Chatters List
 
 const followersFile = path.join(__dirname, 'followers.json');
 if (fs.existsSync(followersFile)) {
@@ -77,12 +78,32 @@ function saveFollowerCount() {
     }
 }
 
+// === Socket.IO Events ===
 io.on('connection', (socket) => {
+    console.log('A user connected');
     totalViewers++;
     io.emit('viewerCountUpdate', totalViewers);
     socket.emit('followerCountUpdate', totalFollowers);
 
-    // === Viewer Count and Follower Count ===
+    let currentUser = `Guest${Math.floor(Math.random() * 10000)}`; // Default username
+    socket.username = currentUser; // Attach default username to the socket
+
+    socket.on('joinChat', (username) => {
+        currentUser = username || currentUser;
+        socket.username = currentUser; // <--- ADD THIS
+        if (!activeUsers.includes(currentUser)) {
+            activeUsers.push(currentUser);
+            io.emit('activeChattersUpdate', activeUsers);
+        }
+    });
+    
+
+    socket.on('leaveChat', (username) => {
+        activeUsers = activeUsers.filter(user => user !== username);
+        io.emit('activeChattersUpdate', activeUsers);
+    });
+
+    // --- Follow/Unfollow Management ---
     socket.on('follow', () => {
         totalFollowers++;
         saveFollowerCount();
@@ -95,25 +116,33 @@ io.on('connection', (socket) => {
         io.emit('followerCountUpdate', totalFollowers);
     });
 
-   // Listen for 'sendMessage' event from the client
-socket.on('sendMessage', ({ sender, text, messageId }) => {
-    // Broadcast the message to all connected clients, including the unique messageId
-    io.emit('newMessage', { sender, text, messageId });
-});
+    socket.on('sendMessage', ({ text, messageId }) => {
+        io.emit('newMessage', { text, sender: socket.username || 'Someone', messageId });
+    });
+    
 
-socket.on('sendReply', ({ messageId, replyText, sender }) => {
-    io.emit('newReply', { messageId, replyText, sender });
-});
+    socket.on('sendReply', ({ replyText, messageId }) => {
+        socket.broadcast.emit('newReply', { replyText, sender: socket.username || 'Someone', messageId });
+    });
+    
 
+    socket.on('updateMessage', ({ newText, messageId }) => {
+        io.emit('updateMessage', { newText, messageId });
+        console.log(`[Edit] Message ${messageId} updated to: ${newText}`);
+    });
 
+    // --- Disconnect Event ---
     socket.on('disconnect', () => {
+        console.log(`A user disconnected: ${socket.username}`);
         totalViewers--;
         io.emit('viewerCountUpdate', totalViewers);
+
+        activeUsers = activeUsers.filter(user => user !== socket.username);
+        io.emit('activeChattersUpdate', activeUsers);
     });
 });
 
-
-
+// === Start the Server ===
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running with Socket.IO at http://localhost:${PORT}`);
 });
