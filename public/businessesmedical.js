@@ -1062,6 +1062,20 @@ function toggleOwnerUI(isOwner) {
 // --- Initialize Socket.IO connection ---
 const socket = io(); 
 
+// --- Helper function: Format time ago ---
+function formatTimeAgo(timestamp) {
+    const now = Date.now();
+    const diff = now - timestamp;
+
+    if (diff < 60000) return 'just now';
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+    const days = Math.floor(hours / 24);
+    return `${days} day${days !== 1 ? 's' : ''} ago`;
+}
+
 // --- Viewer Count ---
 socket.on('viewerCountUpdate', (count) => {
     const viewerElement = document.getElementById('viewerCount');
@@ -1177,34 +1191,22 @@ document.addEventListener("DOMContentLoaded", function () {
         return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     }
 
-    function formatTimeAgo(timestamp) {
-        const now = Date.now();
-        const diff = now - timestamp;
-    
-        if (diff < 60000) return 'just now';
-        const minutes = Math.floor(diff / 60000);
-        if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
-        const hours = Math.floor(minutes / 60);
-        if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
-        const days = Math.floor(hours / 24);
-        return `${days} day${days !== 1 ? 's' : ''} ago`;
-    }
-
     function createMessageElement(text, isReply = false, sender = 'Someone', messageId = '', timestamp = Date.now()) {
         const container = document.createElement('div');
         container.classList.add(isReply ? "comment" : "message-thread");
-        container.setAttribute('data-message-id', messageId); // Attach messageId for replies
-    
+        container.setAttribute('data-message-id', messageId);
+        container.setAttribute('data-timestamp', timestamp);
+
         const messageText = document.createElement("p");
+        messageText.classList.add("message-text");
         messageText.textContent = isReply ? `${sender}: ${text}` : text;
         
         const timeSpan = document.createElement("span");
         timeSpan.classList.add("message-time");
-        timeSpan.textContent = ` (${formatTimeAgo(timestamp)})`; // 🕒 Add time
-    
-        messageText.appendChild(timeSpan); // Add time after message
-        container.appendChild(messageText);   
-       
+        timeSpan.textContent = ` (${formatTimeAgo(timestamp)})`;
+
+        messageText.appendChild(timeSpan);
+        container.appendChild(messageText);
 
         const buttonsWrapper = document.createElement("div");
         buttonsWrapper.classList.add("message-buttons");
@@ -1249,21 +1251,19 @@ document.addEventListener("DOMContentLoaded", function () {
                 e.preventDefault();
                 const replyText = replyInput.value.trim();
                 if (replyText !== "") {
-                    const replyElement = createMessageElement(replyText, true, 'You', messageId);
-                    repliesContainer.appendChild(replyElement);
+                    socket.emit('sendReply', { replyText, messageId });
                     replyInput.value = "";
                     replyBox.style.display = "none";
-                    socket.emit('sendReply', { replyText, messageId });
                 }
             }
-        });       
+        });
 
         return container;
     }
 
     socket.on("newMessage", (message) => {
-        const { sender, text, messageId } = message;
-        const messageElement = createMessageElement(text, false, sender, messageId);
+        const { sender, text, messageId, timestamp } = message;
+        const messageElement = createMessageElement(text, false, sender, messageId, timestamp);
         messageContent.appendChild(messageElement);
         messageContent.scrollTo({
             top: messageContent.scrollHeight,
@@ -1271,15 +1271,25 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    socket.on("newReply", ({ replyText, sender, messageId }) => {
+    socket.on("newReply", ({ replyText, sender, messageId, timestamp }) => {
         const parent = document.querySelector(`[data-message-id="${messageId}"]`);
         if (parent) {
             const repliesContainer = parent.querySelector(".replies-container");
-            const label = (sender === username) ? "You" : sender; 
-            const replyElement = createMessageElement(replyText, true, label);
+            const label = (sender === username) ? "You" : sender;
+            const replyElement = createMessageElement(replyText, true, label, '', timestamp);
             repliesContainer.appendChild(replyElement);
         }
     });
 });
 
-// No duplicate socket.io initializations outside
+// --- Update message times every 1 minute ---
+setInterval(() => {
+    const allMessages = document.querySelectorAll(".message-thread, .comment");
+    allMessages.forEach(msg => {
+        const timestamp = parseInt(msg.getAttribute('data-timestamp'), 10);
+        const timeSpan = msg.querySelector(".message-time");
+        if (timestamp && timeSpan) {
+            timeSpan.textContent = ` (${formatTimeAgo(timestamp)})`;
+        }
+    });
+}, 60000); // Every 60 seconds
