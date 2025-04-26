@@ -1099,8 +1099,27 @@ socket.on('followerCountUpdate', (count) => {
 });
 
 // --- Active Chatters ---
-const username = 'Guest' + Math.floor(Math.random() * 10000); 
-socket.emit('joinChat', username);
+// Generate username
+const username = 'Guest' + Math.floor(Math.random() * 10000);
+
+// Detect device info
+const userAgent = navigator.userAgent || 'Unknown Device';
+const deviceInfo = detectDevice(userAgent);
+
+// Send username + device info to server
+socket.emit('joinChat', { username, deviceInfo });
+
+// Function to detect device from userAgent
+function detectDevice(userAgent) {
+    userAgent = userAgent.toLowerCase();
+    if (userAgent.includes('iphone')) return 'iPhone';
+    if (userAgent.includes('android')) return 'Android Phone';
+    if (userAgent.includes('ipad')) return 'iPad';
+    if (userAgent.includes('windows')) return 'Windows PC';
+    if (userAgent.includes('mac')) return 'Mac';
+    if (userAgent.includes('linux')) return 'Linux PC';
+    return 'Unknown Device';
+}
 
 window.addEventListener('beforeunload', () => {
     socket.emit('leaveChat', username);
@@ -1114,6 +1133,7 @@ socket.on('activeChattersUpdate', (chatters) => {
     }
 });
 
+// --- Chat Messaging System ---
 document.addEventListener("DOMContentLoaded", function () {
     const messageBox = document.getElementById("messageBox");
     const messageIcon = document.getElementById("messageIcon");
@@ -1121,8 +1141,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const messageInput = document.getElementById("messageInput");
     const sendMessage = document.getElementById("sendMessage");
     const messageContent = document.getElementById("messageContent");
-
-   
 
     messageIcon.addEventListener("click", () => {
         messageBox.style.display = "flex";
@@ -1144,10 +1162,9 @@ document.addEventListener("DOMContentLoaded", function () {
     function sendMainMessage() {
         const text = messageInput.value.trim();
         if (text !== "") {
-            const sender = username;  // use username instead of "User"
-            const messageId = generateUniqueId();  // create ID
+            const sender = username; 
+            const messageId = generateUniqueId();  
             socket.emit("sendMessage", { text, messageId });
-
             messageInput.value = "";
         }
     }
@@ -1155,11 +1172,12 @@ document.addEventListener("DOMContentLoaded", function () {
     function generateUniqueId() {
         return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     }
+
     function formatTimeAgo(timestamp) {
         const now = Date.now();
         const diff = now - timestamp;
     
-        if (diff < 60000) return 'just now'; // less than 1 minute
+        if (diff < 60000) return 'just now';
         const minutes = Math.floor(diff / 60000);
         if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
         const hours = Math.floor(minutes / 60);
@@ -1167,77 +1185,70 @@ document.addEventListener("DOMContentLoaded", function () {
         const days = Math.floor(hours / 24);
         return `${days} day${days !== 1 ? 's' : ''} ago`;
     }
-    
-    
+
     function createMessageElement(text, isReply = false, sender = 'Someone', messageId = '', timestamp = Date.now()) {
         const container = document.createElement('div');
         container.classList.add(isReply ? "comment" : "message-thread");
-        container.setAttribute('data-message-id', messageId); // Attach messageId for replies
-    
+        container.setAttribute('data-message-id', messageId);
+
         const messageText = document.createElement("p");
         messageText.textContent = isReply ? `${sender}: ${text}` : text;
         container.appendChild(messageText);
-    
-        // Add "Reply" button
+
         const buttonsWrapper = document.createElement("div");
         buttonsWrapper.classList.add("message-buttons");
         buttonsWrapper.style.display = "flex";
         buttonsWrapper.style.justifyContent = "flex-end";
         buttonsWrapper.style.gap = "5px";
-    
+
         const replyBtn = document.createElement("button");
         replyBtn.textContent = "Reply...";
         replyBtn.classList.add("reply-button");
-    
+
         buttonsWrapper.appendChild(replyBtn);
         container.appendChild(buttonsWrapper);
-    
-        // Add reply container
+
         const replyBox = document.createElement("div");
         replyBox.classList.add("reply-box");
         replyBox.style.display = "none";
-    
+
         const replyInput = document.createElement("textarea");
         replyInput.classList.add("reply-input");
         replyInput.placeholder = "Write a reply...";
         replyBox.appendChild(replyInput);
-    
+
         const replySend = document.createElement("button");
         replySend.classList.add("reply-send");
         replySend.textContent = "Send Reply";
         replyBox.appendChild(replySend);
-    
+
         container.appendChild(replyBox);
-    
+
         const repliesContainer = document.createElement("div");
         repliesContainer.classList.add("replies-container");
         container.appendChild(repliesContainer);
-    
-        // Handle Reply button click (toggle reply input visibility)
+
         replyBtn.addEventListener("click", () => {
             replyBox.style.display = replyBox.style.display === "none" ? "block" : "none";
             replyInput.focus();
         });
-            // Handle sending the reply when Enter key is pressed
+
         replyInput.addEventListener("keydown", function (e) {
-            if (e.key === "Enter" && !e.shiftKey) {  // Ensure "Enter" key is pressed and not "Shift+Enter"
-                e.preventDefault(); // Prevent default action (new line)
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
                 const replyText = replyInput.value.trim();
                 if (replyText !== "") {
                     const replyElement = createMessageElement(replyText, true, 'You', messageId);
                     repliesContainer.appendChild(replyElement);
-                    replyInput.value = "";  // Clear the input
-                    replyBox.style.display = "none";  // Hide the reply box
-
-                    // Emit the reply to the server
+                    replyInput.value = "";
+                    replyBox.style.display = "none";
                     socket.emit('sendReply', { replyText, messageId });
                 }
             }
         });       
-        
+
         return container;
     }
-    
 
     socket.on("newMessage", (message) => {
         const { sender, text, messageId } = message;
@@ -1250,14 +1261,11 @@ document.addEventListener("DOMContentLoaded", function () {
         const parent = document.querySelector(`[data-message-id="${messageId}"]`);
         if (parent) {
             const repliesContainer = parent.querySelector(".replies-container");
-            const label = (sender === yourUsername) ? "You" : sender; 
+            const label = (sender === username) ? "You" : sender; 
             const replyElement = createMessageElement(replyText, true, label);
             repliesContainer.appendChild(replyElement);
         }
     });
-    
 });
 
-
 // No duplicate socket.io initializations outside
-// All the viewers/followers/chatters code you had below remains fine.
