@@ -88,14 +88,15 @@ io.on('connection', (socket) => {
     let currentUser = `Guest${Math.floor(Math.random() * 10000)}`; // Default username
     socket.username = currentUser; // Attach default username to the socket
 
-    socket.on('joinChat', (username) => {
+    socket.on('joinChat', ({ username, deviceInfo }) => {
         currentUser = username || currentUser;
-        socket.username = currentUser; // <--- ADD THIS
-        if (!activeUsers.includes(currentUser)) {
-            activeUsers.push(currentUser);
+        socket.username = `${currentUser} (${deviceInfo})`; 
+        if (!activeUsers.includes(socket.username)) {
+            activeUsers.push(socket.username);
             io.emit('activeChattersUpdate', activeUsers);
         }
     });
+    
     
 
     socket.on('leaveChat', (username) => {
