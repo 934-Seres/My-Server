@@ -9,11 +9,14 @@ const http = require('http');
 const socketIO = require('socket.io');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const server = http.createServer(app);
+const io = socketIO(server, { cors: { origin: '*' } });
 
+const PORT = process.env.PORT || 3000;
 const OWNER_USERNAME = process.env.OWNER_USERNAME;
 const OWNER_PASSWORD = process.env.OWNER_PASSWORD;
 
+// --- Middleware ---
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -27,6 +30,7 @@ app.use(session({
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+// --- Routes ---
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'businessesmedical.html'));
 });
@@ -42,78 +46,74 @@ app.post('/login', (req, res) => {
 });
 
 app.post('/logout', (req, res) => {
-    req.session.destroy();
-    res.json({ success: true });
+    req.session.destroy(() => {
+        res.json({ success: true });
+    });
 });
 
 app.get('/check-owner', (req, res) => {
     res.json({ isOwner: !!req.session.isOwner });
 });
 
-const server = http.createServer(app);
-const io = socketIO(server, {
-    cors: { origin: '*' }
-});
-
-// === Initializations ===
-let totalViewers = 0;
-let totalFollowers = 0;
-let activeUsers = []; // Now stores objects { username, deviceInfo }
-let messages = []; // Array to store messages
-
+// --- Files ---
 const followersFile = path.join(__dirname, 'followers.json');
 const messagesFile = path.join(__dirname, 'messages.json');
 
-// Read followers count if file exists
+// --- Data ---
+let totalViewers = 0;
+let totalFollowers = 0;
+let activeUsers = []; // [{ username, deviceInfo }]
+let messages = [];    // [{ text, sender, messageId, timestamp, replies: [] }]
+const MAX_MESSAGES = 100; // 👈 Only keep last 100 messages
+
+// --- Load Existing Data ---
 if (fs.existsSync(followersFile)) {
     try {
-        const data = fs.readFileSync(followersFile);
+        const data = fs.readFileSync(followersFile, 'utf8');
         totalFollowers = JSON.parse(data).count || 0;
-    } catch (error) {
-        console.error('Error reading followers file:', error);
+    } catch (err) {
+        console.error('Error reading followers file:', err);
     }
 }
 
-// Read messages from file if exists
 if (fs.existsSync(messagesFile)) {
     try {
-        const data = fs.readFileSync(messagesFile);
+        const data = fs.readFileSync(messagesFile, 'utf8');
         messages = JSON.parse(data) || [];
-    } catch (error) {
-        console.error('Error reading messages file:', error);
+    } catch (err) {
+        console.error('Error reading messages file:', err);
     }
 }
 
-// Save followers count to file
+// --- Save Functions ---
 function saveFollowerCount() {
     try {
         fs.writeFileSync(followersFile, JSON.stringify({ count: totalFollowers }));
-    } catch (error) {
-        console.error('Error saving followers file:', error);
+    } catch (err) {
+        console.error('Error saving followers file:', err);
     }
 }
 
-// Save messages to file
 function saveMessages() {
     try {
         fs.writeFileSync(messagesFile, JSON.stringify(messages, null, 2));
-    } catch (error) {
-        console.error('Error saving messages:', error);
+    } catch (err) {
+        console.error('Error saving messages file:', err);
     }
 }
 
-// === Socket.IO Events ===
+// --- Socket.IO Events ---
 io.on('connection', (socket) => {
     console.log('A user connected');
     totalViewers++;
     io.emit('viewerCountUpdate', totalViewers);
     socket.emit('followerCountUpdate', totalFollowers);
 
-    let currentUser = `Guest${Math.floor(Math.random() * 10000)}`; // Default username
+    let currentUser = `Guest${Math.floor(Math.random() * 10000)}`;
     let currentDevice = "Unknown Device";
-
     socket.username = currentUser;
 
+    // Handle joining chat
     socket.on('joinChat', ({ username, deviceInfo }) => {
         currentUser = username || currentUser;
         currentDevice = deviceInfo || "Unknown Device";
@@ -125,13 +125,18 @@ io.on('connection', (socket) => {
             activeUsers.push({ username: currentUser, deviceInfo: currentDevice });
             io.emit('activeChattersUpdate', activeUsers);
         }
+
+        // Send all existing messages to this user
+        socket.emit('loadMessages', messages);
     });
 
+    // Handle leaving chat
     socket.on('leaveChat', (username) => {
         activeUsers = activeUsers.filter(user => user.username !== username);
         io.emit('activeChattersUpdate', activeUsers);
     });
 
+    // Handle follow / unfollow
     socket.on('follow', () => {
         totalFollowers++;
         saveFollowerCount();
@@ -144,57 +149,74 @@ io.on('connection', (socket) => {
         io.emit('followerCountUpdate', totalFollowers);
     });
 
-    // Load all messages when the user connects
-    socket.emit('loadMessages', messages);
-
-    // Send new message
+    // Handle sending message
     socket.on('sendMessage', ({ text, messageId, timestamp }) => {
         const newMessage = {
             text,
             sender: socket.username || 'Someone',
             messageId,
             timestamp: timestamp || Date.now(),
-            replies: [] // prepare for replies inside
+            replies: []
         };
 
-        // Push new message to the messages array
         messages.push(newMessage);
-        
-        // Save messages to the file (or database)
+
+        // 🔥 Auto-limit messages
+        if (messages.length > MAX_MESSAGES) {
+            messages = messages.slice(-MAX_MESSAGES); // Keep only last 100
+        }
+
         saveMessages();
-        
-        // Emit the new message to all connected clients
         io.emit('newMessage', newMessage);
     });
 
-    // Send reply to message
+    // Handle sending reply
     socket.on('sendReply', ({ replyText, messageId, timestamp }) => {
-        const reply = {
-            replyText,
-            sender: socket.username || 'Someone',
-            messageId,
-            timestamp: timestamp || Date.now()
-        };
-
-        // Find the message to add the reply
         const parentMessage = messages.find(m => m.messageId === messageId);
         if (parentMessage) {
+            const reply = {
+                replyText,
+                sender: socket.username || 'Someone',
+                messageId,
+                timestamp: timestamp || Date.now()
+            };
             parentMessage.replies.push(reply);
-            saveMessages(); // Save updated messages array to file
+            saveMessages();
             io.emit('newReply', { ...reply, messageId });
         }
     });
 
+    // Handle editing message
     socket.on('updateMessage', ({ newText, messageId }) => {
         const message = messages.find(m => m.messageId === messageId);
         if (message) {
             message.text = newText;
             saveMessages();
             io.emit('updateMessage', { newText, messageId });
-            console.log(`[Edit] Message ${messageId} updated to: ${newText}`);
+            console.log(`[Edit] Message ${messageId} updated.`);
         }
     });
 
+    // 🧹 Handle deleting message (only if user is OWNER)
+    socket.on('deleteMessage', ({ messageId, isOwner }) => {
+        if (isOwner) { // double security on frontend too
+            messages = messages.filter(m => m.messageId !== messageId);
+            saveMessages();
+            io.emit('deleteMessage', { messageId });
+            console.log(`[Delete] Message ${messageId} deleted by owner.`);
+        }
+    });
+
+    // ✍ Typing indicator
+    socket.on('typing', ({ username }) => {
+        socket.broadcast.emit('typing', { username });
+    });
+
+    socket.on('stopTyping', ({ username }) => {
+        socket.broadcast.emit('stopTyping', { username });
+    });
+
+    // Handle disconnect
     socket.on('disconnect', () => {
         console.log(`A user disconnected: ${socket.username}`);
         totalViewers--;
@@ -205,10 +227,11 @@ io.on('connection', (socket) => {
     });
 });
 
-// === Start the Server ===
+// --- Start Server ---
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running with Socket.IO at http://localhost:${PORT}`);
 });
 
+// --- Keep-alive Settings ---
 server.keepAliveTimeout = 120000;
 server.headersTimeout = 120000;

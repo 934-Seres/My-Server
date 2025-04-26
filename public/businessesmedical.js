@@ -981,18 +981,18 @@ function deleteSpecificMessage(type, index) {
 }
 
 
-// Code for security
-
+// Security Code for owner check
 let isOwner = false;
 
 // Check session status on load
-window.onload = async function() {
+window.onload = async function () {
     const res = await fetch('/check-owner');
     const data = await res.json();
     isOwner = data.isOwner;
     toggleOwnerUI(isOwner);
 };
 
+// Login Function
 function login() {
     const usernameInput = document.getElementById("username");
     const passwordInput = document.getElementById("password");
@@ -1005,59 +1005,57 @@ function login() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
     })
-    .then(res => res.json())
-    .then(data => {
-        // Clear inputs regardless of success
-        usernameInput.value = "";
-        passwordInput.value = "";
+        .then(res => res.json())
+        .then(data => {
+            // Clear inputs regardless of success
+            usernameInput.value = "";
+            passwordInput.value = "";
 
-        if (data.success) {
-            isOwner = true;
-            toggleOwnerUI(true);
-            alert("Logged in as owner");
-        } else {
-            alert("Login failed: " + data.message+" (for Owner only!)");
-        }
-    });
+            if (data.success) {
+                isOwner = true;
+                toggleOwnerUI(true);
+                alert("Logged in as owner");
+            } else {
+                alert("Login failed: " + data.message + " (for Owner only!)");
+            }
+        });
 }
 
+// Logout Function
 function logout() {
     fetch('/logout', { method: 'POST' })
-    .then(() => {
-        isOwner = false;
-        toggleOwnerUI(false);
+        .then(() => {
+            isOwner = false;
+            toggleOwnerUI(false);
 
-        // Clear input fields
-        document.getElementById("username").value = "";
-        document.getElementById("password").value = "";
+            // Clear input fields
+            document.getElementById("username").value = "";
+            document.getElementById("password").value = "";
 
-        alert("Logged out");
-    });
+            alert("Logged out");
+        });
 }
 
-
-
-// Update toggleOwnerUI to handle delete and send buttons
+// Toggle UI based on Owner status
 function toggleOwnerUI(isOwner) {
     const advertContainer = document.getElementById("advertInputContainer");
     const deleteAdvert = document.getElementById("deleteAdvertBtn");
     const noticeContainer = document.getElementById("noticeInputContainer");
     const deleteNotice = document.getElementById("deleteNoticeBtn");
-    
-    // Existing elements for advert and notice manipulation
+
+    // Show elements for advert and notice manipulation
     if (advertContainer) advertContainer.style.display = isOwner ? "inline-block" : "none";
     if (deleteAdvert) deleteAdvert.style.display = isOwner ? "inline-block" : "none";
     if (noticeContainer) noticeContainer.style.display = isOwner ? "inline-block" : "none";
     if (deleteNotice) deleteNotice.style.display = isOwner ? "inline-block" : "none";
 
-    // New elements for stored data
+    // New elements for stored data management
     const deleteBtns = document.querySelectorAll('.delete-btn');
     const sendBtns = document.querySelectorAll('.send-btn');
-    
+
     deleteBtns.forEach(btn => btn.style.display = isOwner ? "inline-block" : "none");
     sendBtns.forEach(btn => btn.style.display = isOwner ? "inline-block" : "none");
 }
-
 
 // --- Initialize Socket.IO connection ---
 const socket = io();
@@ -1130,7 +1128,6 @@ socket.on('followerCountUpdate', (count) => {
 });
 
 // --- Active Chatters ---
-// Generate username
 const username = 'Guest' + Math.floor(Math.random() * 10000);
 
 // Detect device info
@@ -1290,6 +1287,14 @@ document.addEventListener("DOMContentLoaded", function () {
         return container;
     }
 
+    // Receive all previous messages when joining
+    socket.on('loadPreviousMessages', (messages) => {
+        messages.forEach(({ text, sender, messageId, timestamp }) => {
+            const oldMessage = createMessageElement(text, false, sender, messageId, timestamp);
+            messageContent.appendChild(oldMessage);
+        });
+    });
+
     socket.on('newMessage', ({ text, sender, messageId, timestamp }) => {
         const newMessage = createMessageElement(text, false, sender, messageId, timestamp);
         messageContent.appendChild(newMessage);
@@ -1324,4 +1329,4 @@ setInterval(() => {
             timeSpan.textContent = ` (${formatTimeAgo(timestamp)})`;
         }
     });
-}, 60000); // Every 60 seconds
+}, 60000);
