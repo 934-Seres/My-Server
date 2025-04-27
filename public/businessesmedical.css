@@ -124,38 +124,119 @@ body {
     overflow: auto; /* Enable scrolling if needed */
     background-color: rgba(0, 0, 0, 0.4); /* Background overlay */
     padding-top: 50px; /* Adjust for top spacing */
-} 
+    transition: opacity 0.3s ease; /* Smooth fade effect */
+}
 
 /* Modal content */
 .modal-content {
     background-color: white;
+    display: flex; /* Added flexbox for better content alignment */
     flex-direction: column;
-
     margin: 0 auto;
     padding: 20px;
     border: 1px solid #888;
     width: 80%; /* Width of the modal */
     max-width: 600px; /* Maximum width */
     position: relative; /* Position relative to the modal itself */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for a floating effect */
+}
+
+/* For 'more' and 'less' text */
+.toggle-details {
+    color: #007BFF;
+    cursor: pointer;
+    font-size: 14px;
+    text-decoration: underline; /* Underline to signify it's clickable */
 }
 
 /* Close button */
 .close-btn {
-    width: 50px;
-    color:black;
+    width: 40px;
+    height: 40px;
+    color: #333;
     font-size: 28px;
     font-weight: bold;
     position: absolute;
     top: 10px;
     right: 10px;
     cursor: pointer;
+    background: none; /* Transparent background */
+    border: none; /* No border */
+    padding: 0; /* Remove extra padding */
+    text-align: center;
 }
 
 .close-btn:hover,
 .close-btn:focus {
-    color: black;
+    color: #FF5733; /* Change color on hover for better UX */
     text-decoration: none;
-    cursor: pointer;
+}
+
+/* Button to toggle details (show more/less) */
+.toggle-details[aria-expanded="true"] {
+    color: #0056b3; /* Darker blue when expanded */
+}
+
+/* Modal background fade-in effect */
+.modal.open {
+    display: block;
+    opacity: 1; /* Fully visible */
+}
+
+/* Optional: Adding some general modal animations for smoother transitions */
+.modal-content {
+    transform: translateY(-50px); /* Start slightly above */
+    animation: slideIn 0.5s ease-out forwards; /* Slide down animation */
+}
+
+@keyframes slideIn {
+    0% {
+        transform: translateY(-50px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Design for smaller screens (mobile-first) */
+@media (max-width: 767px) {
+    .modal-content {
+        width: 90%; /* Adjust width to 90% for mobile */
+        max-width: 90%; /* Ensuring modal doesn't overflow */
+        padding: 15px; /* Smaller padding for better fit */
+    }
+
+    /* Adjusting text sizes */
+    .toggle-details {
+        font-size: 16px; /* Slightly larger font for mobile */
+    }
+
+    /* Close button size for mobile */
+    .close-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 24px; /* Slightly smaller font size for better fitting */
+        top: 10px; /* Ensure it's not hidden at the top */
+        right: 10px; /* Keep the button visible in the top-right corner */
+    }
+
+    /* Ensure the modal content is still centered */
+    .modal-content {
+        margin: 0 auto;
+    }
+
+    /* Optional: For mobile, hide extra padding in the modal content */
+    .modal {
+        padding-top: 30px;
+    }
+}
+
+/* Larger devices (tablets and up) */
+@media (min-width: 768px) {
+    .modal-content {
+        width: 70%; /* For tablets, the modal is a bit narrower */
+    }
 }
 
 
@@ -215,6 +296,25 @@ body {
     font-size: 20px;
     cursor: pointer;
 }
+.model-close:hover {
+    background-color: red;
+}
+/*Responsive adjustments for small screens */
+@media (max-width: 600px) {
+    #modalContent {
+        width: 90%; /* Reduce the modal width on small screens */
+    }
+
+    .modal-close {
+        font-size: 24px;
+        top: 5px;
+        right: 5px;
+    }
+
+    #slideshow {
+        max-width: 100%;
+    }
+}
  
 
 form input,
@@ -258,12 +358,7 @@ form button:hover {
     padding: 10px;
 }
 
-/* For 'more' and 'less' text */
-.toggle-details {
-    color: #007BFF;
-    cursor: pointer;
-    font-size: 14px;
-}
+
 
 .hidden {
     display: none;
@@ -882,13 +977,13 @@ form {
 
 #AdvertAd {
     margin-left: 170px;
-    font-size: 50px;
+    font-size: 30px;
     color: white; 
     background-color: blueviolet; 
 
 }
 #noticeAd {
-    margin-right: 15px;
+    margin-right: 20px;
     font-size: 50px;
     color: white;
     background-color: blueviolet;
