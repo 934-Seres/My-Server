@@ -1266,11 +1266,43 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         editBtn.addEventListener("click", () => {
-            const newText = prompt("Edit your message:", text);
-            if (newText !== null) {
-                socket.emit('updateMessage', { newText, messageId });
-            }
+            // Create textarea and buttons inside the message box
+            const editTextarea = document.createElement("textarea");
+            editTextarea.value = text; // Pre-fill with old text
+            editTextarea.classList.add("edit-textarea");
+        
+            const saveBtn = document.createElement("button");
+            saveBtn.textContent = "Save";
+            saveBtn.classList.add("save-button");
+        
+            const cancelBtn = document.createElement("button");
+            cancelBtn.textContent = "Cancel";
+            cancelBtn.classList.add("cancel-button");
+        
+            // Clear current messageText and buttons
+            container.innerHTML = "";
+            container.appendChild(editTextarea);
+            container.appendChild(saveBtn);
+            container.appendChild(cancelBtn);
+        
+            saveBtn.addEventListener("click", () => {
+                const newText = editTextarea.value.trim();
+                if (newText !== "") {
+                    socket.emit('updateMessage', { newText, messageId });
+        
+                    // Update only the reply message on the UI (not the original message)
+                    const updatedReply = createMessageElement(newText, true, sender, messageId, Date.now());
+                    container.replaceWith(updatedReply); // Replace only the reply, not the original message
+                }
+            });
+        
+            cancelBtn.addEventListener("click", () => {
+                // If cancel, recreate the original message element
+                const restored = createMessageElement(text, isReply, sender, messageId, timestamp);
+                container.replaceWith(restored);
+            });
         });
+        
 
         replyInput.addEventListener("keydown", function (e) {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -1309,14 +1341,28 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     socket.on('updateMessage', ({ newText, messageId }) => {
-        const messageElement = document.querySelector(`[data-message-id='${messageId}']`);
+        // Find the message element corresponding to the message ID
+        const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+    
         if (messageElement) {
-            const messageText = messageElement.querySelector('.message-text');
+            const messageText = messageElement.querySelector(".message-text");
+    
+            // Check if the element is a reply or a main message
             if (messageText) {
-                messageText.textContent = newText;
+                // Check if the message is a reply
+                const isReply = messageElement.classList.contains("comment");
+    
+                // If it is a reply, update the reply text only
+                if (isReply) {
+                    messageText.childNodes[0].nodeValue = newText; // Update the reply text only
+                } else {
+                    // If it's not a reply, we should not modify the original message
+                    console.log("Cannot update the original message text, only replies.");
+                }
             }
         }
     });
+    
 });
 
 // --- Update message times every 1 minute ---

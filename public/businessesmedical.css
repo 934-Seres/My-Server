@@ -1210,6 +1210,12 @@ button:hover {
     font-size: 0.85rem;
     cursor: pointer;
 }
+#typingIndicator {
+    font-style: italic;
+    color: gray;
+    margin-bottom: 5px;
+
+}
   
 /* Footer */
 #footer {

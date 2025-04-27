@@ -58,6 +58,7 @@ app.get('/check-owner', (req, res) => {
 // --- Files ---
 const followersFile = path.join(__dirname, 'followers.json');
 const messagesFile = path.join(__dirname, 'messages.json');
+const viewerCountFile = path.join(__dirname, 'viewerCount.json');
 
 // --- Data ---
 let totalViewers = 0;
@@ -85,6 +86,15 @@ if (fs.existsSync(messagesFile)) {
     }
 }
 
+if (fs.existsSync(viewerCountFile)) {
+    try {
+        const data = fs.readFileSync(viewerCountFile, 'utf8');
+        totalViewers = JSON.parse(data).count || 0;
+    } catch (err) {
+        console.error('Error reading viewer count file:', err);
+    }
+}
+
 // --- Save Functions ---
 function saveFollowerCount() {
     try {
@@ -102,10 +112,19 @@ function saveMessages() {
     }
 }
 
+function saveViewerCount() {
+    try {
+        fs.writeFileSync(viewerCountFile, JSON.stringify({ count: totalViewers }));
+    } catch (err) {
+        console.error('Error saving viewer count file:', err);
+    }
+}
+
 // --- Socket.IO Events ---
 io.on('connection', (socket) => {
     console.log('A user connected');
     totalViewers++;
+    saveViewerCount();
     io.emit('viewerCountUpdate', totalViewers);
     socket.emit('followerCountUpdate', totalFollowers);
 
@@ -220,6 +239,7 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         console.log(`A user disconnected: ${socket.username}`);
         totalViewers--;
+        saveViewerCount();
         io.emit('viewerCountUpdate', totalViewers);
 
         activeUsers = activeUsers.filter(user => user.username !== socket.username);
