@@ -30,42 +30,21 @@ app.use(session({
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- Routes ---
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'businessesmedical.html'));
-});
-
-app.post('/login', (req, res) => {
-    const { username, password } = req.body;
-    if (username === OWNER_USERNAME && password === OWNER_PASSWORD) {
-        req.session.isOwner = true;
-        return res.json({ success: true });
-    } else {
-        return res.json({ success: false, message: 'Invalid credentials' });
-    }
-});
-
-app.post('/logout', (req, res) => {
-    req.session.destroy(() => {
-        res.json({ success: true });
-    });
-});
-
-app.get('/check-owner', (req, res) => {
-    res.json({ isOwner: !!req.session.isOwner });
-});
-
 // --- Files ---
 const followersFile = path.join(__dirname, 'followers.json');
 const messagesFile = path.join(__dirname, 'messages.json');
 const viewerCountFile = path.join(__dirname, 'viewerCount.json');
+const medicalRegistrationsFile = path.join(__dirname, 'medicalRegistrations.json');
+const businessRegistrationsFile = path.join(__dirname, 'businessRegistrations.json');
 
 // --- Data ---
 let totalViewers = 0;
 let totalFollowers = 0;
 let activeUsers = []; // [{ username, deviceInfo }]
 let messages = [];    // [{ text, sender, messageId, timestamp, replies: [] }]
-const MAX_MESSAGES = 100; // 👈 Only keep last 100 messages
+let medicalRegistrations = [];   // [{ ... }]
+let businessRegistrations = [];  // [{ ... }]
+const MAX_MESSAGES = 100;
 
 // --- Load Existing Data ---
 if (fs.existsSync(followersFile)) {
@@ -95,6 +74,24 @@ if (fs.existsSync(viewerCountFile)) {
     }
 }
 
+if (fs.existsSync(medicalRegistrationsFile)) {
+    try {
+        const data = fs.readFileSync(medicalRegistrationsFile, 'utf8');
+        medicalRegistrations = JSON.parse(data) || [];
+    } catch (err) {
+        console.error('Error reading medical registrations file:', err);
+    }
+}
+
+if (fs.existsSync(businessRegistrationsFile)) {
+    try {
+        const data = fs.readFileSync(businessRegistrationsFile, 'utf8');
+        businessRegistrations = JSON.parse(data) || [];
+    } catch (err) {
+        console.error('Error reading business registrations file:', err);
+    }
+}
+
 // --- Save Functions ---
 function saveFollowerCount() {
     try {
@@ -120,6 +117,76 @@ function saveViewerCount() {
     }
 }
 
+function saveMedicalRegistrations() {
+    try {
+        fs.writeFileSync(medicalRegistrationsFile, JSON.stringify(medicalRegistrations, null, 2));
+    } catch (err) {
+        console.error('Error saving medical registrations:', err);
+    }
+}
+
+function saveBusinessRegistrations() {
+    try {
+        fs.writeFileSync(businessRegistrationsFile, JSON.stringify(businessRegistrations, null, 2));
+    } catch (err) {
+        console.error('Error saving business registrations:', err);
+    }
+}
+
+// --- Routes ---
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'businessesmedical.html'));
+});
+
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+    if (username === OWNER_USERNAME && password === OWNER_PASSWORD) {
+        req.session.isOwner = true;
+        return res.json({ success: true });
+    } else {
+        return res.json({ success: false, message: 'Invalid credentials' });
+    }
+});
+
+app.post('/logout', (req, res) => {
+    req.session.destroy(() => {
+        res.json({ success: true });
+    });
+});
+
+app.get('/check-owner', (req, res) => {
+    res.json({ isOwner: !!req.session.isOwner });
+});
+
+// --- API to register new Medical/Business entry ---
+app.post('/api/register', (req, res) => {
+    const { category, registrationData } = req.body;
+
+    if (!category || !registrationData) {
+        return res.status(400).json({ success: false, message: 'Missing category or registration data' });
+    }
+
+    if (category === 'Medical') {
+        medicalRegistrations.push(registrationData);
+        saveMedicalRegistrations();
+    } else if (category === 'Business') {
+        businessRegistrations.push(registrationData);
+        saveBusinessRegistrations();
+    } else {
+        return res.status(400).json({ success: false, message: 'Invalid category' });
+    }
+
+    res.json({ success: true, message: 'Registration saved successfully' });
+});
+
+// --- API to get all registrations ---
+app.get('/api/registrations', (req, res) => {
+    res.json({
+        medical: medicalRegistrations,
+        business: businessRegistrations
+    });
+});
+
 // --- Socket.IO Events ---
 io.on('connection', (socket) => {
     console.log('A user connected');
@@ -132,7 +199,6 @@ io.on('connection', (socket) => {
     let currentDevice = "Unknown Device";
     socket.username = currentUser;
 
-    // Handle joining chat
     socket.on('joinChat', ({ username, deviceInfo }) => {
         currentUser = username || currentUser;
         currentDevice = deviceInfo || "Unknown Device";
@@ -145,17 +211,14 @@ io.on('connection', (socket) => {
             io.emit('activeChattersUpdate', activeUsers);
         }
 
-        // Send all existing messages to this user
         socket.emit('loadMessages', messages);
     });
 
-    // Handle leaving chat
     socket.on('leaveChat', (username) => {
         activeUsers = activeUsers.filter(user => user.username !== username);
         io.emit('activeChattersUpdate', activeUsers);
     });
 
-    // Handle follow / unfollow
     socket.on('follow', () => {
         totalFollowers++;
         saveFollowerCount();
@@ -168,7 +231,6 @@ io.on('connection', (socket) => {
         io.emit('followerCountUpdate', totalFollowers);
     });
 
-    // Handle sending message
     socket.on('sendMessage', ({ text, messageId, timestamp }) => {
         const newMessage = {
             text,
@@ -180,16 +242,14 @@ io.on('connection', (socket) => {
 
         messages.push(newMessage);
 
-        // 🔥 Auto-limit messages
         if (messages.length > MAX_MESSAGES) {
-            messages = messages.slice(-MAX_MESSAGES); // Keep only last 100
+            messages = messages.slice(-MAX_MESSAGES);
         }
 
         saveMessages();
         io.emit('newMessage', newMessage);
     });
 
-    // Handle sending reply
     socket.on('sendReply', ({ replyText, messageId, timestamp }) => {
         const parentMessage = messages.find(m => m.messageId === messageId);
         if (parentMessage) {
@@ -205,7 +265,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Handle editing message
     socket.on('updateMessage', ({ newText, messageId }) => {
         const message = messages.find(m => m.messageId === messageId);
         if (message) {
@@ -216,9 +275,8 @@ io.on('connection', (socket) => {
         }
     });
 
-    // 🧹 Handle deleting message (only if user is OWNER)
     socket.on('deleteMessage', ({ messageId, isOwner }) => {
-        if (isOwner) { // double security on frontend too
+        if (isOwner) {
             messages = messages.filter(m => m.messageId !== messageId);
             saveMessages();
             io.emit('deleteMessage', { messageId });
@@ -226,7 +284,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // ✍ Typing indicator
     socket.on('typing', ({ username }) => {
         socket.broadcast.emit('typing', { username });
     });
@@ -235,7 +292,6 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('stopTyping', { username });
     });
 
-    // Handle disconnect
     socket.on('disconnect', () => {
         console.log(`A user disconnected: ${socket.username}`);
         totalViewers--;
