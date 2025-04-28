@@ -205,9 +205,18 @@ function escapeHtml(unsafe) {
 }
 
 function openInNewWindow(message) {
+    const safeMessage = escapeHtml(message);
     const newWindow = window.open("", "_blank", "width=400,height=300");
-    newWindow.document.write(`<p style="font-family:sans-serif; padding:20px;">${message}</p>`);
+
+    if (newWindow) {
+        newWindow.document.write(`<p style="font-family:sans-serif; padding:20px;">${safeMessage}</p>`);
+        newWindow.document.close(); // Ensures the content is rendered
+    } else {
+        alert("Popup blocked. Please allow popups for this site.");
+    }
 }
+
+
 
 function addAdvertMessage() {
     const input = document.getElementById("newAdvertMessage");
