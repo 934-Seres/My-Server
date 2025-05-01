@@ -1,4 +1,6 @@
+// --- Load Environment First ---
 require('dotenv').config();
+
 const path = require('path');
 const fs = require('fs');
 const express = require('express');
@@ -12,25 +14,30 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server, { cors: { origin: '*' } });
 
+// --- Environment Variables ---
 const PORT = process.env.PORT || 3000;
 const OWNER_USERNAME = process.env.OWNER_USERNAME;
 const OWNER_PASSWORD = process.env.OWNER_PASSWORD;
+const SESSION_SECRET = process.env.SESSION_SECRET;
+
+if (!OWNER_USERNAME || !OWNER_PASSWORD || !SESSION_SECRET) {
+    console.error('❌ .env configuration is missing OWNER_USERNAME, OWNER_PASSWORD, or SESSION_SECRET');
+    process.exit(1);
+}
 
 // --- Middleware ---
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
 app.use(session({
-    secret: process.env.SESSION_SECRET,
+    secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
-
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- Files ---
+// --- File Paths ---
 const followersFile = path.join(__dirname, 'followers.json');
 const messagesFile = path.join(__dirname, 'messages.json');
 const viewerCountFile = path.join(__dirname, 'viewerCount.json');
@@ -38,122 +45,61 @@ const medicalRegistrationsFile = path.join(__dirname, 'medicalRegistrations.json
 const businessRegistrationsFile = path.join(__dirname, 'businessRegistrations.json');
 const storedDataFile = path.join(__dirname, 'storedData.json');
 
-// --- Data ---
+// --- Initial Data ---
 let totalViewers = 0;
 let totalFollowers = 0;
-let activeUsers = []; // [{ username, deviceInfo }]
-let messages = [];    // [{ text, sender, messageId, timestamp, replies: [] }]
-let medicalRegistrations = [];   // [{ ... }]
-let businessRegistrations = [];  // [{ ... }]
+let activeUsers = [];
+let messages = [];
+let medicalRegistrations = [];
+let businessRegistrations = [];
+let storedData = { advert: [], notice: [] };
 const MAX_MESSAGES = 100;
-// Load on server start
-let storedData = {
-    advert: [],
-    notice: []
-};
 
 // --- Load Existing Data ---
-if (fs.existsSync(followersFile)) {
+function safeLoad(filePath, fallback) {
     try {
-        const data = fs.readFileSync(followersFile, 'utf8');
-        totalFollowers = JSON.parse(data).count || 0;
+        if (fs.existsSync(filePath)) {
+            return JSON.parse(fs.readFileSync(filePath, 'utf8')) || fallback;
+        }
     } catch (err) {
-        console.error('Error reading followers file:', err);
+        console.error(`Error loading ${filePath}:`, err);
     }
+    return fallback;
 }
 
-if (fs.existsSync(messagesFile)) {
-    try {
-        const data = fs.readFileSync(messagesFile, 'utf8');
-        messages = JSON.parse(data) || [];
-    } catch (err) {
-        console.error('Error reading messages file:', err);
-    }
-}
-
-if (fs.existsSync(viewerCountFile)) {
-    try {
-        const data = fs.readFileSync(viewerCountFile, 'utf8');
-        totalViewers = JSON.parse(data).count || 0;
-    } catch (err) {
-        console.error('Error reading viewer count file:', err);
-    }
-}
-
-if (fs.existsSync(medicalRegistrationsFile)) {
-    try {
-        const data = fs.readFileSync(medicalRegistrationsFile, 'utf8');
-        medicalRegistrations = JSON.parse(data) || [];
-    } catch (err) {
-        console.error('Error reading medical registrations file:', err);
-    }
-}
-
-if (fs.existsSync(businessRegistrationsFile)) {
-    try {
-        const data = fs.readFileSync(businessRegistrationsFile, 'utf8');
-        businessRegistrations = JSON.parse(data) || [];
-    } catch (err) {
-        console.error('Error reading business registrations file:', err);
-    }
-}
-if (fs.existsSync(storedDataFile)) {
-    storedData = JSON.parse(fs.readFileSync(storedDataFile, 'utf-8'));
-}
+totalFollowers = safeLoad(followersFile, { count: 0 }).count || 0;
+totalViewers = safeLoad(viewerCountFile, { count: 0 }).count || 0;
+messages = safeLoad(messagesFile, []);
+medicalRegistrations = safeLoad(medicalRegistrationsFile, []);
+businessRegistrations = safeLoad(businessRegistrationsFile, []);
+storedData = safeLoad(storedDataFile, { advert: [], notice: [] });
 
 // --- Save Functions ---
-function saveFollowerCount() {
+const saveToFile = (file, data) => {
     try {
-        fs.writeFileSync(followersFile, JSON.stringify({ count: totalFollowers }));
+        fs.writeFileSync(file, JSON.stringify(data, null, 2));
     } catch (err) {
-        console.error('Error saving followers file:', err);
+        console.error(`Error saving to ${file}:`, err);
     }
-}
+};
 
-function saveMessages() {
-    try {
-        fs.writeFileSync(messagesFile, JSON.stringify(messages, null, 2));
-    } catch (err) {
-        console.error('Error saving messages file:', err);
-    }
-}
-
-function saveViewerCount() {
-    try {
-        fs.writeFileSync(viewerCountFile, JSON.stringify({ count: totalViewers }));
-    } catch (err) {
-        console.error('Error saving viewer count file:', err);
-    }
-}
-
-function saveMedicalRegistrations() {
-    try {
-        fs.writeFileSync(medicalRegistrationsFile, JSON.stringify(medicalRegistrations, null, 2));
-    } catch (err) {
-        console.error('Error saving medical registrations:', err);
-    }
-}
-
-function saveBusinessRegistrations() {
-    try {
-        fs.writeFileSync(businessRegistrationsFile, JSON.stringify(businessRegistrations, null, 2));
-    } catch (err) {
-        console.error('Error saving business registrations:', err);
-    }
-}
+const saveFollowerCount = () => saveToFile(followersFile, { count: totalFollowers });
+const saveViewerCount = () => saveToFile(viewerCountFile, { count: totalViewers });
+const saveMessages = () => saveToFile(messagesFile, messages);
+const saveMedicalRegistrations = () => saveToFile(medicalRegistrationsFile, medicalRegistrations);
+const saveBusinessRegistrations = () => saveToFile(businessRegistrationsFile, businessRegistrations);
 
 // --- Routes ---
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'businessesmedical.html'));
 });
-// Endpoint to get stored data
+
 app.get('/get-stored-data', (req, res) => {
     res.json(storedData);
 });
 
 app.post('/save-stored-data', (req, res) => {
     const { advert, notice } = req.body;
-
     if (!Array.isArray(advert) || !Array.isArray(notice)) {
         return res.status(400).json({ success: false, message: 'Invalid data format' });
     }
@@ -168,6 +114,18 @@ app.post('/save-stored-data', (req, res) => {
     }
 });
 
+app.post('/verify-owner', (req, res) => {
+    const { password } = req.body;
+    if (password === OWNER_PASSWORD) {
+        req.session.isOwner = true;
+        console.log('✅ Owner verified through /verify-owner');
+        res.json({ success: true });
+    } else {
+        console.warn('❌ Incorrect owner password entered');
+        res.json({ success: false });
+    }
+});
+
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
     if (username === OWNER_USERNAME && password === OWNER_PASSWORD) {
@@ -179,19 +137,16 @@ app.post('/login', (req, res) => {
 });
 
 app.post('/logout', (req, res) => {
-    req.session.destroy(() => {
-        res.json({ success: true });
-    });
+    req.session.destroy(() => res.json({ success: true }));
 });
 
 app.get('/check-owner', (req, res) => {
     res.json({ isOwner: !!req.session.isOwner });
 });
 
-// --- API to register new Medical/Business entry ---
+// --- Registration ---
 app.post('/api/register', (req, res) => {
     const { category, registrationData } = req.body;
-
     if (!category || !registrationData) {
         return res.status(400).json({ success: false, message: 'Missing category or registration data' });
     }
@@ -209,15 +164,11 @@ app.post('/api/register', (req, res) => {
     res.json({ success: true, message: 'Registration saved successfully' });
 });
 
-// --- API to get all registrations ---
 app.get('/api/registrations', (req, res) => {
-    res.json({
-        medical: medicalRegistrations,
-        business: businessRegistrations
-    });
+    res.json({ medical: medicalRegistrations, business: businessRegistrations });
 });
 
-// --- Socket.IO Events ---
+// --- Socket.IO ---
 io.on('connection', (socket) => {
     console.log('A user connected');
     totalViewers++;
@@ -333,11 +284,10 @@ io.on('connection', (socket) => {
     });
 });
 
-// --- Start Server ---
+// --- Server ---
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running with Socket.IO at http://localhost:${PORT}`);
+    console.log(`✅ Server running with Socket.IO at http://localhost:${PORT}`);
 });
 
-// --- Keep-alive Settings ---
 server.keepAliveTimeout = 120000;
 server.headersTimeout = 120000;
