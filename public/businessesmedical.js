@@ -181,6 +181,8 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 
+
+
 function openDetailedEntryInNewWindow(type, index) {
     const entry = storedDatas[type][index];
     if (!entry) return;
@@ -231,6 +233,19 @@ function escapeHtml(unsafe) {
         .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
 }
+fetch('/get-stored-data')
+  .then(response => response.json())
+  .then(data => {
+    storedDatas = data;
+    advertMessages = data.advert;
+    noticeMessages = data.notice;
+    updateSlideshow('advert');
+    updateSlideshow('notice');
+  })
+  .catch(err => {
+    console.error("Failed to load stored data:", err);
+  });
+
 
 function openInNewWindow(message) {
     const safeMessage = escapeHtml(message);
@@ -284,6 +299,14 @@ function removeNotice() {
     }
     localStorage.setItem("noticeMessages", JSON.stringify(noticeMessages));
     updateSlideshow('notice');
+}
+
+function saveStoredData() {
+    fetch('/save-stored-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ advert: advertMessages, notice: noticeMessages })
+    });
 }
 
 function goToSlide(type, index) {
@@ -1137,7 +1160,7 @@ function logout() {
 
             alert("Logged out");
         });
-}
+        }
 
 // Toggle UI based on Owner status
 function toggleOwnerUI(isOwner) {
@@ -1159,6 +1182,8 @@ function toggleOwnerUI(isOwner) {
     deleteBtns.forEach(btn => btn.style.display = isOwner ? "inline-block" : "none");
     sendBtns.forEach(btn => btn.style.display = isOwner ? "inline-block" : "none");
 }
+
+
 
 // --- Initialize Socket.IO connection ---
 const socket = io();

@@ -36,6 +36,7 @@ const messagesFile = path.join(__dirname, 'messages.json');
 const viewerCountFile = path.join(__dirname, 'viewerCount.json');
 const medicalRegistrationsFile = path.join(__dirname, 'medicalRegistrations.json');
 const businessRegistrationsFile = path.join(__dirname, 'businessRegistrations.json');
+const storedDataFile = path.join(__dirname, 'storedData.json');
 
 // --- Data ---
 let totalViewers = 0;
@@ -45,6 +46,11 @@ let messages = [];    // [{ text, sender, messageId, timestamp, replies: [] }]
 let medicalRegistrations = [];   // [{ ... }]
 let businessRegistrations = [];  // [{ ... }]
 const MAX_MESSAGES = 100;
+// Load on server start
+let storedData = {
+    advert: [],
+    notice: []
+};
 
 // --- Load Existing Data ---
 if (fs.existsSync(followersFile)) {
@@ -91,6 +97,9 @@ if (fs.existsSync(businessRegistrationsFile)) {
         console.error('Error reading business registrations file:', err);
     }
 }
+if (fs.existsSync(storedDataFile)) {
+    storedData = JSON.parse(fs.readFileSync(storedDataFile, 'utf-8'));
+}
 
 // --- Save Functions ---
 function saveFollowerCount() {
@@ -132,42 +141,22 @@ function saveBusinessRegistrations() {
         console.error('Error saving business registrations:', err);
     }
 }
-const storedDataPath = path.join(__dirname, 'storedData.json');
-let storedData = { medical: {}, business: {} };
 
-// Load data on server start
-if (fs.existsSync(storedDataPath)) {
-    storedData = JSON.parse(fs.readFileSync(storedDataPath, 'utf-8'));
-}
-
-// Save data to file
-function saveStoredData() {
-    fs.writeFileSync(storedDataPath, JSON.stringify(storedData, null, 2));
-}
-
-// API to get all stored data
-app.get('/data', (req, res) => {
-    res.json(storedData);
-});
-
-// API to register new entry
-app.post('/register', (req, res) => {
-    const { type, category, name, industryOrService, licenseNumber, location, contact_info, city } = req.body;
-
-    if (!storedData[type][category]) {
-        storedData[type][category] = [];
-    }
-
-    storedData[type][category].push({ name, industryOrService, licenseNumber, location, contact_info, city });
-    saveStoredData();
-
-    res.json({ success: true, message: 'Registration successful' });
-});
 // --- Routes ---
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'businessesmedical.html'));
 });
+// Endpoint to get stored data
+app.get('/get-stored-data', (req, res) => {
+    res.json(storedData);
+});
 
+// Endpoint to save stored data
+app.post('/save-stored-data', (req, res) => {
+    storedData = req.body;
+    fs.writeFileSync(storedDataFile, JSON.stringify(storedData, null, 2));
+    res.sendStatus(200);
+});
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
     if (username === OWNER_USERNAME && password === OWNER_PASSWORD) {
