@@ -610,16 +610,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let slideIndex = 0;
     let selectedCity = localStorage.getItem("selectedCity") || "All Cities";
-    let storedData = { medical: {}, business: {} };
+    let advertData = [];
+    let noticeData = [];
 
     const socket = io();
 
-    // Fetch the stored data from the server when the page loads
     function fetchStoredData() {
         fetch('/get-stored-data')
             .then(response => response.json())
             .then(data => {
-                storedData = data || { medical: {}, business: {} };
+                advertData = Array.isArray(data.advert) ? data.advert : [];
+                noticeData = Array.isArray(data.notice) ? data.notice : [];
                 cycleSlides();
             });
     }
@@ -628,7 +629,7 @@ document.addEventListener("DOMContentLoaded", function () {
         fetch('/save-stored-data', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(storedData)
+            body: JSON.stringify({ advert: advertData, notice: noticeData })
         })
         .then(response => response.json())
         .then(data => console.log('Data saved successfully:', data))
@@ -640,10 +641,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const dotContainer = document.getElementById("dotContainer");
         const slideInfo = document.getElementById("slideInfo");
 
-        if (!slideshow) {
-            console.error("Slideshow container not found!");
-            return;
-        }
+        if (!slideshow) return;
 
         slideshow.innerHTML = "";
         dotContainer.innerHTML = "";
@@ -660,10 +658,10 @@ document.addEventListener("DOMContentLoaded", function () {
             slide.innerHTML = `
                 <h3>${slideData.category === "Medical" ? "Medical Service" : "Business Organization"}</h3>
                 <p><strong>Name:</strong> ${slideData.name}</p>
-                <p><strong>Service:</strong> ${slideData.service}</p>
+                <p><strong>Service:</strong> ${slideData.industryOrService}</p>
                 <p><strong>Location:</strong> ${slideData.location}</p>
                 <p><strong>City:</strong> ${slideData.city}</p>
-                <p><strong>Contact:</strong> ${slideData.contact}</p>
+                <p><strong>Contact:</strong> ${slideData.contact_info}</p>
             `;
 
             slideshow.appendChild(slide);
@@ -681,54 +679,28 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function cycleSlides() {
-        let newSlides = [];
-        let hasStoredContent = false;
+        let slides = [...advertData, ...noticeData].filter(slide => 
+            slide.city === selectedCity || selectedCity === "All Cities"
+        );
 
-        for (let category in storedData) {
-            for (let subCategory in storedData[category]) {
-                if (storedData[category][subCategory].length > 0) {
-                    hasStoredContent = true;
-                    storedData[category][subCategory].forEach(entity => {
-                        if (entity.city === selectedCity || selectedCity === "All Cities") {
-                            newSlides.push({
-                                category: category === 'medical' ? "Medical" : "Business",
-                                name: entity.name,
-                                service: entity.industryOrService,
-                                location: entity.location,
-                                city: entity.city,
-                                contact: entity.contact_info
-                            });
-                        }
-                    });
-                }
-            }
+        if (slides.length === 0) {
+            slides = defaultSlides.filter(slide => 
+                slide.city === selectedCity || selectedCity === "All Cities"
+            ).map(slide => ({ ...slide, default: true }));
         }
 
-        if (!hasStoredContent || newSlides.length === 0) {
-            newSlides = defaultSlides.filter(slide => slide.city === selectedCity || selectedCity === "All Cities")
-                .map(slide => ({ ...slide, default: true })); // tag for info message
-        }
-
-        showSlides(newSlides);
-        slideIndex = (slideIndex + 1) % (newSlides.length || 1);
+        showSlides(slides);
+        slideIndex = (slideIndex + 1) % (slides.length || 1);
     }
 
     setInterval(cycleSlides, 3000);
 
-    // Show category modal
-    function showCategoryModal(detailsHtml) {
-        const modal = document.getElementById("categoryDataModal");
-        const modalDetails = document.getElementById("categoryModalDetails");
-        modalDetails.innerHTML = detailsHtml;
-        modal.style.display = "block";
-    }
+    function renderStoredData(type) {
+        const dataArray = type === "advert" ? advertData : noticeData;
+        let details = `<h3>${type === "advert" ? "Business Organizations" : "Medical Services"}</h3>`;
 
-    // Render data for a selected category
-    function renderStoredData(type, selectedCategory) {
-        let details = `<h3>${selectedCategory}</h3>`;
-
-        if (storedData[type][selectedCategory] && storedData[type][selectedCategory].length > 0) {
-            storedData[type][selectedCategory].forEach((user, index) => {
+        if (dataArray.length > 0) {
+            dataArray.forEach((user, index) => {
                 details += `
                     <div class="user-entry" data-index="${index}">
                         <p><strong>Name:</strong> ${user.name}</p>
@@ -736,7 +708,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <p><strong>Location:</strong> ${user.location}</p>
                         <p><strong>City:</strong> ${user.city}</p>
                         <p><strong>Contact:</strong> ${user.contact_info}</p>
-                        <button class="delBtn" data-index="${index}" data-type="${type}" data-category="${selectedCategory}">Delete</button>
+                        <button class="delBtn" data-type="${type}" data-index="${index}">Delete</button>
                         <hr>
                     </div>
                 `;
@@ -745,37 +717,25 @@ document.addEventListener("DOMContentLoaded", function () {
             details += "<p>No data available.</p>";
         }
 
-        showCategoryModal(details);
+        document.getElementById("categoryModalDetails").innerHTML = details;
+        document.getElementById("categoryDataModal").style.display = "block";
 
         document.querySelectorAll(".delBtn").forEach(button => {
             button.addEventListener("click", function () {
                 const type = this.dataset.type;
-                const category = this.dataset.category;
                 const index = parseInt(this.dataset.index);
-
                 if (confirm("Are you sure you want to delete this entry?")) {
-                    storedData[type][category].splice(index, 1);
-
-                    if (storedData[type][category].length === 0) {
-                        delete storedData[type][category];
-                    }
-
+                    if (type === "advert") advertData.splice(index, 1);
+                    else noticeData.splice(index, 1);
                     saveStoredData();
                     cycleSlides();
-                    renderStoredData(type, category);
+                    renderStoredData(type);
                 }
             });
         });
     }
 
-    function setupFilterEvent(filterId, type) {
-        document.getElementById(filterId).addEventListener("change", function () {
-            const selectedCategory = this.value;
-            renderStoredData(type, selectedCategory);
-        });
-    }
-
-    document.querySelector(".category-close").addEventListener("click", function () {
+    document.querySelector(".category-close").addEventListener("click", () => {
         document.getElementById("categoryDataModal").style.display = "none";
     });
 
@@ -785,10 +745,9 @@ document.addEventListener("DOMContentLoaded", function () {
         cycleSlides();
     });
 
-    setupFilterEvent("medicalCategoryFilter", "medical");
-    setupFilterEvent("businessCategoryFilter", "business");
+    document.getElementById("medicalCategoryFilter").addEventListener("change", () => renderStoredData("notice"));
+    document.getElementById("businessCategoryFilter").addEventListener("change", () => renderStoredData("advert"));
 
-    // Registration form submission
     document.getElementById("registrationForm").addEventListener("submit", function (event) {
         event.preventDefault();
 
@@ -801,23 +760,14 @@ document.addEventListener("DOMContentLoaded", function () {
         const contact_info = document.getElementById("contact_info").value;
         const city = document.getElementById("regionFilter").value;
 
-        if (category === "Select Medical Category" || category === "Select Business Category") {
+        if (category.includes("Select")) {
             alert("Please select a valid category.");
             return;
         }
 
-        if (!storedData[type][category]) {
-            storedData[type][category] = [];
-        }
-
-        storedData[type][category].push({
-            name,
-            industryOrService,
-            licenseNumber,
-            location,
-            contact_info,
-            city,
-        });
+        const newEntry = { name, category, industryOrService, licenseNumber, location, contact_info, city };
+        if (type === "medical") noticeData.push({ ...newEntry, category: "Medical" });
+        else advertData.push({ ...newEntry, category: "Business" });
 
         saveStoredData();
 
@@ -837,7 +787,6 @@ document.addEventListener("DOMContentLoaded", function () {
     fetchStoredData();
     cycleSlides();
 });
-
 
 
 

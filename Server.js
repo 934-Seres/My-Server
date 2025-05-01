@@ -151,12 +151,23 @@ app.get('/get-stored-data', (req, res) => {
     res.json(storedData);
 });
 
-// Endpoint to save stored data
 app.post('/save-stored-data', (req, res) => {
-    storedData = req.body;
-    fs.writeFileSync(storedDataFile, JSON.stringify(storedData, null, 2));
-    res.sendStatus(200);
+    const { advert, notice } = req.body;
+
+    if (!Array.isArray(advert) || !Array.isArray(notice)) {
+        return res.status(400).json({ success: false, message: 'Invalid data format' });
+    }
+
+    storedData = { advert, notice };
+    try {
+        fs.writeFileSync(storedDataFile, JSON.stringify(storedData, null, 2));
+        res.sendStatus(200);
+    } catch (err) {
+        console.error('Error saving stored data:', err);
+        res.status(500).json({ success: false, message: 'Failed to save data' });
+    }
 });
+
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
     if (username === OWNER_USERNAME && password === OWNER_PASSWORD) {
