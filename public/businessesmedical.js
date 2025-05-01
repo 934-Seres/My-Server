@@ -181,6 +181,34 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 
+function openDetailedEntryInNewWindow(type, index) {
+    const entry = storedDatas[type][index];
+    if (!entry) return;
+
+    const win = window.open('', '_blank', 'width=600,height=500');
+    win.document.write(`
+        <html>
+        <head>
+            <title>${entry.name || "Entry Detail"}</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    padding: 20px;
+                    text-align: justify;
+                }
+                h2 { margin-top: 0; }
+                p { margin: 8px 0; }
+            </style>
+        </head>
+        <body>
+            <h2>${entry.name || "N/A"}</h2>
+            <p><strong>Details:</strong> ${entry.details || "N/A"}</p>
+            
+        </body>
+        </html>
+    `);
+    win.document.close();
+}
 
     
 // Load storedDatas and messages from localStorage
@@ -306,10 +334,23 @@ function updateSlideshow(type) {
     function showMessage(index) {
         const msg = messages[index] || `No ${type === 'advert' ? 'Advertisements' : 'Notices'}`;
         const safeMessage = escapeHtml(msg);
-        box.innerHTML = `<span class="clickable-message" onclick="openInNewWindow('${safeMessage}')">${safeMessage}</span>`;
+    
+        // Match against storedDatas
+        const entryIndex = storedDatas[type].findIndex(entry => {
+            const fullContent = `Name of Organization: ${entry.name}\nDetails: ${entry.details}`;
+            return fullContent === msg;
+        });
+    
+        if (entryIndex !== -1) {
+            box.innerHTML = `<span class="clickable-message" onclick="openDetailedEntryInNewWindow('${type}', ${entryIndex})">${safeMessage}</span>`;
+        } else {
+            box.innerHTML = `<span class="clickable-message" onclick="openInNewWindow('${safeMessage}')">${safeMessage}</span>`;
+        }
+    
         box.style.textAlign = 'justify';
         adjustFontSizeToFit(box);
     }
+    
 
     showMessage(getIndex());
 

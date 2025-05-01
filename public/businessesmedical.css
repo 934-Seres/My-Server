@@ -995,13 +995,11 @@ form {
 }
 
 .clickable-message {
-    display: block;
-    text-align: justify;
-    line-height: 1.6;
-    word-break: break-word;   
-    padding: 20px;
-    font-family: sans-serif;
+    cursor: pointer;
+    display: inline-block;
+    padding: 10px;
 }
+
 
 #name, #industryOrService, #location, #contact_info {
     width: 100%;
