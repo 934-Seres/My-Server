@@ -233,18 +233,6 @@ function escapeHtml(unsafe) {
         .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
 }
-fetch('/get-stored-data')
-  .then(response => response.json())
-  .then(data => {
-    storedDatas = data;
-    advertMessages = data.advert;
-    noticeMessages = data.notice;
-    updateSlideshow('advert');
-    updateSlideshow('notice');
-  })
-  .catch(err => {
-    console.error("Failed to load stored data:", err);
-  });
 
 
 function openInNewWindow(message) {
@@ -301,13 +289,7 @@ function removeNotice() {
     updateSlideshow('notice');
 }
 
-function saveStoredData() {
-    fetch('/save-stored-data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ advert: advertMessages, notice: noticeMessages })
-    });
-}
+
 
 function goToSlide(type, index) {
     if (type === 'advert') {
