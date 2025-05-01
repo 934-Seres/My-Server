@@ -1058,6 +1058,39 @@ form {
 .dot.active {
     background-color: #717171;
 }
+@media (max-width: 768px) {
+    #slideshow {
+        max-width: 100%;
+    }
+
+    .slide {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .dot-container {
+        padding: 5px;
+        bottom: 5px;
+    }
+
+    .dot {
+        height: 8px;
+        width: 8px;
+        margin: 0 3px;
+    }
+}
+
+@media (max-width: 480px) {
+    .slide {
+        font-size: 12px;
+    }
+
+    .dot {
+        height: 6px;
+        width: 6px;
+        margin: 0 2px;
+    }
+}
 
 /* Modal Container */
 #widerView {
@@ -1339,5 +1372,3 @@ footer .social-icons a:hover {
         align-items: flex-start;
     }
 }
-
-

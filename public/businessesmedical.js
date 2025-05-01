@@ -479,6 +479,8 @@ window.addEventListener("click", function (event) {
 });
 
 
+
+
  // Array to hold previously selected or searched cities
 let searchedCities = [];
 
@@ -547,8 +549,9 @@ document.getElementById("searchButton").addEventListener("click", function () {
 
 
 
+
+
 document.addEventListener("DOMContentLoaded", function () {
-    // Default Slides
     const defaultSlides = [
         { category: "Business", name: "Sheraton Addis", service: "International Hotel", location: "Ex. Taitu St.", contact: "09...", city: "Addis Ababa" },
         { category: "Medical", name: "Washington Medical center", service: "General Health", location: "Ex. Bole Rwanda Embassi", contact: "09...", city: "Addis Ababa" },
@@ -559,17 +562,37 @@ document.addEventListener("DOMContentLoaded", function () {
         { category: "Medical", name: "Ozon Medium Clinc", service: "General Health", location: "Assosa", contact: "09...", city: "Assosa" }
     ];
 
-    let storedData = JSON.parse(localStorage.getItem('storedData')) || { medical: {}, business: {} };
     let slideIndex = 0;
     let selectedCity = localStorage.getItem("selectedCity") || "All Cities";
+    let storedData = { medical: {}, business: {} };
+
+    const socket = io();
+
+    // Fetch the stored data from the server when the page loads
+    function fetchStoredData() {
+        fetch('/get-stored-data')
+            .then(response => response.json())
+            .then(data => {
+                storedData = data || { medical: {}, business: {} };
+                cycleSlides();
+            });
+    }
 
     function saveStoredData() {
-        localStorage.setItem('storedData', JSON.stringify(storedData));
+        fetch('/save-stored-data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(storedData)
+        })
+        .then(response => response.json())
+        .then(data => console.log('Data saved successfully:', data))
+        .catch(error => console.error('Error saving data:', error));
     }
 
     function showSlides(data) {
         const slideshow = document.getElementById("slideshow");
         const dotContainer = document.getElementById("dotContainer");
+        const slideInfo = document.getElementById("slideInfo");
 
         if (!slideshow) {
             console.error("Slideshow container not found!");
@@ -578,6 +601,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
         slideshow.innerHTML = "";
         dotContainer.innerHTML = "";
+
+        if (slideInfo) {
+            slideInfo.textContent = data[0]?.default ? "Showing default slides (no stored data found)" : "";
+        }
 
         data.forEach((slideData, index) => {
             const slide = document.createElement("div");
@@ -609,26 +636,31 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function cycleSlides() {
         let newSlides = [];
+        let hasStoredContent = false;
 
         for (let category in storedData) {
             for (let subCategory in storedData[category]) {
-                storedData[category][subCategory].forEach(entity => {
-                    if (entity.city === selectedCity || selectedCity === "All Cities") {
-                        newSlides.push({
-                            category: category === 'medical' ? "Medical" : "Business",
-                            name: entity.name,
-                            service: entity.industryOrService,
-                            location: entity.location,
-                            city: entity.city,
-                            contact: entity.contact_info
-                        });
-                    }
-                });
+                if (storedData[category][subCategory].length > 0) {
+                    hasStoredContent = true;
+                    storedData[category][subCategory].forEach(entity => {
+                        if (entity.city === selectedCity || selectedCity === "All Cities") {
+                            newSlides.push({
+                                category: category === 'medical' ? "Medical" : "Business",
+                                name: entity.name,
+                                service: entity.industryOrService,
+                                location: entity.location,
+                                city: entity.city,
+                                contact: entity.contact_info
+                            });
+                        }
+                    });
+                }
             }
         }
 
-        if (newSlides.length === 0) {
-            newSlides = defaultSlides.filter(slide => slide.city === selectedCity || selectedCity === "All Cities");
+        if (!hasStoredContent || newSlides.length === 0) {
+            newSlides = defaultSlides.filter(slide => slide.city === selectedCity || selectedCity === "All Cities")
+                .map(slide => ({ ...slide, default: true })); // tag for info message
         }
 
         showSlides(newSlides);
@@ -637,6 +669,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     setInterval(cycleSlides, 3000);
 
+    // Show category modal
     function showCategoryModal(detailsHtml) {
         const modal = document.getElementById("categoryDataModal");
         const modalDetails = document.getElementById("categoryModalDetails");
@@ -644,6 +677,7 @@ document.addEventListener("DOMContentLoaded", function () {
         modal.style.display = "block";
     }
 
+    // Render data for a selected category
     function renderStoredData(type, selectedCategory) {
         let details = `<h3>${selectedCategory}</h3>`;
 
@@ -708,7 +742,7 @@ document.addEventListener("DOMContentLoaded", function () {
     setupFilterEvent("medicalCategoryFilter", "medical");
     setupFilterEvent("businessCategoryFilter", "business");
 
-    // Registration Form Submission
+    // Registration form submission
     document.getElementById("registrationForm").addEventListener("submit", function (event) {
         event.preventDefault();
 
@@ -739,9 +773,8 @@ document.addEventListener("DOMContentLoaded", function () {
             city,
         });
 
-        saveStoredData(); // Save to localStorage immediately
+        saveStoredData();
 
-        // Add new category to filter dropdown if it doesn't exist
         const filterDropdown = (type === "medical") ? document.getElementById("medicalCategoryFilter") : document.getElementById("businessCategoryFilter");
         if (!filterDropdown.querySelector(`option[value="${category}"]`)) {
             const newOption = document.createElement("option");
@@ -755,8 +788,11 @@ document.addEventListener("DOMContentLoaded", function () {
         cycleSlides();
     });
 
+    fetchStoredData();
     cycleSlides();
 });
+
+
 
 
 
@@ -894,10 +930,6 @@ async function verifyBusinessLicense(licenseNumber) {
 
 
 
-
-
-
-
 document.addEventListener("DOMContentLoaded", function () {
     // Select form elements
     const typeSelect = document.getElementById("type");
@@ -1006,6 +1038,8 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 });
+
+
 
 
 

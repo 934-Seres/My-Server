@@ -1,0 +1,42 @@
+[
+  {
+    "name": "Ozone Clinic",
+    "industryOrService": "Service",
+    "licenseNumber": "123",
+    "location": "Assosa",
+    "contact_info": "0938087439",
+    "city": "Gondar",
+    "medicalCategory": "general",
+    "businessCategory": ""
+  },
+  {
+    "name": "Pawi hospital",
+    "industryOrService": "Service",
+    "licenseNumber": "123",
+    "location": "Assosa",
+    "contact_info": "0938087439",
+    "city": "Jinka",
+    "medicalCategory": "general",
+    "businessCategory": ""
+  },
+  {
+    "name": "Ozone Clinic",
+    "industryOrService": "Service",
+    "licenseNumber": "123",
+    "location": "Assosa",
+    "contact_info": "0938087439",
+    "city": "Jigjiga",
+    "medicalCategory": "general",
+    "businessCategory": ""
+  },
+  {
+    "name": "Ozone Clinic",
+    "industryOrService": "Service",
+    "licenseNumber": "123",
+    "location": "Assosa",
+    "contact_info": "0938087439",
+    "city": "Jigjiga",
+    "medicalCategory": "general",
+    "businessCategory": ""
+  }
+]

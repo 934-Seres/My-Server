@@ -37,105 +37,86 @@ const viewerCountFile = path.join(__dirname, 'viewerCount.json');
 const medicalRegistrationsFile = path.join(__dirname, 'medicalRegistrations.json');
 const businessRegistrationsFile = path.join(__dirname, 'businessRegistrations.json');
 
+const storedDataPath = path.join(__dirname, 'storedData.json');
+let storedData = { medical: {}, business: {} };
+
+// Load existing data on server start
+if (fs.existsSync(storedDataPath)) {
+    storedData = JSON.parse(fs.readFileSync(storedDataPath, 'utf-8'));
+}
+
 // --- Data ---
 let totalViewers = 0;
 let totalFollowers = 0;
-let activeUsers = []; // [{ username, deviceInfo }]
-let messages = [];    // [{ text, sender, messageId, timestamp, replies: [] }]
-let medicalRegistrations = [];   // [{ ... }]
-let businessRegistrations = [];  // [{ ... }]
+let activeUsers = [];  // [{ username, deviceInfo }]
+let messages = [];     // [{ text, sender, messageId, timestamp, replies: [] }]
 const MAX_MESSAGES = 100;
 
 // --- Load Existing Data ---
-if (fs.existsSync(followersFile)) {
+const loadData = (filePath, defaultValue) => {
     try {
-        const data = fs.readFileSync(followersFile, 'utf8');
-        totalFollowers = JSON.parse(data).count || 0;
+        if (fs.existsSync(filePath)) {
+            return JSON.parse(fs.readFileSync(filePath, 'utf8')) || defaultValue;
+        }
     } catch (err) {
-        console.error('Error reading followers file:', err);
+        console.error(`Error reading file ${filePath}:`, err);
     }
-}
+    return defaultValue;
+};
 
-if (fs.existsSync(messagesFile)) {
-    try {
-        const data = fs.readFileSync(messagesFile, 'utf8');
-        messages = JSON.parse(data) || [];
-    } catch (err) {
-        console.error('Error reading messages file:', err);
-    }
-}
-
-if (fs.existsSync(viewerCountFile)) {
-    try {
-        const data = fs.readFileSync(viewerCountFile, 'utf8');
-        totalViewers = JSON.parse(data).count || 0;
-    } catch (err) {
-        console.error('Error reading viewer count file:', err);
-    }
-}
-
-if (fs.existsSync(medicalRegistrationsFile)) {
-    try {
-        const data = fs.readFileSync(medicalRegistrationsFile, 'utf8');
-        medicalRegistrations = JSON.parse(data) || [];
-    } catch (err) {
-        console.error('Error reading medical registrations file:', err);
-    }
-}
-
-if (fs.existsSync(businessRegistrationsFile)) {
-    try {
-        const data = fs.readFileSync(businessRegistrationsFile, 'utf8');
-        businessRegistrations = JSON.parse(data) || [];
-    } catch (err) {
-        console.error('Error reading business registrations file:', err);
-    }
-}
+totalFollowers = loadData(followersFile, { count: 0 }).count;
+messages = loadData(messagesFile, []);
+totalViewers = loadData(viewerCountFile, { count: 0 }).count;
+medicalRegistrations = loadData(medicalRegistrationsFile, []);
+businessRegistrations = loadData(businessRegistrationsFile, []);
 
 // --- Save Functions ---
-function saveFollowerCount() {
+const saveData = (filePath, data) => {
     try {
-        fs.writeFileSync(followersFile, JSON.stringify({ count: totalFollowers }));
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
     } catch (err) {
-        console.error('Error saving followers file:', err);
+        console.error(`Error saving file ${filePath}:`, err);
     }
+};
+
+function saveStoredData() {
+    saveData(storedDataPath, storedData);
+}
+
+function saveFollowerCount() {
+    saveData(followersFile, { count: totalFollowers });
 }
 
 function saveMessages() {
-    try {
-        fs.writeFileSync(messagesFile, JSON.stringify(messages, null, 2));
-    } catch (err) {
-        console.error('Error saving messages file:', err);
-    }
+    saveData(messagesFile, messages);
 }
 
 function saveViewerCount() {
-    try {
-        fs.writeFileSync(viewerCountFile, JSON.stringify({ count: totalViewers }));
-    } catch (err) {
-        console.error('Error saving viewer count file:', err);
-    }
+    saveData(viewerCountFile, { count: totalViewers });
 }
 
 function saveMedicalRegistrations() {
-    try {
-        fs.writeFileSync(medicalRegistrationsFile, JSON.stringify(medicalRegistrations, null, 2));
-    } catch (err) {
-        console.error('Error saving medical registrations:', err);
-    }
+    saveData(medicalRegistrationsFile, medicalRegistrations);
 }
 
 function saveBusinessRegistrations() {
-    try {
-        fs.writeFileSync(businessRegistrationsFile, JSON.stringify(businessRegistrations, null, 2));
-    } catch (err) {
-        console.error('Error saving business registrations:', err);
-    }
+    saveData(businessRegistrationsFile, businessRegistrations);
 }
 
-// --- Routes ---
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'businessesmedical.html'));
+// --- API Endpoints ---
+app.get('/data', (req, res) => {
+    res.json(storedData);
+});
+
+app.post('/register', (req, res) => {
+    const { type, category, name, industryOrService, licenseNumber, location, contact_info, city } = req.body;
+    if (!storedData[type][category]) {
+        storedData[type][category] = [];
+    }
+
+    storedData[type][category].push({ name, industryOrService, licenseNumber, location, contact_info, city });
+    saveStoredData();
+    res.json({ success: true, message: 'Registration successful' });
 });
 
 app.post('/login', (req, res) => {
@@ -158,7 +139,6 @@ app.get('/check-owner', (req, res) => {
     res.json({ isOwner: !!req.session.isOwner });
 });
 
-// --- API to register new Medical/Business entry ---
 app.post('/api/register', (req, res) => {
     const { category, registrationData } = req.body;
 
@@ -179,12 +159,15 @@ app.post('/api/register', (req, res) => {
     res.json({ success: true, message: 'Registration saved successfully' });
 });
 
-// --- API to get all registrations ---
 app.get('/api/registrations', (req, res) => {
     res.json({
         medical: medicalRegistrations,
         business: businessRegistrations
     });
+});
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'businessesmedical.html'));
 });
 
 // --- Socket.IO Events ---
@@ -211,7 +194,7 @@ io.on('connection', (socket) => {
             io.emit('activeChattersUpdate', activeUsers);
         }
 
-        socket.emit('loadMessages', messages);
+        socket.emit('loadMessages', messages); // Load messages when a user joins
     });
 
     socket.on('leaveChat', (username) => {
@@ -307,7 +290,3 @@ io.on('connection', (socket) => {
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running with Socket.IO at http://localhost:${PORT}`);
 });
-
-// --- Keep-alive Settings ---
-server.keepAliveTimeout = 120000;
-server.headersTimeout = 120000;
