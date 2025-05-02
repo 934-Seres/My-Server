@@ -52,7 +52,8 @@ let activeUsers = [];
 let messages = [];
 let medicalRegistrations = [];
 let businessRegistrations = [];
-let storedData = { advert: [], notice: [] };
+let storedMedicalData = [];
+let storedBusinessData = [];
 const MAX_MESSAGES = 100;
 
 // --- Load Existing Data ---
@@ -72,7 +73,9 @@ totalViewers = safeLoad(viewerCountFile, { count: 0 }).count || 0;
 messages = safeLoad(messagesFile, []);
 medicalRegistrations = safeLoad(medicalRegistrationsFile, []);
 businessRegistrations = safeLoad(businessRegistrationsFile, []);
-storedData = safeLoad(storedDataFile, { advert: [], notice: [] });
+const storedData = safeLoad(storedDataFile, { medical: [], business: [] });
+storedMedicalData = storedData.medical || [];
+storedBusinessData = storedData.business || [];
 
 // --- Save Functions ---
 const saveToFile = (file, data) => {
@@ -88,6 +91,7 @@ const saveViewerCount = () => saveToFile(viewerCountFile, { count: totalViewers 
 const saveMessages = () => saveToFile(messagesFile, messages);
 const saveMedicalRegistrations = () => saveToFile(medicalRegistrationsFile, medicalRegistrations);
 const saveBusinessRegistrations = () => saveToFile(businessRegistrationsFile, businessRegistrations);
+const saveStoredData = () => saveToFile(storedDataFile, { medical: storedMedicalData, business: storedBusinessData });
 
 // --- Routes ---
 app.get('/', (req, res) => {
@@ -95,33 +99,27 @@ app.get('/', (req, res) => {
 });
 
 app.get('/get-stored-data', (req, res) => {
-    res.json(storedData);
+    res.json({ medical: storedMedicalData, business: storedBusinessData });
 });
 
 app.post('/save-stored-data', (req, res) => {
-    const { advert, notice } = req.body;
-    if (!Array.isArray(advert) || !Array.isArray(notice)) {
+    const { medical, business } = req.body;
+    if (!Array.isArray(medical) || !Array.isArray(business)) {
         return res.status(400).json({ success: false, message: 'Invalid data format' });
     }
 
-    storedData = { advert, notice };
-    try {
-        fs.writeFileSync(storedDataFile, JSON.stringify(storedData, null, 2));
-        res.sendStatus(200);
-    } catch (err) {
-        console.error('Error saving stored data:', err);
-        res.status(500).json({ success: false, message: 'Failed to save data' });
-    }
+    storedMedicalData = medical;
+    storedBusinessData = business;
+    saveStoredData();
+    res.sendStatus(200);
 });
 
 app.post('/verify-owner', (req, res) => {
     const { password } = req.body;
     if (password === OWNER_PASSWORD) {
         req.session.isOwner = true;
-        console.log('✅ Owner verified through /verify-owner');
         res.json({ success: true });
     } else {
-        console.warn('❌ Incorrect owner password entered');
         res.json({ success: false });
     }
 });
@@ -170,7 +168,6 @@ app.get('/api/registrations', (req, res) => {
 
 // --- Socket.IO ---
 io.on('connection', (socket) => {
-    console.log('A user connected');
     totalViewers++;
     saveViewerCount();
     io.emit('viewerCountUpdate', totalViewers);
@@ -183,7 +180,6 @@ io.on('connection', (socket) => {
     socket.on('joinChat', ({ username, deviceInfo }) => {
         currentUser = username || currentUser;
         currentDevice = deviceInfo || "Unknown Device";
-
         socket.username = currentUser;
         socket.deviceInfo = currentDevice;
 
@@ -220,13 +216,10 @@ io.on('connection', (socket) => {
             timestamp: timestamp || Date.now(),
             replies: []
         };
-
         messages.push(newMessage);
-
         if (messages.length > MAX_MESSAGES) {
             messages = messages.slice(-MAX_MESSAGES);
         }
-
         saveMessages();
         io.emit('newMessage', newMessage);
     });
@@ -252,7 +245,6 @@ io.on('connection', (socket) => {
             message.text = newText;
             saveMessages();
             io.emit('updateMessage', { newText, messageId });
-            console.log(`[Edit] Message ${messageId} updated.`);
         }
     });
 
@@ -261,7 +253,6 @@ io.on('connection', (socket) => {
             messages = messages.filter(m => m.messageId !== messageId);
             saveMessages();
             io.emit('deleteMessage', { messageId });
-            console.log(`[Delete] Message ${messageId} deleted by owner.`);
         }
     });
 
@@ -274,11 +265,9 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        console.log(`A user disconnected: ${socket.username}`);
         totalViewers--;
         saveViewerCount();
         io.emit('viewerCountUpdate', totalViewers);
-
         activeUsers = activeUsers.filter(user => user.username !== socket.username);
         io.emit('activeChattersUpdate', activeUsers);
     });

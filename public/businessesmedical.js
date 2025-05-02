@@ -599,29 +599,63 @@ document.getElementById("searchButton").addEventListener("click", function () {
 
 document.addEventListener("DOMContentLoaded", function () {
     const defaultSlides = [
-        { category: "Business", name: "Sheraton Addis", service: "International Hotel", location: "Ex. Taitu St.", contact: "09...", city: "Addis Ababa" },
-        { category: "Medical", name: "Washington Medical center", service: "General Health", location: "Ex. Bole Rwanda Embassi", contact: "09...", city: "Addis Ababa" },
-        { category: "Business", name: "Ethiopian Consultancy", service: "Consulting", location: "Ex. ...", contact: "09...", city: "Adama" },
-        { category: "Medical", name: "Smile Dental", service: "Dental Care", location: "Ex.Bole Rwanda Embassi ", contact: "0904222324", city: "Hawassa" },
-        { category: "Business", name: "Luxury Hotel", service: "International Hotel", location: "Ex. ...", contact: "09...", city: "Bahir Dar" },
-        { category: "Medical", name: "Seven Dental", service: "Dental Care", location: "Golagul/22", contact: "09...", city: "Addis Ababa" },
-        { category: "Medical", name: "Ozon Medium Clinc", service: "General Health", location: "Assosa", contact: "09...", city: "Assosa" }
+        { category: "Business", name: "Sheraton Addis", service: "International Hotel", location: "Ex. Taitu St.", contact_info: "09...", city: "Addis Ababa" },
+        { category: "Medical", name: "Washington Medical center", service: "General Health", location: "Ex. Bole Rwanda Embassi", contact_info: "09...", city: "Addis Ababa" },
+        { category: "Business", name: "Ethiopian Consultancy", service: "Consulting", location: "Ex. ...", contact_info: "09...", city: "Adama" },
+        { category: "Medical", name: "Smile Dental", service: "Dental Care", location: "Ex.Bole Rwanda Embassi ", contact_info: "0904222324", city: "Hawassa" },
+        { category: "Business", name: "Luxury Hotel", service: "International Hotel", location: "Ex. ...", contact_info: "09...", city: "Bahir Dar" },
+        { category: "Medical", name: "Seven Dental", service: "Dental Care", location: "Golagul/22", contact_info: "09...", city: "Addis Ababa" },
+        { category: "Medical", name: "Ozon Medium Clinc", service: "General Health", location: "Assosa", contact_info: "09...", city: "Assosa" }
     ];
+
+    let storedMedicalData = [];
+    let storedBusinessData = [];
 
     let slideIndex = 0;
     let selectedCity = localStorage.getItem("selectedCity") || "All Cities";
-    let advertData = [];
-    let noticeData = [];
 
     const socket = io();
+
+    const medicalCategorySelect = document.getElementById("medicalCategory");
+    const businessCategorySelect = document.getElementById("businessCategory");
+
+    // Restore original options for the category dropdowns
+    function initializeCategoryDropdowns() {
+        medicalCategorySelect.innerHTML = `
+            <option value="" disabled selected>Select Medical Category</option>
+            <option value="general">General Health Service</option>
+            <option value="dental">Dental Health Service</option>
+            <option value="eye">Eye Medication</option>
+            <option value="heart">Heart Health service</option>
+            <option value="kidney">Kidney Health Service</option>
+            <option value="other">Other(Specify)</option>
+        `;
+        
+        businessCategorySelect.innerHTML = `
+            <option value="" disabled selected>Select business Category</option>
+            <option value="consulting">Consulting Service</option>
+            <option value="internationalHotel">International Hotel Services</option>
+            <option value="noninternationalHotel">Non-International Hotel Service</option>
+            <option value="factoryproduct">Factory Products</option>
+            <option value="importer">Importers</option>
+            <option value="others">Other(Specify)</option>
+        `;
+    }
+
+    // Call this function at the start to restore options
+    initializeCategoryDropdowns();
 
     function fetchStoredData() {
         fetch('/get-stored-data')
             .then(response => response.json())
             .then(data => {
-                advertData = Array.isArray(data.advert) ? data.advert : [];
-                noticeData = Array.isArray(data.notice) ? data.notice : [];
+                storedMedicalData = Array.isArray(data.medical) ? data.medical : [];
+                storedBusinessData = Array.isArray(data.business) ? data.business : [];
                 cycleSlides();
+            })
+            .catch(err => {
+                console.error("Failed to fetch stored data:", err);
+                cycleSlides(); // fallback to defaultSlides
             });
     }
 
@@ -629,19 +663,20 @@ document.addEventListener("DOMContentLoaded", function () {
         fetch('/save-stored-data', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ advert: advertData, notice: noticeData })
+            body: JSON.stringify({
+                notice: storedMedicalData,
+                business: storedBusinessData
+            })
         })
-        .then(response => response.json())
-        .then(data => console.log('Data saved successfully:', data))
-        .catch(error => console.error('Error saving data:', error));
+        .then(res => res.json())
+        .then(data => console.log("Data saved successfully:", data))
+        .catch(error => console.error("Error saving data:", error));
     }
 
     function showSlides(data) {
         const slideshow = document.getElementById("slideshow");
         const dotContainer = document.getElementById("dotContainer");
         const slideInfo = document.getElementById("slideInfo");
-
-        if (!slideshow) return;
 
         slideshow.innerHTML = "";
         dotContainer.innerHTML = "";
@@ -658,10 +693,10 @@ document.addEventListener("DOMContentLoaded", function () {
             slide.innerHTML = `
                 <h3>${slideData.category === "Medical" ? "Medical Service" : "Business Organization"}</h3>
                 <p><strong>Name:</strong> ${slideData.name}</p>
-                <p><strong>Service:</strong> ${slideData.industryOrService}</p>
+                <p><strong>Service:</strong> ${slideData.industryOrService || slideData.service}</p>
                 <p><strong>Location:</strong> ${slideData.location}</p>
                 <p><strong>City:</strong> ${slideData.city}</p>
-                <p><strong>Contact:</strong> ${slideData.contact_info}</p>
+                <p><strong>Contact:</strong> ${slideData.contact_info || slideData.contact}</p>
             `;
 
             slideshow.appendChild(slide);
@@ -679,12 +714,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function cycleSlides() {
-        let slides = [...advertData, ...noticeData].filter(slide => 
+        let slides = [...storedMedicalData, ...storedBusinessData].filter(slide =>
             slide.city === selectedCity || selectedCity === "All Cities"
         );
 
         if (slides.length === 0) {
-            slides = defaultSlides.filter(slide => 
+            slides = defaultSlides.filter(slide =>
                 slide.city === selectedCity || selectedCity === "All Cities"
             ).map(slide => ({ ...slide, default: true }));
         }
@@ -695,19 +730,41 @@ document.addEventListener("DOMContentLoaded", function () {
 
     setInterval(cycleSlides, 3000);
 
-    function renderStoredData(type) {
-        const dataArray = type === "advert" ? advertData : noticeData;
-        let details = `<h3>${type === "advert" ? "Business Organizations" : "Medical Services"}</h3>`;
+    document.querySelector(".category-close").addEventListener("click", () => {
+        document.getElementById("categoryDataModal").style.display = "none";
+    });
 
-        if (dataArray.length > 0) {
-            dataArray.forEach((user, index) => {
+    document.getElementById("cityFilter").addEventListener("change", function () {
+        selectedCity = this.value;
+        localStorage.setItem("selectedCity", selectedCity);
+        cycleSlides();
+    });
+
+    function renderStoredData(type) {
+        const isMedical = type === "medical";
+        const dataArray = isMedical ? storedMedicalData : storedBusinessData;
+
+        const subcategorySelect = isMedical
+            ? document.getElementById("medicalCategoryFilter")
+            : document.getElementById("businessCategoryFilter");
+
+        const selectedSubcategory = subcategorySelect.value;
+
+        const filteredData = selectedSubcategory === "All" || selectedSubcategory.includes("Select")
+            ? dataArray
+            : dataArray.filter(entry => entry.category === selectedSubcategory);
+
+        let details = `<h3>${isMedical ? "Medical Services" : "Business Organizations"}</h3>`;
+
+        if (filteredData.length > 0) {
+            filteredData.forEach((entry, index) => {
                 details += `
                     <div class="user-entry" data-index="${index}">
-                        <p><strong>Name:</strong> ${user.name}</p>
-                        <p><strong>Industry/Service:</strong> ${user.industryOrService}</p>
-                        <p><strong>Location:</strong> ${user.location}</p>
-                        <p><strong>City:</strong> ${user.city}</p>
-                        <p><strong>Contact:</strong> ${user.contact_info}</p>
+                        <p><strong>Name:</strong> ${entry.name}</p>
+                        <p><strong>Industry/Service:</strong> ${entry.industryOrService}</p>
+                        <p><strong>Location:</strong> ${entry.location}</p>
+                        <p><strong>City:</strong> ${entry.city}</p>
+                        <p><strong>Contact:</strong> ${entry.contact_info}</p>
                         <button class="delBtn" data-type="${type}" data-index="${index}">Delete</button>
                         <hr>
                     </div>
@@ -722,38 +779,35 @@ document.addEventListener("DOMContentLoaded", function () {
 
         document.querySelectorAll(".delBtn").forEach(button => {
             button.addEventListener("click", function () {
-                const type = this.dataset.type;
+                const entryType = this.dataset.type;
                 const index = parseInt(this.dataset.index);
+
                 if (confirm("Are you sure you want to delete this entry?")) {
-                    if (type === "advert") advertData.splice(index, 1);
-                    else noticeData.splice(index, 1);
+                    if (entryType === "medical") {
+                        storedMedicalData.splice(index, 1);
+                    } else {
+                        storedBusinessData.splice(index, 1);
+                    }
+
                     saveStoredData();
                     cycleSlides();
-                    renderStoredData(type);
+                    renderStoredData(entryType);
                 }
             });
         });
     }
 
-    document.querySelector(".category-close").addEventListener("click", () => {
-        document.getElementById("categoryDataModal").style.display = "none";
-    });
-
-    document.getElementById("cityFilter").addEventListener("change", function () {
-        selectedCity = this.value;
-        localStorage.setItem("selectedCity", selectedCity);
-        cycleSlides();
-    });
-
-    document.getElementById("medicalCategoryFilter").addEventListener("change", () => renderStoredData("notice"));
-    document.getElementById("businessCategoryFilter").addEventListener("change", () => renderStoredData("advert"));
+    document.getElementById("medicalCategoryFilter").addEventListener("change", () => renderStoredData("medical"));
+    document.getElementById("businessCategoryFilter").addEventListener("change", () => renderStoredData("business"));
 
     document.getElementById("registrationForm").addEventListener("submit", function (event) {
         event.preventDefault();
 
         const name = document.getElementById("name").value;
         const type = document.getElementById("type").value;
-        const category = (type === "medical") ? document.getElementById("medicalCategory").value : document.getElementById("businessCategory").value;
+        const category = (type === "medical")
+            ? document.getElementById("medicalCategory").value
+            : document.getElementById("businessCategory").value;
         const industryOrService = document.getElementById("industryOrService").value;
         const licenseNumber = document.getElementById("licenseNumber").value;
         const location = document.getElementById("location").value;
@@ -765,9 +819,21 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        const newEntry = { name, category, industryOrService, licenseNumber, location, contact_info, city };
-        if (type === "medical") noticeData.push({ ...newEntry, category: "Medical" });
-        else advertData.push({ ...newEntry, category: "Business" });
+        const newEntry = {
+            name,
+            category,
+            industryOrService,
+            licenseNumber,
+            location,
+            contact_info,
+            city
+        };
+
+        if (type === "medical") {
+            storedMedicalData.push(newEntry);
+        } else {
+            storedBusinessData.push(newEntry);
+        }
 
         saveStoredData();
 
@@ -781,13 +847,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
         alert("Registration successful!");
         this.reset();
+        initializeCategoryDropdowns();  // Reinitialize dropdown options after form reset
         cycleSlides();
     });
 
-    fetchStoredData();
-    cycleSlides();
+    fetchStoredData(); // Load stored data on startup
 });
-
 
 
 
