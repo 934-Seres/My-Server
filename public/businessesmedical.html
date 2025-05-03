@@ -157,7 +157,7 @@
              
             </div>
 
-            <!-- Modal for displaying stored data -->
+           <!-- Modal for displaying stored data notice/advert modal window-->
             <div id="dataModal">            
                 <div id="modalContent">                
                       
@@ -165,10 +165,18 @@
                 </div>               
                               
                <button type="button" class="modal-close">&times;</button>   
-         </div> 
+         </div>  
     
+            <!-- Modal for displaying stored data for registered medical or business users in the form -->
+            <div id="categoryDataModal" class="category-modal">            
+                <div class="category-modal-content">
+                    <span class="category-close">&times;</span> 
+                    <h2>Stored User Data</h2>
+                    <div id="categoryModalDetails"></div>
+                </div> 
+            </div>  
 
-        <!-- slideshow for stored data display and default slideshow-->
+        <!-- slideshow for stored data display and default slideshow for medical/busieness -->
             <div id="slideshow"></div> 
             <div id="dotContainer" class="dot-container"></div> 
         </div>  
@@ -204,15 +212,7 @@
             <ul id="businessList"></ul> 
           <!-- Modal for displaying stored data with delete option -->
             
-           <!-- Modal for displaying stored data and managing delete -->
-            <div id="categoryDataModal" class="category-modal">            
-                <div class="category-modal-content">
-                    <span class="category-close">&times;</span> 
-                    <h2>Stored User Data</h2>
-                    <div id="categoryModalDetails"></div>
-                </div> 
-            </div> 
-
+           
              <!-- Notices Data -->      
              </section>             
                 <select name="advertNotice" class="select-advert-notice" aria-label="Advert or Notice">
