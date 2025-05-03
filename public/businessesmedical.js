@@ -237,12 +237,16 @@ let currentNoticeIndex = 0;
 let advertInterval;
 let noticeInterval;
 
+// Function to escape HTML to prevent XSS attacks
 function escapeHtml(unsafe) {
-    return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    return unsafe.replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
 }
 
+// Function to open a message in a new window
 function openInNewWindow(message) {
     const safeMessage = escapeHtml(message);
     const newWindow = window.open("", "_blank", "width=400,height=300");
@@ -255,7 +259,7 @@ function openInNewWindow(message) {
     }
 }
 
-
+// Function to add a new advert message
 function addAdvertMessage() {
     const input = document.getElementById("newAdvertMessage");
     const message = input.value.trim();
@@ -263,19 +267,23 @@ function addAdvertMessage() {
         advertMessages.push(message);
         input.value = "";
         localStorage.setItem("advertMessages", JSON.stringify(advertMessages));
-        updateSlideshow('advert');
+        updateSlideshow('advert'); // Update the slideshow with new advert
     }
 }
 
+// Function to remove the current advert message
 function removeAdvert() {
-    advertMessages.splice(currentAdvertIndex, 1);
-    if (currentAdvertIndex >= advertMessages.length) {
-        currentAdvertIndex = 0;
+    if (advertMessages.length > 0) {
+        advertMessages.splice(currentAdvertIndex, 1);
+        if (currentAdvertIndex >= advertMessages.length) {
+            currentAdvertIndex = 0; // Reset index if it exceeds the length
+        }
+        localStorage.setItem("advertMessages", JSON.stringify(advertMessages));
+        updateSlideshow('advert'); // Update the slideshow after removal
     }
-    localStorage.setItem("advertMessages", JSON.stringify(advertMessages));
-    updateSlideshow('advert');
 }
 
+// Function to add a new notice message
 function addNoticeMessage() {
     const input = document.getElementById("newNoticeMessage");
     const message = input.value.trim();
@@ -283,29 +291,33 @@ function addNoticeMessage() {
         noticeMessages.push(message);
         input.value = "";
         localStorage.setItem("noticeMessages", JSON.stringify(noticeMessages));
-        updateSlideshow('notice');
+        updateSlideshow('notice'); // Update the slideshow with new notice
     }
 }
 
+// Function to remove the current notice message
 function removeNotice() {
-    noticeMessages.splice(currentNoticeIndex, 1);
-    if (currentNoticeIndex >= noticeMessages.length) {
-        currentNoticeIndex = 0;
+    if (noticeMessages.length > 0) {
+        noticeMessages.splice(currentNoticeIndex, 1);
+        if (currentNoticeIndex >= noticeMessages.length) {
+            currentNoticeIndex = 0; // Reset index if it exceeds the length
+        }
+        localStorage.setItem("noticeMessages", JSON.stringify(noticeMessages));
+        updateSlideshow('notice'); // Update the slideshow after removal
     }
-    localStorage.setItem("noticeMessages", JSON.stringify(noticeMessages));
-    updateSlideshow('notice');
 }
 
-
+// Function to go to a specific slide
 function goToSlide(type, index) {
     if (type === 'advert') {
         currentAdvertIndex = index;
     } else {
         currentNoticeIndex = index;
     }
-    updateSlideshow(type);
+    updateSlideshow(type); // Update the slideshow to show the selected slide
 }
 
+// Function to update the slideshow based on type (advert or notice)
 function updateSlideshow(type) {
     let messages, getIndex, setIndex, boxId, dotsId, intervalVarName;
 
@@ -337,7 +349,7 @@ function updateSlideshow(type) {
 
         while (message.scrollWidth > maxWidth || message.scrollHeight > maxHeight) {
             fontSize -= 2;
-            if (fontSize < 10) break;
+            if (fontSize < 10) break; // Prevent font size from becoming too small
             message.style.fontSize = `${fontSize}px`;
         }
     }
@@ -345,29 +357,28 @@ function updateSlideshow(type) {
     function showMessage(index) {
         const msg = messages[index] || `No ${type === 'advert' ? 'Advertisements' : 'Notices'}`;
         const safeMessage = escapeHtml(msg);
-    
+
         // Match against storedDatas
         const entryIndex = storedDatas[type].findIndex(entry => {
             const fullContent = `Name of Organization: ${entry.name}\nDetails: ${entry.details}`;
             return fullContent === msg;
         });
-    
+
         if (entryIndex !== -1) {
             box.innerHTML = `<span class="clickable-message" onclick="openDetailedEntryInNewWindow('${type}', ${entryIndex})">${safeMessage}</span>`;
         } else {
             box.innerHTML = `<span class="clickable-message" onclick="openInNewWindow('${safeMessage}')">${safeMessage}</span>`;
         }
-    
+
         box.style.textAlign = 'justify';
         adjustFontSizeToFit(box);
     }
-    
 
     showMessage(getIndex());
 
     dotContainer.innerHTML = messages.map((msg, i) =>
-        `<span class="dot ${i === getIndex() ? 'active' : ''}" onclick="goToSlide('${type}', ${i})">
-            </span><span style="cursor:pointer; color:red;" onclick="deleteSpecificMessage('${type}', ${i})">❌</span>`
+        `<span class="dot ${i === getIndex() ? 'active' : ''}" onclick="goToSlide('${type}', ${i})"></span>
+         <span style="cursor:pointer; color:red;" onclick="deleteSpecificMessage('${type}', ${i})">❌</span>`
     ).reverse().join("");
 
     clearInterval(window[intervalVarName]);
@@ -385,6 +396,7 @@ function updateSlideshow(type) {
     }
 }
 
+// Function to delete a specific message
 function deleteSpecificMessage(type, index) {
     if (type === 'advert') {
         advertMessages.splice(index, 1);
@@ -395,24 +407,25 @@ function deleteSpecificMessage(type, index) {
         if (currentNoticeIndex >= noticeMessages.length) currentNoticeIndex = 0;
         localStorage.setItem("noticeMessages", JSON.stringify(noticeMessages));
     }
-    updateSlideshow(type);
+    updateSlideshow(type); // Update the slideshow after deletion
 
+    // Remove from stored data as well
     storedDatas[type].splice(index, 1);
     localStorage.setItem("storedDatas", JSON.stringify(storedDatas));
 }
 
-// Handle form submission
+// Function to handle form submission
 function handleFormSubmit(event, type) {
-    event.preventDefault();
+    event.preventDefault(); // Prevent default form submission
 
     let formData = new FormData(event.target);
-    let formObject = Object.fromEntries(formData);
+    let formObject = Object.fromEntries(formData); // Convert form data to an object
 
-    storedDatas[type].push(formObject);
-    localStorage.setItem("storedDatas", JSON.stringify(storedDatas));
+    storedDatas[type].push(formObject); // Store the data in the appropriate category
+    localStorage.setItem("storedDatas", JSON.stringify(storedDatas)); // Save to localStorage
 
     alert(`Form submitted under: ${type === "advert" ? "Advertises" : "Notices"}`);
-    event.target.reset();
+    event.target.reset(); // Reset the form
 }
 
 // Attach event listeners to forms after DOM content is loaded
@@ -422,25 +435,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (advertForm) {
         advertForm.addEventListener("submit", function (event) {
-            handleFormSubmit(event, "advert");
+            handleFormSubmit(event, "advert"); // Handle advert form submission
         });
     }
 
     if (noticeForm) {
         noticeForm.addEventListener("submit", function (event) {
-            handleFormSubmit(event, "notice");
+            handleFormSubmit(event, "notice"); // Handle notice form submission
         });
     }
 
+    // Event listener for selecting advert or notice
     document.querySelector(".select-advert-notice").addEventListener("change", function () {
-        let selectedOption = this.value;
-        showStoredDatas(selectedOption);
+        let selectedOption = this.value; // Get selected option
+        showStoredDatas(selectedOption); // Show stored data for the selected option
     });
 
+    // Initialize the slideshows
     updateSlideshow('advert');
     updateSlideshow('notice');
 });
 
+// Function to send stored data to the slideshow
 function sendStoredData(type, index) {
     const entry = storedDatas[type][index];
     const messageContent = `Name of Organization: ${entry.name}\nDetails: ${entry.details}`;
@@ -449,33 +465,33 @@ function sendStoredData(type, index) {
     if (type === 'advert') {
         advertMessages.push(messageContent);
         localStorage.setItem("advertMessages", JSON.stringify(advertMessages));
-        updateSlideshow('advert');
+        updateSlideshow('advert'); // Update the advert slideshow
     } else if (type === 'notice') {
         noticeMessages.push(messageContent);
         localStorage.setItem("noticeMessages", JSON.stringify(noticeMessages));
-        updateSlideshow('notice');
+        updateSlideshow('notice'); // Update the notice slideshow
     }
 
-    // Don't remove from stored data. The entry will remain there unless explicitly deleted.
     alert(`${entry.name || "This entry"} has been sent to the slideshow.`);
 
     // Refresh stored data view
     showStoredDatas(type);
 }
 
+// Function to show stored data in a modal
 function showStoredDatas(type) {
     let modals = document.getElementById("dataModal");
     let modalsContent = document.getElementById("modalContent");
 
-    modalsContent.innerHTML = "";
+    modalsContent.innerHTML = ""; // Clear previous content
 
     if (storedDatas[type].length > 0) {
         storedDatas[type].forEach((entry, index) => {
             modalsContent.innerHTML += `
                 <h4>Entry ${index + 1}</h4>
                 <p><strong>Name:</strong> ${entry.name || "N/A"}</p>
-                <p><strong>Details:</strong> <span id="details-${type}-${index}">${shortenText(entry.details)}</span> 
-                    <a href="#" onclick="toggleDetailsStored('${type}', ${index}); return false;" id="toggle-${type}-${index}">more...</a>
+                <p><strong>Details:</strong> <span id="details-${type}-${index}">${shortenText(entry.details)}</span>
+                <a href="#" onclick="toggleDetailsStored('${type}', ${index}); return false;" id="toggle-${type}-${index}">more...</a>
                 </p>
                 <button id="delete-btn-${index}" class="delete-btn" onclick="deleteStoredData('${type}', ${index})">Delete</button>
                 <button id="send-btn-${index}" class="send-btn" onclick="sendStoredData('${type}', ${index})">Send</button>
@@ -486,47 +502,52 @@ function showStoredDatas(type) {
         modalsContent.innerHTML = "<p>No data available.</p>";
     }
 
-    modals.style.display = "flex";
+    modals.style.display = "flex"; // Show the modal
 }
 
+// Function to shorten text for display
 function shortenText(text) {
     if (!text) return "N/A";
     let words = text.split(" ");
     return words.length > 3 ? words.slice(0, 3).join(" ") + "..." : text;
 }
 
+// Function to toggle details visibility in stored data
 function toggleDetailsStored(type, index) {
     let detailsElement = document.getElementById(`details-${type}-${index}`);
     let toggleElement = document.getElementById(`toggle-${type}-${index}`);
     let fullText = storedDatas[type][index].details || "N/A";
 
     if (detailsElement.innerText.includes("...")) {
-        detailsElement.innerText = fullText;
-        toggleElement.innerText = "less...";
+        detailsElement.innerText = fullText; // Show full text
+        toggleElement.innerText = "less..."; // Change toggle text
     } else {
-        detailsElement.innerText = shortenText(fullText);
-        toggleElement.innerText = "more...";
+        detailsElement.innerText = shortenText(fullText); // Show shortened text
+        toggleElement.innerText = "more..."; // Change toggle text
     }
 }
 
+// Function to delete stored data
 function deleteStoredData(type, index) {
     let confirmation = confirm("Are you sure you want to delete this entry?");
     if (confirmation) {
-        storedDatas[type].splice(index, 1);
-        localStorage.setItem("storedDatas", JSON.stringify(storedDatas));
-        showStoredDatas(type);
-        updateSlideshow(type);
+        storedDatas[type].splice(index, 1); // Remove entry from stored data
+        localStorage.setItem("storedDatas", JSON.stringify(storedDatas)); // Update localStorage
+        showStoredDatas(type); // Refresh the displayed data
+        updateSlideshow(type); // Update the slideshow
     }
 }
 
+// Close modal when clicking 'X'
 document.querySelector(".modal-close").addEventListener("click", function () {
-    document.getElementById("dataModal").style.display = "none";
+    document.getElementById("dataModal").style.display = "none"; // Hide modal
 });
 
+// Close modal if clicked outside
 window.addEventListener("click", function (event) {
     let modal = document.getElementById("dataModal");
     if (event.target === modal) {
-        modal.style.display = "none";
+        modal.style.display = "none"; // Hide modal
     }
 });
 
