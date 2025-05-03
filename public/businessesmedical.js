@@ -183,50 +183,16 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 
-function openDetailedEntryInNewWindow(type, index) {
-    const entry = storedDatas[type][index];
-    if (!entry) return;
 
-    const win = window.open('', '_blank', 'width=600,height=500');
-    win.document.write(`
-        <html>
-        <head>
-            <title>${entry.name || "Entry Detail"}</title>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    padding: 20px;
-                    text-align: justify;
-                }
-                h2 { margin-top: 0; }
-                p { margin: 8px 0; }
-            </style>
-        </head>
-        <body>
-            <h2>${entry.name || "N/A"}</h2>
-            <p><strong>Details:</strong> ${entry.details || "N/A"}</p>
-            
-        </body>
-        </html>
-    `);
-    win.document.close();
-}
-
-    
-// Load storedDatas and messages from localStorage
-let storedDatas = JSON.parse(localStorage.getItem("storedDatas")) || {
-    advert: [],
-    notice: []
-};
-
-let advertMessages = JSON.parse(localStorage.getItem("advertMessages")) || [];
-let noticeMessages = JSON.parse(localStorage.getItem("noticeMessages")) || [];
-
+let storedDatas = { advert: [], notice: [] };
+let advertMessages = [];
+let noticeMessages = [];
 let currentAdvertIndex = 0;
 let currentNoticeIndex = 0;
-
 let advertInterval;
 let noticeInterval;
+
+
 
 function escapeHtml(unsafe) {
     return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;")
@@ -234,20 +200,65 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
+async function loadStoredDataFromServer() {
+    try {
+        const res = await fetch('/get-stored-data');
+        const data = await res.json();
+        storedDatas = data.storedDatas || { advert: [], notice: [] };
+        advertMessages = data.advertMessages || [];
+        noticeMessages = data.noticeMessages || [];
+
+        updateSlideshow('advert');
+        updateSlideshow('notice');
+    } catch (err) {
+        console.error('Failed to load data:', err);
+    }
+}
+
+async function saveStoredDataToServer() {
+    try {
+        await fetch('/save-stored-data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                storedDatas,
+                advertMessages,
+                noticeMessages
+            })
+        });
+    } catch (err) {
+        console.error('Failed to save data:', err);
+    }
+}
+
+function openDetailedEntryInNewWindow(type, index) {
+    const entry = storedDatas[type][index];
+    if (!entry) return;
+
+    const win = window.open('', '_blank', 'width=600,height=500');
+    win.document.write(`
+        <html><head><title>${entry.name || "Entry Detail"}</title>
+        <style>
+        body { font-family: Arial, sans-serif; padding: 20px; text-align: justify; }
+        h2 { margin-top: 0; } p { margin: 8px 0; }
+        </style></head><body>
+        <h2>${entry.name || "N/A"}</h2>
+        <p><strong>Details:</strong> ${entry.details || "N/A"}</p>
+        </body></html>
+    `);
+    win.document.close();
+}
 
 function openInNewWindow(message) {
     const safeMessage = escapeHtml(message);
     const newWindow = window.open("", "_blank", "width=400,height=300");
-
     if (newWindow) {
         newWindow.document.write(`<p style="font-family:sans-serif; padding:20px;">${safeMessage}</p>`);
-        newWindow.document.close(); // Ensures the content is rendered
+        newWindow.document.close();
     } else {
         alert("Popup blocked. Please allow popups for this site.");
     }
 }
-
-
 
 function addAdvertMessage() {
     const input = document.getElementById("newAdvertMessage");
@@ -255,72 +266,102 @@ function addAdvertMessage() {
     if (message) {
         advertMessages.push(message);
         input.value = "";
-        localStorage.setItem("advertMessages", JSON.stringify(advertMessages));
-        updateSlideshow('advert');
+
+        // Send the new advert data to the server and fetch the updated slideshow data
+        saveStoredDataToServer('advert')
+            .then(() => {
+                // Fetch the updated slideshow data
+                return fetch('/get-slideshow-data');
+            })
+            .then(response => response.json())
+            .then(data => {
+                advertMessages = data.advertMessages;
+                noticeMessages = data.noticeMessages;
+                storedAdvertData = data.storedDatas.advert;
+                storedNoticeData = data.storedDatas.notice;
+                updateSlideshow('advert');  // Update the UI with new data
+            })
+            .catch(err => console.error("Error saving or fetching data:", err));
     }
 }
+
 
 function removeAdvert() {
     advertMessages.splice(currentAdvertIndex, 1);
-    if (currentAdvertIndex >= advertMessages.length) {
-        currentAdvertIndex = 0;
-    }
-    localStorage.setItem("advertMessages", JSON.stringify(advertMessages));
-    updateSlideshow('advert');
-}
+    if (currentAdvertIndex >= advertMessages.length) currentAdvertIndex = 0;
 
+    // Send the updated data to the server and fetch the updated slideshow data
+    saveStoredDataToServer('advert')
+        .then(() => {
+            return fetch('/get-slideshow-data');
+        })
+        .then(response => response.json())
+        .then(data => {
+            advertMessages = data.advertMessages;
+            noticeMessages = data.noticeMessages;
+            storedAdvertData = data.storedDatas.advert;
+            storedNoticeData = data.storedDatas.notice;
+            updateSlideshow('advert');  // Update the UI with new data
+        })
+        .catch(err => console.error("Error saving or fetching data:", err));
+}
 function addNoticeMessage() {
     const input = document.getElementById("newNoticeMessage");
     const message = input.value.trim();
     if (message) {
         noticeMessages.push(message);
         input.value = "";
-        localStorage.setItem("noticeMessages", JSON.stringify(noticeMessages));
-        updateSlideshow('notice');
+
+        // Send the new notice data to the server and fetch the updated slideshow data
+        saveStoredDataToServer('notice')
+            .then(() => {
+                return fetch('/get-slideshow-data');
+            })
+            .then(response => response.json())
+            .then(data => {
+                advertMessages = data.advertMessages;
+                noticeMessages = data.noticeMessages;
+                storedAdvertData = data.storedDatas.advert;
+                storedNoticeData = data.storedDatas.notice;
+                updateSlideshow('notice');  // Update the UI with new data
+            })
+            .catch(err => console.error("Error saving or fetching data:", err));
     }
 }
+
 
 function removeNotice() {
     noticeMessages.splice(currentNoticeIndex, 1);
-    if (currentNoticeIndex >= noticeMessages.length) {
-        currentNoticeIndex = 0;
-    }
-    localStorage.setItem("noticeMessages", JSON.stringify(noticeMessages));
-    updateSlideshow('notice');
+    if (currentNoticeIndex >= noticeMessages.length) currentNoticeIndex = 0;
+
+    // Send the updated data to the server and fetch the updated slideshow data
+    saveStoredDataToServer('notice')
+        .then(() => {
+            return fetch('/get-slideshow-data');
+        })
+        .then(response => response.json())
+        .then(data => {
+            advertMessages = data.advertMessages;
+            noticeMessages = data.noticeMessages;
+            storedAdvertData = data.storedDatas.advert;
+            storedNoticeData = data.storedDatas.notice;
+            updateSlideshow('notice');  // Update the UI with new data
+        })
+        .catch(err => console.error("Error saving or fetching data:", err));
 }
 
 
-
 function goToSlide(type, index) {
-    if (type === 'advert') {
-        currentAdvertIndex = index;
-    } else {
-        currentNoticeIndex = index;
-    }
+    if (type === 'advert') currentAdvertIndex = index;
+    else currentNoticeIndex = index;
     updateSlideshow(type);
 }
 
 function updateSlideshow(type) {
-    let messages, getIndex, setIndex, boxId, dotsId, intervalVarName;
-
-    if (type === 'advert') {
-        messages = advertMessages;
-        getIndex = () => currentAdvertIndex;
-        setIndex = val => currentAdvertIndex = val;
-        boxId = "AdvertAd";
-        dotsId = "advertDots";
-        intervalVarName = "advertInterval";
-    } else {
-        messages = noticeMessages;
-        getIndex = () => currentNoticeIndex;
-        setIndex = val => currentNoticeIndex = val;
-        boxId = "noticeAd";
-        dotsId = "noticeDots";
-        intervalVarName = "noticeInterval";
-    }
-
-    const box = document.getElementById(boxId);
-    const dotContainer = document.getElementById(dotsId);
+    let messages = type === 'advert' ? advertMessages : noticeMessages;
+    let index = type === 'advert' ? currentAdvertIndex : currentNoticeIndex;
+    let box = document.getElementById(type === 'advert' ? "AdvertAd" : "noticeAd");
+    let dots = document.getElementById(type === 'advert' ? "advertDots" : "noticeDots");
 
     function adjustFontSizeToFit(box) {
         const maxWidth = box.offsetWidth;
@@ -339,42 +380,37 @@ function updateSlideshow(type) {
     function showMessage(index) {
         const msg = messages[index] || `No ${type === 'advert' ? 'Advertisements' : 'Notices'}`;
         const safeMessage = escapeHtml(msg);
-    
-        // Match against storedDatas
+
         const entryIndex = storedDatas[type].findIndex(entry => {
             const fullContent = `Name of Organization: ${entry.name}\nDetails: ${entry.details}`;
             return fullContent === msg;
         });
-    
-        if (entryIndex !== -1) {
-            box.innerHTML = `<span class="clickable-message" onclick="openDetailedEntryInNewWindow('${type}', ${entryIndex})">${safeMessage}</span>`;
-        } else {
-            box.innerHTML = `<span class="clickable-message" onclick="openInNewWindow('${safeMessage}')">${safeMessage}</span>`;
-        }
-    
+
+        box.innerHTML = `<span class="clickable-message" onclick="${
+            entryIndex !== -1
+                ? `openDetailedEntryInNewWindow('${type}', ${entryIndex})`
+                : `openInNewWindow('${safeMessage}')`
+        }">${safeMessage}</span>`;
+
         box.style.textAlign = 'justify';
         adjustFontSizeToFit(box);
     }
-    
 
-    showMessage(getIndex());
+    showMessage(index);
 
-    dotContainer.innerHTML = messages.map((msg, i) =>
-        `<span class="dot ${i === getIndex() ? 'active' : ''}" onclick="goToSlide('${type}', ${i})">
-            </span><span style="cursor:pointer; color:red;" onclick="deleteSpecificMessage('${type}', ${i})">❌</span>`
+    dots.innerHTML = messages.map((msg, i) =>
+        `<span class="dot ${i === index ? 'active' : ''}" onclick="goToSlide('${type}', ${i})"></span>
+        <span style="cursor:pointer; color:red;" onclick="deleteSpecificMessage('${type}', ${i})">❌</span>`
     ).reverse().join("");
 
-    clearInterval(window[intervalVarName]);
+    clearInterval(window[type === 'advert' ? "advertInterval" : "noticeInterval"]);
 
     if (messages.length > 0) {
-        window[intervalVarName] = setInterval(() => {
-            const newIndex = (getIndex() + 1) % messages.length;
-            setIndex(newIndex);
-            showMessage(newIndex);
-
-            dotContainer.innerHTML = messages.map((_, i) =>
-                `<span class="dot ${i === newIndex ? 'active' : ''}" onclick="goToSlide('${type}', ${i})"></span>`
-            ).reverse().join("");
+        window[type === 'advert' ? "advertInterval" : "noticeInterval"] = setInterval(() => {
+            const newIndex = (index + 1) % messages.length;
+            if (type === 'advert') currentAdvertIndex = newIndex;
+            else currentNoticeIndex = newIndex;
+            updateSlideshow(type);
         }, 3000);
     }
 }
@@ -383,104 +419,57 @@ function deleteSpecificMessage(type, index) {
     if (type === 'advert') {
         advertMessages.splice(index, 1);
         if (currentAdvertIndex >= advertMessages.length) currentAdvertIndex = 0;
-        localStorage.setItem("advertMessages", JSON.stringify(advertMessages));
     } else {
         noticeMessages.splice(index, 1);
         if (currentNoticeIndex >= noticeMessages.length) currentNoticeIndex = 0;
-        localStorage.setItem("noticeMessages", JSON.stringify(noticeMessages));
     }
-    updateSlideshow(type);
-
     storedDatas[type].splice(index, 1);
-    localStorage.setItem("storedDatas", JSON.stringify(storedDatas));
+    saveStoredDataToServer();
+    updateSlideshow(type);
 }
 
-// Handle form submission
 function handleFormSubmit(event, type) {
     event.preventDefault();
-
     let formData = new FormData(event.target);
     let formObject = Object.fromEntries(formData);
-
     storedDatas[type].push(formObject);
-    localStorage.setItem("storedDatas", JSON.stringify(storedDatas));
-
+    saveStoredDataToServer();
     alert(`Form submitted under: ${type === "advert" ? "Advertises" : "Notices"}`);
     event.target.reset();
 }
 
-// Attach event listeners to forms after DOM content is loaded
-document.addEventListener("DOMContentLoaded", function () {
-    let advertForm = document.getElementById("adverteForm");
-    let noticeForm = document.getElementById("noticeForm");
-
-    if (advertForm) {
-        advertForm.addEventListener("submit", function (event) {
-            handleFormSubmit(event, "advert");
-        });
-    }
-
-    if (noticeForm) {
-        noticeForm.addEventListener("submit", function (event) {
-            handleFormSubmit(event, "notice");
-        });
-    }
-
-    document.querySelector(".select-advert-notice").addEventListener("change", function () {
-        let selectedOption = this.value;
-        showStoredDatas(selectedOption);
-    });
-
-    updateSlideshow('advert');
-    updateSlideshow('notice');
-});
-
 function sendStoredData(type, index) {
     const entry = storedDatas[type][index];
     const messageContent = `Name of Organization: ${entry.name}\nDetails: ${entry.details}`;
-
-    // Add to slideshow messages
-    if (type === 'advert') {
-        advertMessages.push(messageContent);
-        localStorage.setItem("advertMessages", JSON.stringify(advertMessages));
-        updateSlideshow('advert');
-    } else if (type === 'notice') {
-        noticeMessages.push(messageContent);
-        localStorage.setItem("noticeMessages", JSON.stringify(noticeMessages));
-        updateSlideshow('notice');
-    }
-
-    // Don't remove from stored data. The entry will remain there unless explicitly deleted.
+    if (type === 'advert') advertMessages.push(messageContent);
+    else noticeMessages.push(messageContent);
+    saveStoredDataToServer();
+    updateSlideshow(type);
     alert(`${entry.name || "This entry"} has been sent to the slideshow.`);
-
-    // Refresh stored data view
     showStoredDatas(type);
 }
 
 function showStoredDatas(type) {
-    let modals = document.getElementById("dataModal");
-    let modalsContent = document.getElementById("modalContent");
-
-    modalsContent.innerHTML = "";
+    let modal = document.getElementById("dataModal");
+    let content = document.getElementById("modalContent");
+    content.innerHTML = "";
 
     if (storedDatas[type].length > 0) {
         storedDatas[type].forEach((entry, index) => {
-            modalsContent.innerHTML += `
+            content.innerHTML += `
                 <h4>Entry ${index + 1}</h4>
                 <p><strong>Name:</strong> ${entry.name || "N/A"}</p>
-                <p><strong>Details:</strong> <span id="details-${type}-${index}">${shortenText(entry.details)}</span> 
-                    <a href="#" onclick="toggleDetailsStored('${type}', ${index}); return false;" id="toggle-${type}-${index}">more...</a>
-                </p>
-                <button id="delete-btn-${index}" class="delete-btn" onclick="deleteStoredData('${type}', ${index})">Delete</button>
-                <button id="send-btn-${index}" class="send-btn" onclick="sendStoredData('${type}', ${index})">Send</button>
-                <hr>
-            `;
+                <p><strong>Details:</strong> <span id="details-${type}-${index}">${shortenText(entry.details)}</span>
+                    <a href="#" onclick="toggleDetailsStored('${type}', ${index}); return false;" id="toggle-${type}-${index}">more...</a></p>
+                <button onclick="deleteStoredData('${type}', ${index})">Delete</button>
+                <button onclick="sendStoredData('${type}', ${index})">Send</button>
+                <hr>`;
         });
     } else {
-        modalsContent.innerHTML = "<p>No data available.</p>";
+        content.innerHTML = "<p>No data available.</p>";
     }
 
-    modals.style.display = "flex";
+    modal.style.display = "flex";
 }
 
 function shortenText(text) {
@@ -493,7 +482,6 @@ function toggleDetailsStored(type, index) {
     let detailsElement = document.getElementById(`details-${type}-${index}`);
     let toggleElement = document.getElementById(`toggle-${type}-${index}`);
     let fullText = storedDatas[type][index].details || "N/A";
-
     if (detailsElement.innerText.includes("...")) {
         detailsElement.innerText = fullText;
         toggleElement.innerText = "less...";
@@ -504,25 +492,33 @@ function toggleDetailsStored(type, index) {
 }
 
 function deleteStoredData(type, index) {
-    let confirmation = confirm("Are you sure you want to delete this entry?");
-    if (confirmation) {
+    if (confirm("Are you sure you want to delete this entry?")) {
         storedDatas[type].splice(index, 1);
-        localStorage.setItem("storedDatas", JSON.stringify(storedDatas));
+        saveStoredDataToServer();
         showStoredDatas(type);
         updateSlideshow(type);
     }
 }
 
-document.querySelector(".modal-close").addEventListener("click", function () {
-    document.getElementById("dataModal").style.display = "none";
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("adverteForm")?.addEventListener("submit", e => handleFormSubmit(e, "advert"));
+    document.getElementById("noticeForm")?.addEventListener("submit", e => handleFormSubmit(e, "notice"));
+    document.querySelector(".select-advert-notice")?.addEventListener("change", function () {
+        showStoredDatas(this.value);
+    });
+    document.querySelector(".modal-close").addEventListener("click", () => {
+        document.getElementById("dataModal").style.display = "none";
+    });
+    window.addEventListener("click", e => {
+        if (e.target === document.getElementById("dataModal")) {
+            document.getElementById("dataModal").style.display = "none";
+        }
+    });
+
+    loadStoredDataFromServer();
 });
 
-window.addEventListener("click", function (event) {
-    let modal = document.getElementById("dataModal");
-    if (event.target === modal) {
-        modal.style.display = "none";
-    }
-});
+
 
 
 
@@ -991,46 +987,48 @@ async function verifyBusinessLicense(licenseNumber) {
 
 
 document.addEventListener("DOMContentLoaded", function () {
-    // Select form elements
     const typeSelect = document.getElementById("type");
     const medicalCategory = document.getElementById("medicalCategory");
     const businessCategory = document.getElementById("businessCategory");
 
-    // Check if elements exist to prevent errors
     if (typeSelect && medicalCategory && businessCategory) {
-        // Create input fields dynamically for "Other" selections
+        // Create input fields for custom "Other" categories
         const medicalOtherInput = document.createElement("input");
         medicalOtherInput.type = "text";
         medicalOtherInput.id = "medicalOther";
         medicalOtherInput.placeholder = "Specify Medical Category";
-        medicalOtherInput.style.display = "none"; // Hidden by default
+        medicalOtherInput.style.display = "none";
 
         const businessOtherInput = document.createElement("input");
         businessOtherInput.type = "text";
         businessOtherInput.id = "businessOther";
         businessOtherInput.placeholder = "Specify Business Category";
-        businessOtherInput.style.display = "none"; // Hidden by default
+        businessOtherInput.style.display = "none";
 
-        // Insert inputs after their respective select elements
+        // Insert "Other" input fields after their respective select elements
         medicalCategory.parentNode.insertBefore(medicalOtherInput, medicalCategory.nextSibling);
         businessCategory.parentNode.insertBefore(businessOtherInput, businessCategory.nextSibling);
 
-        // Event Listener for Type Selection (Enable/Disable categories)
+        // Disable both categories by default
+        medicalCategory.disabled = true;
+        businessCategory.disabled = true;
+
+        // Enable relevant dropdowns based on type selection
         typeSelect.addEventListener("change", function () {
-            if (typeSelect.value === "medical") {
+            const selectedType = typeSelect.value;
+            if (selectedType === "medical") {
                 medicalCategory.disabled = false;
                 businessCategory.disabled = true;
-                businessCategory.value = ""; // Reset business category selection
-                businessOtherInput.style.display = "none"; // Hide "Other" input for business
+                businessCategory.value = "";
+                businessOtherInput.style.display = "none";
                 businessOtherInput.required = false;
-            } else if (typeSelect.value === "business") {
-                medicalCategory.disabled = true;
+            } else if (selectedType === "business") {
                 businessCategory.disabled = false;
-                medicalCategory.value = ""; // Reset medical category selection
-                medicalOtherInput.style.display = "none"; // Hide "Other" input for medical
+                medicalCategory.disabled = true;
+                medicalCategory.value = "";
+                medicalOtherInput.style.display = "none";
                 medicalOtherInput.required = false;
             } else {
-                // Reset both if no selection
                 medicalCategory.disabled = true;
                 businessCategory.disabled = true;
                 medicalOtherInput.style.display = "none";
@@ -1038,7 +1036,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 
-        // Event Listener for Medical Category Selection
+        // Show/hide custom input for medical category
         medicalCategory.addEventListener("change", function () {
             if (medicalCategory.value === "other") {
                 medicalOtherInput.style.display = "block";
@@ -1046,58 +1044,53 @@ document.addEventListener("DOMContentLoaded", function () {
             } else {
                 medicalOtherInput.style.display = "none";
                 medicalOtherInput.required = false;
-                medicalOtherInput.value = ""; // Clear input when not needed
+                medicalOtherInput.value = "";
             }
         });
 
-        // Event Listener for Business Category Selection
+        // Show/hide custom input for business category
         businessCategory.addEventListener("change", function () {
-            if (businessCategory.value === "others") {
+            if (businessCategory.value === "other") {
                 businessOtherInput.style.display = "block";
                 businessOtherInput.required = true;
             } else {
                 businessOtherInput.style.display = "none";
                 businessOtherInput.required = false;
-                businessOtherInput.value = ""; // Clear input when not needed
+                businessOtherInput.value = "";
             }
         });
 
-        // Event Listener for Form Submission
+        // Handle form submission
         const registrationForm = document.getElementById("registrationForm");
         registrationForm.addEventListener("submit", function (event) {
-            event.preventDefault(); // Prevent form submission for now (for demonstration)
+            event.preventDefault();
 
-            // Get the selected category value
             let medicalSelected = medicalCategory.value;
             let businessSelected = businessCategory.value;
 
-            // Get the custom input values
-            const customMedical = medicalOtherInput.value;
-            const customBusiness = businessOtherInput.value;
+            const customMedical = medicalOtherInput.value.trim();
+            const customBusiness = businessOtherInput.value.trim();
 
-            // Replace "Other" or "Others" with custom input if available
             if (medicalSelected === "other" && customMedical) {
-                medicalSelected = customMedical; // Save the user-specified title for medical category
+                medicalSelected = customMedical;
             }
 
-            if (businessSelected === "others" && customBusiness) {
-                businessSelected = customBusiness; // Save the user-specified title for business category
+            if (businessSelected === "other" && customBusiness) {
+                businessSelected = customBusiness;
             }
 
-            // Prepare the data to display in the model window
             const displayTitle = `Type: ${typeSelect.value === "medical" ? "Medical" : "Business"} | Category: ${medicalSelected || businessSelected}`;
 
-            // Assume there's a modal window or an element where we want to display this data
-            const modelWindow = document.getElementById("modelWindow"); // Your model window element
+            const modelWindow = document.getElementById("modelWindow");
             if (modelWindow) {
                 modelWindow.innerHTML = `<p>${displayTitle}</p>`;
             }
 
-            // Log data for testing purposes (you can remove this later)
             console.log(displayTitle);
         });
     }
 });
+
 
 
 
