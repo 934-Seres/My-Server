@@ -336,6 +336,14 @@ function updateSlideshow(type) {
         dotsId = "noticeDots";
         intervalVarName = "noticeInterval";
     }
+    fetch('/get-stored-data')
+    .then(response => response.json())
+    .then(data => {
+        const messages = data[type]; // Get messages for the selected type
+        // Update your slideshow logic here
+        console.log(messages); // For debugging
+    })
+    .catch(error => console.error('Error fetching stored data:', error));
 
     const box = document.getElementById(boxId);
     const dotContainer = document.getElementById(dotsId);
@@ -426,6 +434,27 @@ function handleFormSubmit(event, type) {
 
     alert(`Form submitted under: ${type === "advert" ? "Advertises" : "Notices"}`);
     event.target.reset(); // Reset the form
+    fetch('/save-stored-data', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ type, entry: formObject }) // Send the type and entry
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Form submitted under: ${type === "advert" ? "Advertises" : "Notices"}`);
+            event.target.reset(); // Reset the form
+            updateSlideshow(type); // Update the slideshow after submission
+        } else {
+            alert('Error submitting form: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to submit form. Please try again.');
+    });
 }
 
 // Attach event listeners to forms after DOM content is loaded
