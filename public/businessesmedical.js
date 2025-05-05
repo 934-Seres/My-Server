@@ -211,19 +211,20 @@ function openDetailedEntryInNewWindow(type, index) {
 }
 
     
-// Load storedDatas and messages from localStorage
-function safeParse(key, fallback) {
-    try {
-        return JSON.parse(localStorage.getItem(key)) || fallback;
-    } catch {
-        return fallback;
-    }
-}
+let storedDatas = { advert: [], notice: [] };
+let advertMessages = [];
+let noticeMessages = [];
 
+fetch('/get-stored-data')
+    .then(res => res.json())
+    .then(data => {
+        storedDatas = data.storedDatas || { advert: [], notice: [] };
+        advertMessages = data.advertMessages || [];
+        noticeMessages = data.noticeMessages || [];
 
-let storedDatas = safeParse("storedDatas", { advert: [], notice: [] });
-let advertMessages = safeParse("advertMessages", []);
-let noticeMessages = safeParse("noticeMessages", []);
+        updateSlideshow('advert');
+        updateSlideshow('notice');
+    });
 
 let currentAdvertIndex = 0;
 let currentNoticeIndex = 0;
@@ -421,7 +422,16 @@ function handleFormSubmit(event, type) {
     let formObject = Object.fromEntries(formData);
 
     storedDatas[type].push(formObject);
-    localStorage.setItem("storedDatas", JSON.stringify(storedDatas));
+    fetch('/save-slideshow-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            storedDatas,
+            advertMessages,
+            noticeMessages
+        })
+    });
+    
 
     alert(`Form submitted under: ${type === "advert" ? "Advertises" : "Notices"}`);
     event.target.reset();
@@ -469,6 +479,16 @@ function sendStoredData(type, index) {
             localStorage.setItem("noticeMessages", JSON.stringify(noticeMessages));
             updateSlideshow('notice');
         }
+        fetch('/save-slideshow-data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                storedDatas,
+                advertMessages,
+                noticeMessages
+            })
+        });
+        
     }
 
     alert(`${entry.name || "This entry"} has been sent to the slideshow.`);
@@ -530,7 +550,16 @@ function deleteStoredData(type, index) {
     let confirmation = confirm("Are you sure you want to delete this entry?");
     if (confirmation) {
         storedDatas[type].splice(index, 1);
-        localStorage.setItem("storedDatas", JSON.stringify(storedDatas));
+        fetch('/save-slideshow-data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                storedDatas,
+                advertMessages,
+                noticeMessages
+            })
+        });
+        
         showStoredDatas(type);
         updateSlideshow(type);
     }

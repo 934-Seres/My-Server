@@ -49,6 +49,7 @@ const medicalFile = path.join(__dirname, 'medicalRegistrations.json');
 const businessFile = path.join(__dirname, 'businessRegistrations.json');
 const storedDataFile = path.join(__dirname, 'storedData.json');
 const slideshowDataFile = path.join(__dirname, 'slideshowData.json');
+
 // --- Initial State Variables ---
 let totalViewers = 0;
 let totalFollowers = 0;
@@ -90,6 +91,7 @@ advertMessages = slideshowData.advertMessages;
 noticeMessages = slideshowData.noticeMessages;
 storedAdvertData = slideshowData.storedDatas.advert;
 storedNoticeData = slideshowData.storedDatas.notice;
+
 // --- File Saving Helpers ---
 const saveToFile = (file, data) => {
     try {
