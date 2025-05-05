@@ -8,6 +8,8 @@ const fs = require('fs');
 const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser'); 
+const { v4: uuidv4 } = require('uuid');
+
 
 
 const cors = require('cors');
@@ -97,14 +99,14 @@ storedAdvertData = slideshowData.storedDatas.advert;
 storedNoticeData = slideshowData.storedDatas.notice;
 
 // --- File Saving Helpers ---
-const saveToFile = (file, data) => {
+const saveToFile = async (file, data) => {
     try {
-        fs.writeFileSync(file, JSON.stringify(data, null, 2));
+      await fs.promises.writeFile(file, JSON.stringify(data, null, 2));
+    } catch (err) {
+      console.error(`Error writing to ${file}:`, err);
     }
-    catch (err) {
-        console.error(`Error writing to ${file}:`, err);
-    }
-};
+  };
+  
 const saveMessages = () => saveToFile(messagesFile, messages);
 const saveViewerCount = () => saveToFile(viewerCountFile, { count: totalViewers });
 const saveFollowerCount = () => saveToFile(followersFile, { count: totalFollowers });
@@ -182,7 +184,7 @@ app.post('/save-slideshow-data', (req, res) => {
     }
 
     // Save the data using the existing helper
-    saveToFile('slideshowData.json', { storedDatas, advertMessages, noticeMessages });
+    saveToFile(slideshowDataFile, { storedDatas, advertMessages, noticeMessages });
 
     res.status(200).json({ message: 'Slideshow data saved successfully.' });
 });
@@ -269,10 +271,11 @@ io.on('connection', (socket) => {
         const newMessage = {
             text,
             sender: socket.username,
-            messageId,
+            messageId: messageId || uuidv4(), // <- Use UUID if not provided
             timestamp: timestamp || Date.now(),
             replies: []
         };
+    
         messages.push(newMessage);
         if (messages.length > MAX_MESSAGES) {
             messages = messages.slice(-MAX_MESSAGES);
