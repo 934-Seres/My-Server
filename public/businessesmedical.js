@@ -266,38 +266,79 @@ function escapeHtml(text) {
     return text.replace(/[&<>"']/g, m => map[m]);
 }
 
-function openInNewWindow(message) {
-    const safeMessage = escapeHtml(message);
-    const newWindow = window.open("", "_blank", "width=400,height=300");
-    if (newWindow) {
-        newWindow.document.write(`<p style="font-family:sans-serif; padding:20px;">${safeMessage}</p>`);
-        newWindow.document.close();
-    } else {
-        alert("Popup blocked. Please allow popups for this site.");
-    }
-}
+
 
 function openDetailedEntryInNewWindow(type, index) {
     const entry = storedDatas[type][index];
     if (!entry) return;
+
     const win = window.open('', '_blank', 'width=600,height=500');
-    win.document.write(`
-        <html>
+    win.document.write(
+        `<html>
         <head>
             <title>${escapeHtml(entry.name || "Entry Detail")}</title>
             <style>
                 body { font-family: Arial, sans-serif; padding: 20px; text-align: justify; }
                 h2 { margin-top: 0; } p { margin: 8px 0; }
+                button { margin-top: 20px; padding: 8px 12px; }
             </style>
         </head>
         <body>
             <h2>${escapeHtml(entry.name || "N/A")}</h2>
             <p><strong>Details:</strong> ${escapeHtml(entry.details || "N/A")}</p>
+            ${isOwner ? `<button onclick="window.opener.deleteEntryFromPopup('${type}', ${index}); window.close();">Delete This Entry</button>` : ""}
         </body>
-        </html>
-    `);
+        </html>`
+    );
     win.document.close();
+
+    // Add arrow key navigation in the new window
+    win.addEventListener('keydown', function (e) {
+        const totalEntries = storedDatas[type].length;
+        let newIndex = index;
+
+        if (e.key === "ArrowRight") {
+            newIndex = (index + 1) % totalEntries;  // Move to the next entry
+        } else if (e.key === "ArrowLeft") {
+            newIndex = (index - 1 + totalEntries) % totalEntries;  // Move to the previous entry
+        }
+
+        if (newIndex !== index) {
+            // Reopen the new window with the updated entry
+            win.close();  // Close the current window
+            openDetailedEntryInNewWindow(type, newIndex);  // Open the new entry
+        }
+    });
 }
+
+
+
+function deleteEntryFromPopup(type, index) {
+    const messageArray = type === 'advert' ? advertMessages : noticeMessages;
+    messageArray.splice(index, 1);  // Remove only from the slideshow array
+
+    // Update the slideshow display
+    updateSlideshow(type);
+    saveSlideshowData();  // Ensure data is saved after deletion
+}
+
+function deleteNotice(index) {
+    noticeMessages.splice(index, 1);  // Remove from the slideshow only
+    updateSlideshow('notice');
+    saveSlideshowData();  // Ensure data is saved after deletion
+}
+
+function deleteAdvert(index) {
+    advertMessages.splice(index, 1);  // Remove from the slideshow only
+    updateSlideshow('advert');
+    saveSlideshowData();  // Ensure data is saved after deletion
+}
+
+
+
+
+
+
 
 function goToSlide(type, index) {
     if (type === 'advert') currentAdvertIndex = index;
