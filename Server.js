@@ -1,17 +1,23 @@
+
+// --- Load Environment First => Strict Mode and Core Modules ---
 "use strict";
-// --- Load Environment First ---
 require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
+// Essential Libraries & Server Setup---
 const express = require('express');
 const session = require('express-session');
-const bodyParser = require('body-parser');
+const bodyParser = require('body-parser'); 
+
+
 const cors = require('cors');
 const http = require('http');
 const socketIO = require('socket.io');
+// Server and Socket Initialization ---
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server, { cors: { origin: '*' } });
+
 // --- Environment Variables ---
 const PORT = process.env.PORT || 3000;
 const OWNER_USERNAME = process.env.OWNER_USERNAME;
@@ -25,14 +31,17 @@ if (!OWNER_USERNAME || !OWNER_PASSWORD || !SESSION_SECRET) {
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
 app.use(session({
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
+//  Static Files
 app.use(express.static(path.join(__dirname, 'public')));
-// --- File Paths ---
+
+// ---  File Paths Setup ---
 const followersFile = path.join(__dirname, 'followers.json');
 const viewerCountFile = path.join(__dirname, 'viewerCount.json');
 const messagesFile = path.join(__dirname, 'messages.json');
@@ -40,7 +49,7 @@ const medicalFile = path.join(__dirname, 'medicalRegistrations.json');
 const businessFile = path.join(__dirname, 'businessRegistrations.json');
 const storedDataFile = path.join(__dirname, 'storedData.json');
 const slideshowDataFile = path.join(__dirname, 'slideshowData.json');
-// --- Initial State ---
+// --- Initial State Variables ---
 let totalViewers = 0;
 let totalFollowers = 0;
 let messages = [];
@@ -54,7 +63,7 @@ let noticeMessages = [];
 let storedAdvertData = [];
 let storedNoticeData = [];
 const MAX_MESSAGES = 100;
-// --- Safe File Load ---
+// --- Safe File Load Function ---
 function safeLoad(filePath, fallback) {
     try {
         if (fs.existsSync(filePath)) {
@@ -66,6 +75,7 @@ function safeLoad(filePath, fallback) {
     }
     return fallback;
 }
+
 // --- Load Data From Files ---
 totalViewers = safeLoad(viewerCountFile, { count: 0 }).count;
 totalFollowers = safeLoad(followersFile, { count: 0 }).count;
@@ -80,7 +90,7 @@ advertMessages = slideshowData.advertMessages;
 noticeMessages = slideshowData.noticeMessages;
 storedAdvertData = slideshowData.storedDatas.advert;
 storedNoticeData = slideshowData.storedDatas.notice;
-// --- Save Helpers ---
+// --- File Saving Helpers ---
 const saveToFile = (file, data) => {
     try {
         fs.writeFileSync(file, JSON.stringify(data, null, 2));
@@ -103,12 +113,12 @@ const saveSlideshowData = () => saveToFile(slideshowDataFile, {
         notice: storedNoticeData
     }
 });
-// --- Static Page ---
-app.get('/', (req, res) => {
+// --- Routes: Static Page ---
+app.get('/', (_req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'businessesmedical.html'));
 });
-// --- Stored Registration Data ---
-app.get('/get-stored-data', (req, res) => {
+// --- Stored Data API:Stored Registration Data ---
+app.get('/get-stored-data', (_req, res) => {
     res.json({ medical: storedMedicalData, business: storedBusinessData });
 });
 app.post('/save-stored-data', (req, res) => {
@@ -121,8 +131,8 @@ app.post('/save-stored-data', (req, res) => {
     saveStoredData();
     res.sendStatus(200);
 });
-// --- Slideshow Data ---
-app.get('/get-slideshow-data', (req, res) => {
+// --- Slideshow Data API: Slideshow Data ---
+app.get('/get-slideshow-data', (_req, res) => {
     res.json({
         advertMessages,
         noticeMessages,
@@ -164,7 +174,7 @@ app.post('/logout', (req, res) => {
 app.get('/check-owner', (req, res) => {
     res.json({ isOwner: !!req.session.isOwner });
 });
-// --- Registration ---
+// ---Registration API: Registration ---
 app.post('/api/register', (req, res) => {
     const { category, registrationData } = req.body;
     if (!category || !registrationData) {
@@ -186,7 +196,7 @@ app.post('/api/register', (req, res) => {
 app.get('/api/registrations', (req, res) => {
     res.json({ medical: medicalRegistrations, business: businessRegistrations });
 });
-// --- Socket.IO Chat and Stats ---
+// --- Socket.IO – Real-time Chat + Stats: Socket.IO Chat and Stats ---
 io.on('connection', (socket) => {
     totalViewers++;
     saveViewerCount();

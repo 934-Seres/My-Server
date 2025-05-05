@@ -369,7 +369,7 @@ form button:hover {
     overflow: auto;
 }
 
-#adverteForm, #noticeForm {
+#advertForm, #noticeForm {
     width: 500px;
     background-color: gold;
 }
