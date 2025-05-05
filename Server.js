@@ -36,7 +36,11 @@ app.use(session({
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: process.env.NODE_ENV === 'production' }
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+      }
+      
 }));
 //  Static Files
 app.use(express.static(path.join(__dirname, 'public')));
@@ -119,10 +123,31 @@ const saveSlideshowData = () => saveToFile(slideshowDataFile, {
 app.get('/', (_req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'businessesmedical.html'));
 });
+// --- Unified Stored Slideshow Data for All Devices ---
+app.get('/get-advert-notice-data', (_req, res) => {
+    res.json({
+        advert: storedAdvertData,
+        notice: storedNoticeData
+    });
+});
+
+app.post('/save-advert-notice-data', (req, res) => {
+    const { advert, notice } = req.body;
+    if (!Array.isArray(advert) || !Array.isArray(notice)) {
+        return res.status(400).json({ success: false, message: 'Invalid data format' });
+    }
+    storedAdvertData = advert;
+    storedNoticeData = notice;
+    saveSlideshowData(); // ✅ Fix: Use slideshow data saver to persist across devices
+    res.sendStatus(200);
+});
+
+
 // --- Stored Data API:Stored Registration Data ---
 app.get('/get-stored-data', (_req, res) => {
     res.json({ medical: storedMedicalData, business: storedBusinessData });
 });
+
 app.post('/save-stored-data', (req, res) => {
     const { medical, business } = req.body;
     if (!Array.isArray(medical) || !Array.isArray(business)) {
@@ -145,17 +170,23 @@ app.get('/get-slideshow-data', (_req, res) => {
     });
 });
 app.post('/save-slideshow-data', (req, res) => {
-    const { advertMessages: ads, noticeMessages: notices, storedDatas } = req.body;
-    if (!Array.isArray(ads) || !Array.isArray(notices) || typeof storedDatas !== 'object') {
+    const { storedDatas, advertMessages, noticeMessages } = req.body;
+
+    // Validate the incoming data
+    if (
+        typeof storedDatas !== 'object' ||
+        !Array.isArray(advertMessages) ||
+        !Array.isArray(noticeMessages)
+    ) {
         return res.status(400).json({ success: false, message: 'Invalid slideshow format' });
     }
-    advertMessages = ads;
-    noticeMessages = notices;
-    storedAdvertData = storedDatas.advert || [];
-    storedNoticeData = storedDatas.notice || [];
-    saveSlideshowData();
-    res.json({ success: true });
+
+    // Save the data using the existing helper
+    saveToFile('slideshowData.json', { storedDatas, advertMessages, noticeMessages });
+
+    res.status(200).json({ message: 'Slideshow data saved successfully.' });
 });
+
 // --- Authentication ---
 app.post('/verify-owner', (req, res) => {
     res.json({ success: req.body.password === OWNER_PASSWORD });
@@ -204,7 +235,11 @@ io.on('connection', (socket) => {
     saveViewerCount();
     io.emit('viewerCountUpdate', totalViewers);
     socket.emit('followerCountUpdate', totalFollowers);
-    let currentUser = `Guest${Math.floor(Math.random() * 10000)}`;
+    let currentUser;
+    do {
+    currentUser = `Guest${Math.floor(Math.random() * 10000)}`;
+    } while (activeUsers.find(u => u.username === currentUser));
+
     socket.username = currentUser;
     socket.on('joinChat', ({ username, deviceInfo }) => {
         currentUser = username || currentUser;

@@ -1,10 +1,12 @@
 {
-  "advertMessages": [],
+  "advertMessages": [
+    "Name of Organization: Pawi hospital\nDetails: •\tGet your health back on track with Medium our Clinic – Comprehensive checkups now!"
+  ],
   "noticeMessages": [],
   "storedDatas": {
     "advert": [
       {
-        "name": "Ozone Clinic",
+        "name": "Pawi hospital",
         "details": "•\tGet your health back on track with Medium our Clinic – Comprehensive checkups now!"
       }
     ],

@@ -215,7 +215,7 @@ let storedDatas = { advert: [], notice: [] };
 let advertMessages = [];
 let noticeMessages = [];
 
-fetch('/get-stored-data')
+fetch('/get-advert-notice-data')
     .then(res => res.json())
     .then(data => {
         storedDatas = data.storedDatas || { advert: [], notice: [] };
@@ -263,28 +263,28 @@ function addAdvertMessage() {
     if (message) {
         advertMessages.push(message);
         input.value = "";
-        localStorage.setItem("advertMessages", JSON.stringify(advertMessages));
         updateSlideshow('advert');
+        syncSlideshowData();
     }
 }
+
 
 function removeAdvert() {
     advertMessages.splice(currentAdvertIndex, 1);
     if (currentAdvertIndex >= advertMessages.length) {
         currentAdvertIndex = 0;
     }
-    localStorage.setItem("advertMessages", JSON.stringify(advertMessages));
     updateSlideshow('advert');
+    syncSlideshowData();
 }
-
 function addNoticeMessage() {
     const input = document.getElementById("newNoticeMessage");
     const message = input.value.trim();
     if (message) {
         noticeMessages.push(message);
         input.value = "";
-        localStorage.setItem("noticeMessages", JSON.stringify(noticeMessages));
         updateSlideshow('notice');
+        syncSlideshowData();
     }
 }
 
@@ -293,9 +293,21 @@ function removeNotice() {
     if (currentNoticeIndex >= noticeMessages.length) {
         currentNoticeIndex = 0;
     }
-    localStorage.setItem("noticeMessages", JSON.stringify(noticeMessages));
     updateSlideshow('notice');
+    syncSlideshowData();
 }
+function syncSlideshowData() {
+    fetch('/save-slideshow-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            storedDatas,
+            advertMessages,
+            noticeMessages
+        })
+    });
+}
+
 
 
 function goToSlide(type, index) {
@@ -467,30 +479,14 @@ function sendStoredData(type, index) {
     const entry = storedDatas[type][index];
     const messageContent = `Name of Organization: ${entry.name}\nDetails: ${entry.details}`;
 
-    if (type === 'advert') {
-        if (!advertMessages.includes(messageContent)) {
-            advertMessages.push(messageContent);
-            localStorage.setItem("advertMessages", JSON.stringify(advertMessages));
-            updateSlideshow('advert');
-        }
-    } else if (type === 'notice') {
-        if (!noticeMessages.includes(messageContent)) {
-            noticeMessages.push(messageContent);
-            localStorage.setItem("noticeMessages", JSON.stringify(noticeMessages));
-            updateSlideshow('notice');
-        }
-        fetch('/save-slideshow-data', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                storedDatas,
-                advertMessages,
-                noticeMessages
-            })
-        });
-        
+    if (type === 'advert' && !advertMessages.includes(messageContent)) {
+        advertMessages.push(messageContent);
+    } else if (type === 'notice' && !noticeMessages.includes(messageContent)) {
+        noticeMessages.push(messageContent);
     }
 
+    updateSlideshow(type);
+    syncSlideshowData();
     alert(`${entry.name || "This entry"} has been sent to the slideshow.`);
     showStoredDatas(type);
 }
