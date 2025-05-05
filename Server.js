@@ -4,7 +4,7 @@
 require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
-const path = './slideshowData.json';  // The path where the slideshow data will be stored
+const slideshowDataPath = './slideshowData.json';  // The path where the slideshow data will be stored
 // Essential Libraries & Server Setup---
 const express = require('express');
 const session = require('express-session');
@@ -55,7 +55,7 @@ const messagesFile = path.join(__dirname, 'messages.json');
 const medicalFile = path.join(__dirname, 'medicalRegistrations.json');
 const businessFile = path.join(__dirname, 'businessRegistrations.json');
 const storedDataFile = path.join(__dirname, 'storedData.json');
-const slideshowDataFile = path.join(__dirname, 'slideshowData.json');
+const slideshowDataFile = slideshowDataPath.join(__dirname, 'slideshowData.json');
 
 // --- Initial State Variables ---
 let totalViewers = 0;
@@ -109,13 +109,13 @@ const saveToFile = async (file, data) => {
   };
   // Function to save data to slideshowData.json
 function saveData(data) {
-    fs.writeFileSync(path, JSON.stringify(data, null, 2));  // Save formatted JSON data
+    fs.writeFileSync(slideshowDataPath, JSON.stringify(data, null, 2));  // Save formatted JSON data
 }
 
 // Function to load data from slideshowData.json
 function loadData() {
     try {
-        const data = fs.readFileSync(path);  // Read the data from the file
+        const data = fs.readFileSync(slideshowDataPath);  // Read the data from the file
         return JSON.parse(data);  // Parse and return the JSON data
     } catch (err) {
         // If the file does not exist or an error occurs, return default structure
