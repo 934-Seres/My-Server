@@ -55,7 +55,7 @@ const messagesFile = path.join(__dirname, 'messages.json');
 const medicalFile = path.join(__dirname, 'medicalRegistrations.json');
 const businessFile = path.join(__dirname, 'businessRegistrations.json');
 const storedDataFile = path.join(__dirname, 'storedData.json');
-const slideshowDataFile = slideshowDataPath.join(__dirname, 'slideshowData.json');
+const slideshowDataFile = path.join(__dirname, 'slideshowData.json');
 
 // --- Initial State Variables ---
 let totalViewers = 0;
