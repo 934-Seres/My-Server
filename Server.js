@@ -4,6 +4,7 @@
 require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
+const path = './slideshowData.json';  // The path where the slideshow data will be stored
 // Essential Libraries & Server Setup---
 const express = require('express');
 const session = require('express-session');
@@ -106,6 +107,22 @@ const saveToFile = async (file, data) => {
       console.error(`Error writing to ${file}:`, err);
     }
   };
+  // Function to save data to slideshowData.json
+function saveData(data) {
+    fs.writeFileSync(path, JSON.stringify(data, null, 2));  // Save formatted JSON data
+}
+
+// Function to load data from slideshowData.json
+function loadData() {
+    try {
+        const data = fs.readFileSync(path);  // Read the data from the file
+        return JSON.parse(data);  // Parse and return the JSON data
+    } catch (err) {
+        // If the file does not exist or an error occurs, return default structure
+        return { advertMessages: [], noticeMessages: [], storedDatas: { advert: [], notice: [] } };
+    }
+}
+
   
 const saveMessages = () => saveToFile(messagesFile, messages);
 const saveViewerCount = () => saveToFile(viewerCountFile, { count: totalViewers });
@@ -160,33 +177,17 @@ app.post('/save-stored-data', (req, res) => {
     saveStoredData();
     res.sendStatus(200);
 });
-// --- Slideshow Data API: Slideshow Data ---
-app.get('/get-slideshow-data', (_req, res) => {
-    res.json({
-        advertMessages,
-        noticeMessages,
-        storedDatas: {
-            advert: storedAdvertData,
-            notice: storedNoticeData
-        }
-    });
+// Endpoint to get stored slideshow data
+app.get('/get-slideshow-data', (req, res) => {
+    const data = loadData();  // Load the data from the file
+    res.json(data);  // Send the data as a JSON response
 });
+
+// Endpoint to save slideshow data
 app.post('/save-slideshow-data', (req, res) => {
-    const { storedDatas, advertMessages, noticeMessages } = req.body;
-
-    // Validate the incoming data
-    if (
-        typeof storedDatas !== 'object' ||
-        !Array.isArray(advertMessages) ||
-        !Array.isArray(noticeMessages)
-    ) {
-        return res.status(400).json({ success: false, message: 'Invalid slideshow format' });
-    }
-
-    // Save the data using the existing helper
-    saveToFile(slideshowDataFile, { storedDatas, advertMessages, noticeMessages });
-
-    res.status(200).json({ message: 'Slideshow data saved successfully.' });
+    const data = req.body;  // Get the data sent from the frontend
+    saveData(data);  // Save the data to the file
+    res.status(200).send('Data saved successfully');  // Send success response
 });
 
 // --- Authentication ---

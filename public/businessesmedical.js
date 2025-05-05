@@ -211,130 +211,106 @@ function openDetailedEntryInNewWindow(type, index) {
 }
 
     
-let storedDatas = { advert: [], notice: [] };
+
 let advertMessages = [];
 let noticeMessages = [];
+let storedDatas = { advert: [], notice: [] };
 
-fetch('/get-advert-notice-data')
-    .then(res => res.json())
-    .then(data => {
-        storedDatas = data.storedDatas || { advert: [], notice: [] };
+function saveSlideshowData() {
+    fetch('/save-slideshow-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            advertMessages,
+            noticeMessages,
+            storedDatas
+        })
+    }).catch(err => console.error('Error saving slideshow data:', err));
+}
+
+function addAdvert(text, details) {
+    advertMessages.push(`Name of Organization: ${text}\nDetails: ${details}`);
+    storedDatas.advert.push({ name: text, details });
+    updateSlideshow('advert');
+    saveSlideshowData();
+}
+
+function deleteNotice(index) {
+    noticeMessages.splice(index, 1);
+    storedDatas.notice.splice(index, 1);
+    updateSlideshow('notice');
+    saveSlideshowData();
+}
+
+async function loadSlideshowData() {
+    try {
+        const res = await fetch('/get-slideshow-data');
+        const data = await res.json();
         advertMessages = data.advertMessages || [];
         noticeMessages = data.noticeMessages || [];
-
+        storedDatas = data.storedDatas || { advert: [], notice: [] };
         updateSlideshow('advert');
         updateSlideshow('notice');
-    });
+    } catch (err) {
+        console.error('Error loading slideshow data:', err);
+    }
+}
 
 let currentAdvertIndex = 0;
 let currentNoticeIndex = 0;
-
 let advertInterval;
 let noticeInterval;
 
 function escapeHtml(text) {
-    const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;',
-    };
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
     return text.replace(/[&<>"']/g, m => map[m]);
 }
-
 
 function openInNewWindow(message) {
     const safeMessage = escapeHtml(message);
     const newWindow = window.open("", "_blank", "width=400,height=300");
-
     if (newWindow) {
         newWindow.document.write(`<p style="font-family:sans-serif; padding:20px;">${safeMessage}</p>`);
-        newWindow.document.close(); // Ensures the content is rendered
+        newWindow.document.close();
     } else {
         alert("Popup blocked. Please allow popups for this site.");
     }
 }
 
-
-function addAdvertMessage() {
-    const input = document.getElementById("newAdvertMessage");
-    const message = input.value.trim();
-    if (message) {
-        advertMessages.push(message);
-        input.value = "";
-        updateSlideshow('advert');
-        syncSlideshowData();
-    }
+function openDetailedEntryInNewWindow(type, index) {
+    const entry = storedDatas[type][index];
+    if (!entry) return;
+    const win = window.open('', '_blank', 'width=600,height=500');
+    win.document.write(`
+        <html>
+        <head>
+            <title>${escapeHtml(entry.name || "Entry Detail")}</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; text-align: justify; }
+                h2 { margin-top: 0; } p { margin: 8px 0; }
+            </style>
+        </head>
+        <body>
+            <h2>${escapeHtml(entry.name || "N/A")}</h2>
+            <p><strong>Details:</strong> ${escapeHtml(entry.details || "N/A")}</p>
+        </body>
+        </html>
+    `);
+    win.document.close();
 }
-
-
-function removeAdvert() {
-    advertMessages.splice(currentAdvertIndex, 1);
-    if (currentAdvertIndex >= advertMessages.length) {
-        currentAdvertIndex = 0;
-    }
-    updateSlideshow('advert');
-    syncSlideshowData();
-}
-function addNoticeMessage() {
-    const input = document.getElementById("newNoticeMessage");
-    const message = input.value.trim();
-    if (message) {
-        noticeMessages.push(message);
-        input.value = "";
-        updateSlideshow('notice');
-        syncSlideshowData();
-    }
-}
-
-function removeNotice() {
-    noticeMessages.splice(currentNoticeIndex, 1);
-    if (currentNoticeIndex >= noticeMessages.length) {
-        currentNoticeIndex = 0;
-    }
-    updateSlideshow('notice');
-    syncSlideshowData();
-}
-function syncSlideshowData() {
-    fetch('/save-slideshow-data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            storedDatas,
-            advertMessages,
-            noticeMessages
-        })
-    });
-}
-
-
 
 function goToSlide(type, index) {
-    if (type === 'advert') {
-        currentAdvertIndex = index;
-    } else {
-        currentNoticeIndex = index;
-    }
+    if (type === 'advert') currentAdvertIndex = index;
+    else currentNoticeIndex = index;
     updateSlideshow(type);
 }
 
 function updateSlideshow(type) {
-    let messages, getIndex, setIndex, boxId, dotsId;
-
-    if (type === 'advert') {
-        messages = advertMessages;
-        getIndex = () => currentAdvertIndex;
-        setIndex = val => currentAdvertIndex = val;
-        boxId = "AdvertAd";
-        dotsId = "advertDots";
-    } else {
-        messages = noticeMessages;
-        getIndex = () => currentNoticeIndex;
-        setIndex = val => currentNoticeIndex = val;
-        boxId = "noticeAd";
-        dotsId = "noticeDots";
-    }
+    let messages = type === 'advert' ? advertMessages : noticeMessages;
+    let getIndex = () => (type === 'advert' ? currentAdvertIndex : currentNoticeIndex);
+    let setIndex = val => type === 'advert' ? currentAdvertIndex = val : currentNoticeIndex = val;
+    let boxId = type === 'advert' ? "AdvertAd" : "noticeAd";
+    let dotsId = type === 'advert' ? "advertDots" : "noticeDots";
 
     const box = document.getElementById(boxId);
     const dotContainer = document.getElementById(dotsId);
@@ -362,19 +338,14 @@ function updateSlideshow(type) {
             return fullContent === msg;
         });
 
-        if (entryIndex !== -1) {
-            box.innerHTML = `<span class="clickable-message" onclick="openDetailedEntryInNewWindow('${type}', ${entryIndex})">${safeMessage}</span>`;
-        } else {
-            box.innerHTML = `<span class="clickable-message" onclick="openInNewWindow('${safeMessage}')">${safeMessage}</span>`;
-        }
-
+        box.innerHTML = `<span class="clickable-message" onclick="${entryIndex !== -1
+            ? `openDetailedEntryInNewWindow('${type}', ${entryIndex})`
+            : `openInNewWindow('${safeMessage}')`}">${safeMessage}</span>`;
         box.style.textAlign = 'justify';
         adjustFontSizeToFit(box);
     }
 
     showMessage(getIndex());
-
-    // ✅ Clear any existing interval before starting a new one
     clearInterval(type === 'advert' ? advertInterval : noticeInterval);
 
     if (messages.length > 0) {
@@ -388,92 +359,10 @@ function updateSlideshow(type) {
             ).join("");
         }, 5000);
 
-        // ✅ Save new interval to global variable
-        if (type === 'advert') {
-            advertInterval = intervalId;
-        } else {
-            noticeInterval = intervalId;
-        }
+        if (type === 'advert') advertInterval = intervalId;
+        else noticeInterval = intervalId;
     }
 }
-
-
-function deleteSlideshowEntry(type, index) {
-    if (!storedDatas[type] || index < 0 || index >= storedDatas[type].length) return;
-
-    // Remove entry
-    storedDatas[type].splice(index, 1);
-
-    // Rebuild messages
-    if (type === 'advert') {
-        advertMessages = storedDatas.advert.map(entry => `Name of Organization: ${entry.name}\nDetails: ${entry.details}`);
-    } else {
-        noticeMessages = storedDatas.notice.map(entry => `Name of Organization: ${entry.name}\nDetails: ${entry.details}`);
-    }
-
-    // Send updated data to server
-    fetch('/save-slideshow-data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            advertMessages,
-            noticeMessages,
-            storedDatas
-        })
-    });
-
-    // Restart slideshow
-    updateSlideshow(type);
-}
-
-// Handle form submission
-function handleFormSubmit(event, type) {
-    event.preventDefault();
-
-    let formData = new FormData(event.target);
-    let formObject = Object.fromEntries(formData);
-
-    storedDatas[type].push(formObject);
-    fetch('/save-slideshow-data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            storedDatas,
-            advertMessages,
-            noticeMessages
-        })
-    });
-    
-
-    alert(`Form submitted under: ${type === "advert" ? "Advertises" : "Notices"}`);
-    event.target.reset();
-}
-
-// Attach event listeners to forms after DOM content is loaded
-document.addEventListener("DOMContentLoaded", function () {
-    let advertForm = document.getElementById("advertForm");
-    let noticeForm = document.getElementById("noticeForm");
-
-    if (advertForm) {
-        advertForm.addEventListener("submit", function (event) {
-            handleFormSubmit(event, "advert");
-        });
-    }
-
-    if (noticeForm) {
-        noticeForm.addEventListener("submit", function (event) {
-            handleFormSubmit(event, "notice");
-        });
-    }
-
-    document.querySelector(".select-advert-notice").addEventListener("change", function () {
-        let selectedOption = this.value;
-        showStoredDatas(selectedOption);
-    });
-
-    updateSlideshow('advert');
-    updateSlideshow('notice');
-});
 
 function sendStoredData(type, index) {
     const entry = storedDatas[type][index];
@@ -486,16 +375,14 @@ function sendStoredData(type, index) {
     }
 
     updateSlideshow(type);
-    syncSlideshowData();
+    saveSlideshowData();
     alert(`${entry.name || "This entry"} has been sent to the slideshow.`);
     showStoredDatas(type);
 }
 
-
 function showStoredDatas(type) {
-    let modals = document.getElementById("dataModal");
-    let modalsContent = document.getElementById("modalContent");
-
+    const modals = document.getElementById("dataModal");
+    const modalsContent = document.getElementById("modalContent");
     modalsContent.innerHTML = "";
 
     if (storedDatas[type].length > 0) {
@@ -507,14 +394,12 @@ function showStoredDatas(type) {
                     <a href="#" onclick="toggleDetailsStored('${type}', ${index}); return false;" id="toggle-${type}-${index}">more...</a>
                 </p>
                 ${isOwner ? `
-                    <button id="delete-btn-${index}" class="delete-btn" onclick="deleteStoredData('${type}', ${index})">Delete</button>
-                    <button id="send-btn-${index}" class="send-btn" onclick="sendStoredData('${type}', ${index})">Send</button>
+                    <button class="delete-btn" onclick="deleteStoredData('${type}', ${index})">Delete</button>
+                    <button class="send-btn" onclick="sendStoredData('${type}', ${index})">Send</button>
                 ` : ""}
                 <hr>
             `;
         });
-    
-    
     } else {
         modalsContent.innerHTML = "<p>No data available.</p>";
     }
@@ -524,14 +409,14 @@ function showStoredDatas(type) {
 
 function shortenText(text) {
     if (!text) return "N/A";
-    let words = text.split(" ");
+    const words = text.split(" ");
     return words.length > 3 ? words.slice(0, 3).join(" ") + "..." : text;
 }
 
 function toggleDetailsStored(type, index) {
-    let detailsElement = document.getElementById(`details-${type}-${index}`);
-    let toggleElement = document.getElementById(`toggle-${type}-${index}`);
-    let fullText = storedDatas[type][index].details || "N/A";
+    const detailsElement = document.getElementById(`details-${type}-${index}`);
+    const toggleElement = document.getElementById(`toggle-${type}-${index}`);
+    const fullText = storedDatas[type][index].details || "N/A";
 
     if (detailsElement.innerText.includes("...")) {
         detailsElement.innerText = fullText;
@@ -543,34 +428,49 @@ function toggleDetailsStored(type, index) {
 }
 
 function deleteStoredData(type, index) {
-    let confirmation = confirm("Are you sure you want to delete this entry?");
-    if (confirmation) {
+    if (confirm("Are you sure you want to delete this entry?")) {
         storedDatas[type].splice(index, 1);
-        fetch('/save-slideshow-data', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                storedDatas,
-                advertMessages,
-                noticeMessages
-            })
-        });
-        
+        saveSlideshowData();
         showStoredDatas(type);
         updateSlideshow(type);
     }
 }
 
-document.querySelector(".modal-close").addEventListener("click", function () {
-    document.getElementById("dataModal").style.display = "none";
+function handleFormSubmit(event, type) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const formObject = Object.fromEntries(formData);
+    storedDatas[type].push(formObject);
+
+    const message = `Name of Organization: ${formObject.name}\nDetails: ${formObject.details}`;
+    if (type === 'advert') advertMessages.push(message);
+    else noticeMessages.push(message);
+
+    saveSlideshowData();
+    alert(`Form submitted under: ${type === "advert" ? "Advertises" : "Notices"}`);
+    event.target.reset();
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("advertForm")?.addEventListener("submit", e => handleFormSubmit(e, "advert"));
+    document.getElementById("noticeForm")?.addEventListener("submit", e => handleFormSubmit(e, "notice"));
+    document.querySelector(".select-advert-notice")?.addEventListener("change", function () {
+        showStoredDatas(this.value);
+    });
+
+    document.querySelector(".modal-close").addEventListener("click", () => {
+        document.getElementById("dataModal").style.display = "none";
+    });
+
+    window.addEventListener("click", function (event) {
+        if (event.target === document.getElementById("dataModal")) {
+            document.getElementById("dataModal").style.display = "none";
+        }
+    });
+
+    loadSlideshowData();
 });
 
-window.addEventListener("click", function (event) {
-    let modal = document.getElementById("dataModal");
-    if (event.target === modal) {
-        modal.style.display = "none";
-    }
-});
 
 
 
