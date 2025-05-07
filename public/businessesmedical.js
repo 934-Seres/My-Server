@@ -1274,7 +1274,7 @@ socket.on('activeChattersUpdate', (chatters) => {
     }
 });
 
-// --- Chat Messaging System ---
+
 document.addEventListener("DOMContentLoaded", function () {
     const messageBox = document.getElementById("messageBox");
     const messageIcon = document.getElementById("messageIcon");
@@ -1375,43 +1375,37 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         editBtn.addEventListener("click", () => {
-            // Create textarea and buttons inside the message box
             const editTextarea = document.createElement("textarea");
-            editTextarea.value = text; // Pre-fill with old text
+            editTextarea.value = text;
             editTextarea.classList.add("edit-textarea");
-        
+
             const saveBtn = document.createElement("button");
             saveBtn.textContent = "Save";
             saveBtn.classList.add("save-button");
-        
+
             const cancelBtn = document.createElement("button");
             cancelBtn.textContent = "Cancel";
             cancelBtn.classList.add("cancel-button");
-        
-            // Clear current messageText and buttons
+
             container.innerHTML = "";
             container.appendChild(editTextarea);
             container.appendChild(saveBtn);
             container.appendChild(cancelBtn);
-        
+
             saveBtn.addEventListener("click", () => {
                 const newText = editTextarea.value.trim();
                 if (newText !== "") {
                     socket.emit('updateMessage', { newText, messageId });
-        
-                    // Update only the reply message on the UI (not the original message)
                     const updatedReply = createMessageElement(newText, true, sender, messageId, Date.now());
-                    container.replaceWith(updatedReply); // Replace only the reply, not the original message
+                    container.replaceWith(updatedReply);
                 }
             });
-        
+
             cancelBtn.addEventListener("click", () => {
-                // If cancel, recreate the original message element
                 const restored = createMessageElement(text, isReply, sender, messageId, timestamp);
                 container.replaceWith(restored);
             });
         });
-        
 
         replyInput.addEventListener("keydown", function (e) {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -1428,11 +1422,27 @@ document.addEventListener("DOMContentLoaded", function () {
         return container;
     }
 
-    // Receive all previous messages when joining
-    socket.on('loadPreviousMessages', (messages) => {
-        messages.forEach(({ text, sender, messageId, timestamp }) => {
-            const oldMessage = createMessageElement(text, false, sender, messageId, timestamp);
-            messageContent.appendChild(oldMessage);
+    // ✅ Emit joinChat to request messages from the server
+    socket.emit("joinChat", {
+        username,
+        deviceInfo: navigator.userAgent
+    });
+
+    // ✅ Receive and render all saved messages and replies
+    socket.on('loadMessages', (messages) => {
+        messageContent.innerHTML = ''; // Clear existing
+
+        messages.forEach(({ text, sender, messageId, timestamp, replies }) => {
+            const messageEl = createMessageElement(text, false, sender, messageId, timestamp);
+            messageContent.appendChild(messageEl);
+
+            const replyContainer = messageEl.querySelector(".replies-container");
+            if (Array.isArray(replies)) {
+                replies.forEach(({ replyText, sender: replySender, timestamp: replyTime }) => {
+                    const replyEl = createMessageElement(replyText, true, replySender, messageId, replyTime);
+                    replyContainer.appendChild(replyEl);
+                });
+            }
         });
     });
 
@@ -1450,28 +1460,16 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     socket.on('updateMessage', ({ newText, messageId }) => {
-        // Find the message element corresponding to the message ID
         const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
-    
         if (messageElement) {
             const messageText = messageElement.querySelector(".message-text");
-    
-            // Check if the element is a reply or a main message
-            if (messageText) {
-                // Check if the message is a reply
-                const isReply = messageElement.classList.contains("comment");
-    
-                // If it is a reply, update the reply text only
-                if (isReply) {
-                    messageText.childNodes[0].nodeValue = newText; // Update the reply text only
-                } else {
-                    // If it's not a reply, we should not modify the original message
-                    console.log("Cannot update the original message text, only replies.");
-                }
+            if (messageText && messageElement.classList.contains("comment")) {
+                messageText.childNodes[0].nodeValue = newText;
+            } else {
+                console.log("Cannot update the original message text, only replies.");
             }
         }
     });
-    
 });
 
 // --- Update message times every 1 minute ---
@@ -1485,3 +1483,4 @@ setInterval(() => {
         }
     });
 }, 60000);
+
