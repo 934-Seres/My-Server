@@ -8,6 +8,15 @@
       "location": "Assosa",
       "contact_info": "09...",
       "city": "Assosa"
+    },
+    {
+      "name": "Ozon Medium Clinic",
+      "category": "general",
+      "industryOrService": "General Health Care",
+      "licenseNumber": "12345",
+      "location": "Near MA College",
+      "contact_info": "09...",
+      "city": "Assosa"
     }
   ],
   "business": []
