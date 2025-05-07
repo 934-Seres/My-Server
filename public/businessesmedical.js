@@ -626,22 +626,24 @@ document.addEventListener("DOMContentLoaded", function () {
         fetch('/get-stored-data')
             .then(response => response.json())
             .then(data => {
-                storedMedicalData = Array.isArray(data.medical) ? data.medical : [];
-                storedBusinessData = Array.isArray(data.business) ? data.business : [];
-                cycleSlides();
+                storedMedicalData = data.medical || [];
+                storedBusinessData = data.business || [];
+                cycleSlides();  // Run slideshow with real data
             })
-            .catch(err => {
-                console.error("Failed to fetch stored data:", err);
-                cycleSlides(); // fallback to defaultSlides
+            .catch(error => {
+                console.error("Failed to fetch stored data:", error);
+                cycleSlides();  // Fallback to default if fetch fails
             });
     }
+    
+    
 
     function saveStoredData() {
         fetch('/save-stored-data', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                notice: storedMedicalData,
+                medical: storedMedicalData,
                 business: storedBusinessData
             })
         })
@@ -649,6 +651,7 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(data => console.log("Data saved successfully:", data))
         .catch(error => console.error("Error saving data:", error));
     }
+    
 
     function showSlides(data) {
         const slideshow = document.getElementById("slideshow");
@@ -742,7 +745,13 @@ document.addEventListener("DOMContentLoaded", function () {
                         <p><strong>Location:</strong> ${entry.location}</p>
                         <p><strong>City:</strong> ${entry.city}</p>
                         <p><strong>Contact:</strong> ${entry.contact_info}</p>
-                        <button class="delBtn" data-type="${type}" data-index="${index}">Delete</button>
+                     
+                        ${isOwner ? `
+                            <button class="delBtn" data-type="${type}" data-index="${index}">Delete</button>
+                            
+                        ` : ""}
+                        <hr>
+                    
                         <hr>
                     </div>
                 `;
@@ -758,20 +767,23 @@ document.addEventListener("DOMContentLoaded", function () {
             button.addEventListener("click", function () {
                 const entryType = this.dataset.type;
                 const index = parseInt(this.dataset.index);
-
+        
                 if (confirm("Are you sure you want to delete this entry?")) {
                     if (entryType === "medical") {
                         storedMedicalData.splice(index, 1);
                     } else {
                         storedBusinessData.splice(index, 1);
                     }
-
+        
                     saveStoredData();
                     cycleSlides();
                     renderStoredData(entryType);
                 }
             });
+        
+           
         });
+        
     }
 
     document.getElementById("medicalCategoryFilter").addEventListener("change", () => renderStoredData("medical"));

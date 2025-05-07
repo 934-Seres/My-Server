@@ -1,14 +1,4 @@
 {
-  "advert": [],
-  "notice": [
-    {
-      "name": "Ozone Clinic",
-      "category": "Medical",
-      "industryOrService": "Service",
-      "licenseNumber": "123",
-      "location": "Assosa",
-      "contact_info": "0938087439",
-      "city": "Assosa"
-    }
-  ]
+  "medical": [],
+  "business": []
 }

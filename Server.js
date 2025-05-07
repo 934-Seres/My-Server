@@ -167,16 +167,21 @@ app.get('/get-stored-data', (_req, res) => {
     res.json({ medical: storedMedicalData, business: storedBusinessData });
 });
 
-app.post('/save-stored-data', (req, res) => {
+app.post('/save-stored-data', async (req, res) => {
     const { medical, business } = req.body;
-    if (!Array.isArray(medical) || !Array.isArray(business)) {
-        return res.status(400).json({ success: false, message: 'Invalid data format' });
+    try {
+        await Promise.all([
+            saveToFile(medicalFile, medical || []),
+            saveToFile(businessFile, business || [])
+        ]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Failed to save registration data:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
-    storedMedicalData = medical;
-    storedBusinessData = business;
-    saveStoredData();
-    res.sendStatus(200);
 });
+
+
 // Endpoint to get stored slideshow data
 app.get('/get-slideshow-data', (req, res) => {
     const data = loadData();  // Load the data from the file
@@ -324,7 +329,8 @@ io.on('connection', (socket) => {
         io.emit('viewerCountUpdate', totalViewers);
         activeUsers = activeUsers.filter(u => u.username !== socket.username);
         io.emit('activeChattersUpdate', activeUsers);
-    });
+    });   
+    
 });
 // --- Start Server ---
 server.listen(PORT, '0.0.0.0', () => {
