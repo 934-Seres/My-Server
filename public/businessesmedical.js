@@ -181,34 +181,69 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 
+
 function openDetailedEntryInNewWindow(type, index) {
     const entry = storedDatas[type][index];
     if (!entry) return;
 
     const win = window.open('', '_blank', 'width=600,height=500');
-    win.document.write(`
+    const htmlContent = `
+        <!DOCTYPE html>
         <html>
         <head>
             <title>${escapeHtml(entry.name || "Entry Detail")}</title>
             <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    padding: 20px;
-                    text-align: justify;
-                }
+                body { font-family: Arial, sans-serif; padding: 20px; text-align: justify; }
                 h2 { margin-top: 0; }
                 p { margin: 8px 0; }
+                .nav-buttons { display: flex; justify-content: space-between; margin-top: 30px; }
+                button { padding: 8px 12px; }
             </style>
+            <script>
+                function goTo(type, index) {
+                    window.opener.openDetailedEntryInNewWindow(type, index);
+                    window.close();
+                }
+                function deleteThis(type, index) {
+                    window.opener.deleteEntryFromPopup(type, index);
+                    window.close();
+                }
+            </script>
         </head>
         <body>
             <h2>${escapeHtml(entry.name || "N/A")}</h2>
             <p><strong>Details:</strong> ${escapeHtml(entry.details || "N/A")}</p>
-            
+            <div class="nav-buttons">
+                <button onclick="goTo('${type}', ${(index - 1 + storedDatas[type].length) % storedDatas[type].length})">← Previous</button>
+                <button onclick="goTo('${type}', ${(index + 1) % storedDatas[type].length})">Next →</button>
+            </div>
+            ${isOwner ? `<button onclick="deleteThis('${type}', ${index})">Delete This Entry</button>` : ""}
         </body>
         </html>
-    `);
+    `;
+    win.document.write(htmlContent);
     win.document.close();
+
+    // Add arrow key navigation in the new window
+    win.addEventListener('keydown', function (e) {
+        const totalEntries = storedDatas[type].length;
+        let newIndex = index;
+
+        if (e.key === "ArrowRight") {
+            newIndex = (index + 1) % totalEntries;
+        } else if (e.key === "ArrowLeft") {
+            newIndex = (index - 1 + totalEntries) % totalEntries;
+        }
+
+        if (newIndex !== index) {
+            win.close();
+            openDetailedEntryInNewWindow(type, newIndex);
+        }
+    });
 }
+
+    
+
 
     
 
@@ -231,16 +266,11 @@ function saveSlideshowData() {
 function addAdvert(text, details) {
     advertMessages.push(`Name of Organization: ${text}\nDetails: ${details}`);
     storedDatas.advert.push({ name: text, details });
-    updateSlideshow('advert');
+    /*updateSlideshow('advert');*/
     saveSlideshowData();
 }
 
-function deleteNotice(index) {
-    noticeMessages.splice(index, 1);
-    storedDatas.notice.splice(index, 1);
-    updateSlideshow('notice');
-    saveSlideshowData();
-}
+
 
 async function loadSlideshowData() {
     try {
@@ -266,78 +296,41 @@ function escapeHtml(text) {
     return text.replace(/[&<>"']/g, m => map[m]);
 }
 
-
-
-function openDetailedEntryInNewWindow(type, index) {
-    const entry = storedDatas[type][index];
-    if (!entry) return;
-
-    const win = window.open('', '_blank', 'width=600,height=500');
-    win.document.write(
-        `<html>
-        <head>
-            <title>${escapeHtml(entry.name || "Entry Detail")}</title>
-            <style>
-                body { font-family: Arial, sans-serif; padding: 20px; text-align: justify; }
-                h2 { margin-top: 0; } p { margin: 8px 0; }
-                button { margin-top: 20px; padding: 8px 12px; }
-            </style>
-        </head>
-        <body>
-            <h2>${escapeHtml(entry.name || "N/A")}</h2>
-            <p><strong>Details:</strong> ${escapeHtml(entry.details || "N/A")}</p>
-            ${isOwner ? `<button onclick="window.opener.deleteEntryFromPopup('${type}', ${index}); window.close();">Delete This Entry</button>` : ""}
-        </body>
-        </html>`
-    );
-    win.document.close();
-
-    // Add arrow key navigation in the new window
-    win.addEventListener('keydown', function (e) {
-        const totalEntries = storedDatas[type].length;
-        let newIndex = index;
-
-        if (e.key === "ArrowRight") {
-            newIndex = (index + 1) % totalEntries;  // Move to the next entry
-        } else if (e.key === "ArrowLeft") {
-            newIndex = (index - 1 + totalEntries) % totalEntries;  // Move to the previous entry
-        }
-
-        if (newIndex !== index) {
-            // Reopen the new window with the updated entry
-            win.close();  // Close the current window
-            openDetailedEntryInNewWindow(type, newIndex);  // Open the new entry
-        }
-    });
-}
-
-
-
 function deleteEntryFromPopup(type, index) {
     const messageArray = type === 'advert' ? advertMessages : noticeMessages;
-    messageArray.splice(index, 1);  // Remove only from the slideshow array
 
-    // Update the slideshow display
-    updateSlideshow(type);
-    saveSlideshowData();  // Ensure data is saved after deletion
+    // Construct the message to remove using the storedDatas entry
+    const entry = storedDatas[type][index];
+    const messageToDelete = `Name of Organization: ${entry.name}\nDetails: ${entry.details}`;
+
+    // Find and remove the exact message from the slideshow array
+    const messageIndex = messageArray.indexOf(messageToDelete);
+    if (messageIndex !== -1) {
+        messageArray.splice(messageIndex, 1);
+    }
+
+    // Adjust current index if needed
+    if (type === 'advert') {
+        currentAdvertIndex = Math.min(currentAdvertIndex, messageArray.length - 1);
+    } else {
+        currentNoticeIndex = Math.min(currentNoticeIndex, messageArray.length - 1);
+    }
+
+    // If the slideshow array is now empty
+    if (messageArray.length === 0) {
+        alert(type === 'advert' ? "No Advertisement data Available" : "No Notice data Available");
+
+        const slideshowContent = document.getElementById(type === 'advert' ? 'advertSlideshowContent' : 'noticeSlideshowContent');
+        if (slideshowContent) slideshowContent.innerHTML = '';
+
+        const dotsContainer = document.getElementById(type === 'advert' ? 'advertDotsContainer' : 'noticeDotsContainer');
+        if (dotsContainer) dotsContainer.innerHTML = '';
+    } else {
+        updateSlideshow(type);
+    }
+
+    saveSlideshowData();
 }
-
-function deleteNotice(index) {
-    noticeMessages.splice(index, 1);  // Remove from the slideshow only
-    updateSlideshow('notice');
-    saveSlideshowData();  // Ensure data is saved after deletion
-}
-
-function deleteAdvert(index) {
-    advertMessages.splice(index, 1);  // Remove from the slideshow only
-    updateSlideshow('advert');
-    saveSlideshowData();  // Ensure data is saved after deletion
-}
-
-
-
-
-
 
 
 function goToSlide(type, index) {
@@ -483,14 +476,11 @@ function handleFormSubmit(event, type) {
     const formObject = Object.fromEntries(formData);
     storedDatas[type].push(formObject);
 
-    const message = `Name of Organization: ${formObject.name}\nDetails: ${formObject.details}`;
-    if (type === 'advert') advertMessages.push(message);
-    else noticeMessages.push(message);
-
     saveSlideshowData();
     alert(`Form submitted under: ${type === "advert" ? "Advertises" : "Notices"}`);
     event.target.reset();
 }
+
 
 document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("advertForm")?.addEventListener("submit", e => handleFormSubmit(e, "advert"));
