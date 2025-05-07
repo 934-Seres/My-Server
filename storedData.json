@@ -1,4 +1,14 @@
 {
-  "medical": [],
+  "medical": [
+    {
+      "name": "Pawi hospital",
+      "category": "general",
+      "industryOrService": "Service",
+      "licenseNumber": "123",
+      "location": "Assosa",
+      "contact_info": "09...",
+      "city": "Assosa"
+    }
+  ],
   "business": []
 }
