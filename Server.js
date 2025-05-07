@@ -56,7 +56,7 @@ const messagesFile = path.join(__dirname, 'messages.json');
 const medicalFile = path.join(__dirname, 'medicalRegistrations.json');
 const businessFile = path.join(__dirname, 'businessRegistrations.json');
 const storedDataFile = path.join(__dirname, 'storedData.json');
-const slideshowFilePath = path.join(__dirname, 'medicalBusinessSlideshow.json');
+const slideshowDataFile = path.join(__dirname, 'slideshowData.json');
 
 // --- Initial State Variables ---
 let totalViewers = 0;
@@ -181,31 +181,6 @@ app.post('/save-stored-data', async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
-app.get('/get-medical-business-slideshow-data', (req, res) => {
-    fs.readFile(slideshowFilePath, 'utf8', (err, data) => {
-      if (err) {
-        console.error('Error reading slideshow data:', err);
-        return res.json([]);  // Return empty array if file doesn't exist or error occurs
-      }
-      try {
-        const parsedData = JSON.parse(data);
-        res.json(parsedData);
-      } catch (parseErr) {
-        console.error('Error parsing slideshow JSON:', parseErr);
-        res.json([]);  // Return empty if parsing fails
-      }
-    });
-  });
-  app.post('/save-medical-business-slideshow-data', (req, res) => {
-    fs.writeFile(slideshowFilePath, JSON.stringify(req.body, null, 2), (err) => {
-      if (err) {
-        console.error('Error saving slideshow data:', err);
-        return res.status(500).json({ success: false, message: 'Failed to save data' });
-      }
-      res.json({ success: true });
-    });
-  });
-    
 
 
 // Endpoint to get stored slideshow data
