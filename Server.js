@@ -42,10 +42,12 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax'
-      }
-      
+        httpOnly: true,
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 1000 // 1 hour
+    }
 }));
+
 //  Static Files
 app.use(express.static(path.join(__dirname, 'public')));
 

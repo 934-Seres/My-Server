@@ -1091,9 +1091,9 @@ function login() {
             if (data.success) {
                 isOwner = true;
                 toggleOwnerUI(true);
-                alert("Logged in as owner");
+                alert("Logged in Successfully");
             } else {
-                alert("Login failed: " + data.message + " (for Owner only!)");
+                alert("Login failed: " + data.message + "!");
             }
         });
 }
@@ -1101,17 +1101,24 @@ function login() {
 // Logout Function
 function logout() {
     fetch('/logout', { method: 'POST' })
-        .then(() => {
-            isOwner = false;
-            toggleOwnerUI(false);
-
-            // Clear input fields
-            document.getElementById("username").value = "";
-            document.getElementById("password").value = "";
-
-            alert("Logged out");
-        });
-        }
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+        isOwner = false;
+        toggleOwnerUI(false);
+        document.getElementById("username").value = "";
+        document.getElementById("password").value = "";
+        alert("Logged out");
+        window.location.reload(); // optional but safer
+    } else {
+        alert("Logout failed.");
+    }
+  })
+  .catch(err => {
+    console.error('Logout error:', err);
+    alert("An error occurred during logout.");
+  });
+}
 
 // Toggle UI based on Owner status
 function toggleOwnerUI(isOwner) {
