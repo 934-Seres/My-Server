@@ -1272,7 +1272,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function sendMainMessage() {
         const text = messageInput.value.trim();
         if (text !== "") {
-            const sender = username;
+            const sender = username; // Ensure you are using the logged-in user's username
             const messageId = generateUniqueId();
             socket.emit("sendMessage", { text, messageId, sender });
             messageInput.value = "";
@@ -1283,121 +1283,139 @@ document.addEventListener("DOMContentLoaded", function () {
         return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     }
 
-    function createMessageElement(text, isReply = false, sender = 'Someone', messageId = '', timestamp = Date.now()) {
-        const container = document.createElement('div');
-        container.classList.add(isReply ? "comment" : "message-thread");
-        container.setAttribute('data-message-id', messageId);
-        container.setAttribute('data-timestamp', timestamp);
+function createMessageElement(text, isReply = false, sender = 'Someone', messageId = '', timestamp = Date.now()) {
+    const container = document.createElement('div');
+    container.classList.add(isReply ? "comment" : "message-thread");
+    container.setAttribute('data-message-id', messageId);
+    container.setAttribute('data-timestamp', timestamp);
 
-        const messageText = document.createElement("p");
-        messageText.classList.add("message-text");
-        messageText.textContent = isReply ? `${sender}: ${text}` : text;
+    const messageText = document.createElement("p");
+    messageText.classList.add("message-text");
+    messageText.textContent = isReply ? `${sender}: ${text}` : text;
 
-        const timeSpan = document.createElement("span");
-        timeSpan.classList.add("message-time");
-        timeSpan.textContent = ` (${formatTimeAgo(timestamp)})`;
+    const timeSpan = document.createElement("span");
+    timeSpan.classList.add("message-time");
+    timeSpan.textContent = ` (${formatTimeAgo(timestamp)})`;
 
-        messageText.appendChild(timeSpan);
-        container.appendChild(messageText);
+    messageText.appendChild(timeSpan);
+    container.appendChild(messageText);
 
-        const buttonsWrapper = document.createElement("div");
-        buttonsWrapper.classList.add("message-buttons");
-        buttonsWrapper.style.display = "flex";
-        buttonsWrapper.style.justifyContent = "flex-end";
-        buttonsWrapper.style.gap = "5px";
+    const buttonsWrapper = document.createElement("div");
+    buttonsWrapper.classList.add("message-buttons");
+    buttonsWrapper.style.display = "flex";
+    buttonsWrapper.style.justifyContent = "flex-end";
+    buttonsWrapper.style.gap = "5px";
 
-        const replyBtn = document.createElement("button");
-        replyBtn.textContent = "Reply...";
-        replyBtn.classList.add("reply-button");
+    const replyBtn = document.createElement("button");
+    replyBtn.textContent = "Reply...";
+    replyBtn.classList.add("reply-button");
 
-        const editBtn = document.createElement("button");
-        editBtn.textContent = "Edit";
-        editBtn.classList.add("edit-button");
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "Edit";
+    editBtn.classList.add("edit-button");
 
-        buttonsWrapper.appendChild(replyBtn);
-        buttonsWrapper.appendChild(editBtn);
-        container.appendChild(buttonsWrapper);
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Delete";
+    deleteBtn.classList.add("delete-button");
 
-        const replyBox = document.createElement("div");
-        replyBox.classList.add("reply-box");
-        replyBox.style.display = "none";
+    // Only show delete button for the owner
+    if (isOwner) {
+        buttonsWrapper.appendChild(deleteBtn);
+    }
 
-        const replyInput = document.createElement("textarea");
-        replyInput.classList.add("reply-input");
-        replyInput.placeholder = "Write a reply...";
-        replyBox.appendChild(replyInput);
+    buttonsWrapper.appendChild(replyBtn);
+    buttonsWrapper.appendChild(editBtn);
+    container.appendChild(buttonsWrapper);
 
-        const replySend = document.createElement("button");
-        replySend.classList.add("reply-send");
-        replySend.textContent = "Send Reply";
-        replyBox.appendChild(replySend);
+    const replyBox = document.createElement("div");
+    replyBox.classList.add("reply-box");
+    replyBox.style.display = "none";
 
-        container.appendChild(replyBox);
+    const replyInput = document.createElement("textarea");
+    replyInput.classList.add("reply-input");
+    replyInput.placeholder = "Write a reply...";
+    replyBox.appendChild(replyInput);
 
-        const repliesContainer = document.createElement("div");
-        repliesContainer.classList.add("replies-container");
-        container.appendChild(repliesContainer);
+    const replySend = document.createElement("button");
+    replySend.classList.add("reply-send");
+    replySend.textContent = "Send Reply";
+    replyBox.appendChild(replySend);
 
-        replyBtn.addEventListener("click", () => {
-            replyBox.style.display = replyBox.style.display === "none" ? "block" : "none";
-            replyInput.focus();
-        });
+    container.appendChild(replyBox);
 
-        editBtn.addEventListener("click", () => {
-            const editTextarea = document.createElement("textarea");
-            editTextarea.value = text;
-            editTextarea.classList.add("edit-textarea");
+    const repliesContainer = document.createElement("div");
+    repliesContainer.classList.add("replies-container");
+    container.appendChild(repliesContainer);
 
-            const saveBtn = document.createElement("button");
-            saveBtn.textContent = "Save";
-            saveBtn.classList.add("save-button");
+    // Reply button functionality
+    replyBtn.addEventListener("click", () => {
+        replyBox.style.display = replyBox.style.display === "none" ? "block" : "none";
+        replyInput.focus();
+    });
 
-            const cancelBtn = document.createElement("button");
-            cancelBtn.textContent = "Cancel";
-            cancelBtn.classList.add("cancel-button");
+    // Edit button functionality
+    editBtn.addEventListener("click", () => {
+        const editTextarea = document.createElement("textarea");
+        editTextarea.value = text;
+        editTextarea.classList.add("edit-textarea");
 
-            container.innerHTML = "";
-            container.appendChild(editTextarea);
-            container.appendChild(saveBtn);
-            container.appendChild(cancelBtn);
+        const saveBtn = document.createElement("button");
+        saveBtn.textContent = "Save";
+        saveBtn.classList.add("save-button");
 
-            saveBtn.addEventListener("click", () => {
-                const newText = editTextarea.value.trim();
-                if (newText !== "") {
-                    socket.emit('updateMessage', { newText, messageId });
-                    const updatedReply = createMessageElement(newText, true, sender, messageId, Date.now());
-                    container.replaceWith(updatedReply);
-                }
-            });
+        const cancelBtn = document.createElement("button");
+        cancelBtn.textContent = "Cancel";
+        cancelBtn.classList.add("cancel-button");
 
-            cancelBtn.addEventListener("click", () => {
-                const restored = createMessageElement(text, isReply, sender, messageId, timestamp);
-                container.replaceWith(restored);
-            });
-        });
+        container.innerHTML = "";
+        container.appendChild(editTextarea);
+        container.appendChild(saveBtn);
+        container.appendChild(cancelBtn);
 
-        replyInput.addEventListener("keydown", function (e) {
-            if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                const replyText = replyInput.value.trim();
-                if (replyText !== "") {
-                    socket.emit('sendReply', { replyText, messageId });
-                    replyInput.value = "";
-                    replyBox.style.display = "none";
-                }
+        saveBtn.addEventListener("click", () => {
+            const newText = editTextarea.value.trim();
+            if (newText !== "") {
+                socket.emit('updateMessage', { newText, messageId });
+                const updatedReply = createMessageElement(newText, true, sender, messageId, Date.now());
+                container.replaceWith(updatedReply);
             }
         });
 
-        return container;
-    }
+        cancelBtn.addEventListener("click", () => {
+            const restored = createMessageElement(text, isReply, sender, messageId, timestamp);
+            container.replaceWith(restored);
+        });
+    });
 
-    // ✅ Emit joinChat to request messages from the server
+    // Reply input functionality
+    replyInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            const replyText = replyInput.value.trim();
+            if (replyText !== "") {
+                socket.emit('sendReply', { replyText, messageId });
+                replyInput.value = "";
+                replyBox.style.display = "none";
+            }
+        }
+    });
+
+    // Delete button functionality
+    deleteBtn.addEventListener("click", () => {
+        if (confirm("Are you sure you want to delete this message?")) {
+            socket.emit('deleteMessage', { messageId });
+            container.remove(); // Remove the message locally
+        }
+    });
+
+    return container;
+}
+
     socket.emit("joinChat", {
         username,
         deviceInfo: navigator.userAgent
     });
 
-    // ✅ Receive and render all saved messages and replies
     socket.on('loadMessages', (messages) => {
         messageContent.innerHTML = ''; // Clear existing
 
@@ -1441,15 +1459,35 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
-// --- Update message times every 1 minute ---
+
+function formatTimeAgo(timestamp) {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
+    const oneDay = 24 * 60 * 60 * 1000; // 1 day in milliseconds
+
+    if (diff < oneDay) {
+        const seconds = Math.floor(diff / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+
+        if (seconds < 60) return `${seconds} seconds ago`;
+        if (minutes < 60) return `${minutes} minutes ago`;
+        return `${hours} hours ago`;
+    } else {
+        const date = new Date(timestamp);
+        return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+    }
+}
+
 setInterval(() => {
     const allMessages = document.querySelectorAll(".message-thread, .comment");
     allMessages.forEach(msg => {
         const timestamp = parseInt(msg.getAttribute('data-timestamp'), 10);
         const timeSpan = msg.querySelector(".message-time");
         if (timestamp && timeSpan) {
-            timeSpan.textContent = ` (${formatTimeAgo(timestamp)})`;
+            timeSpan.textContent = ` (${formatTimeAgo(timestamp)})`;  // Update the timestamp
         }
     });
-}, 60000);
+}, 60000); // Update every 1 minute
 
