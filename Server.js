@@ -344,13 +344,16 @@ io.on('connection', (socket) => {
             io.emit('updateMessage', { newText, messageId });
         }
     });
-    socket.on('deleteMessage', ({ messageId, isOwner }) => {
-        if (isOwner) {
-            messages = messages.filter(m => m.messageId !== messageId);
-            saveMessages();
-            io.emit('deleteMessage', { messageId });
-        }
-    });
+   socket.on('deleteMessage', ({ messageId }) => {
+    // Your logic to find and remove the message by messageId from storage
+    const index = messages.findIndex(msg => msg.messageId === messageId);
+    if (index !== -1) {
+        messages.splice(index, 1);
+        // Emit the updated messages list to all clients
+        io.emit('loadMessages', messages);
+    }
+});
+
     socket.on('typing', ({ username }) => {
         socket.broadcast.emit('typing', { username });
     });
@@ -363,7 +366,8 @@ io.on('connection', (socket) => {
         io.emit('viewerCountUpdate', totalViewers);
         activeUsers = activeUsers.filter(u => u.username !== socket.username);
         io.emit('activeChattersUpdate', activeUsers);
-    });   
+    });  
+
     
 });
 // --- Start Server ---
