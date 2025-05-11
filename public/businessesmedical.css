@@ -1008,7 +1008,8 @@ form {
 
 
 #slideshow {
-    position: relative;  
+    position: relative; 
+   
     width: 100%;
     max-width: 600px;
     margin: auto;
@@ -1017,6 +1018,7 @@ form {
 
 .slide {
     display: none;
+ 
     padding: 20px;
     box-sizing: border-box;
     text-align: justify;
@@ -1032,7 +1034,7 @@ form {
     }
   }
 .dot-container {
-    position: absolute; /* Position the dots at the bottom of the slideshow */
+    position: absolute; /* Position the dots at the bottom of the slideshow */   
     bottom: 10px; /* Adjust the space from the bottom */
     left: 50%; /* Center align horizontally */
     transform: translateX(-50%); /* Correct for exact centering */
@@ -1041,6 +1043,16 @@ form {
     width: 100%;
     z-index: 2; /* Ensure dots are always on top of slides */
 }
+/* If you want dots to be displayed below the ad */
+.dotContainer {
+    margin-top: 15px;
+    padding: 5px 0;
+} 
+
+.dot:hover {
+    background-color: #717171;
+}
+
 /* Dot Navigation Styles */
 .dot {
     height: 10px;
@@ -1068,6 +1080,7 @@ form {
 
     #slideshow {
         max-width: 100%;
+        z-index: 1;
     }
 
     .slide {
@@ -1131,15 +1144,6 @@ form {
     font-weight: bold;
 }
 
-/* If you want dots to be displayed below the ad */
-.dotContainer {
-    margin-top: 15px;
-    padding: 5px 0;
-}
-
-.dot:hover {
-    background-color: #717171;
-}
 
 input, #selectLanguage, #type, #regionFilter, .left #medicalCategoryFilter, .right #businessCategoryFilter, #medicalCategory, #businessCategory, button {
     display: block;
