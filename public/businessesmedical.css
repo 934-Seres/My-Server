@@ -610,8 +610,8 @@ nav[role="menubar"] {
   
   
   @media (max-width: 768px) {
-    #map,
-    #slideshowContainer {
+    #map
+    /*#slideshowContainer*/ {
       position: relative !important; /* Ensure it flows naturally in layout */
       width: 100% !important;
       margin-top: 10px;
@@ -663,19 +663,19 @@ nav[role="menubar"] {
     flex-direction: column;
     text-align: justified;    
     align-items: center;
-   
+ 
     align-items: center;
     justify-content: center;
   }
   @media (max-width: 768px) {
     #slideshowContainer {
-      position: relative !important;  /* Cancel absolute positioning */
-      top: auto !important;           /* Cancel top offset */
-      right: auto;
-      width: 100% !important;
-      height: auto;
-      margin: 10px 0;
-      z-index: 2;
+        position: relative !important;
+        top: auto !important;
+        right: auto !important;
+        width: 100% !important;
+        height: auto !important;
+        margin: 10px 0 !important;
+        box-sizing: border-box;
     }
   }
   
@@ -882,6 +882,7 @@ nav ul li a {
     width: 200px;
     height: 30px;
     font-size: 16px;
+   
 }
 
 #filtersContainer {    
@@ -1018,7 +1019,7 @@ form {
 
 .slide {
     display: none;
- 
+
     padding: 20px;
     box-sizing: border-box;
     text-align: justify;
@@ -1029,9 +1030,9 @@ form {
 }
 
 @media (max-width: 768px) {
-    #slideshowContainer {
+    /*#slideshowContainer {
       padding: 10px;
-    }
+    }*/
   }
 .dot-container {
     position: absolute; /* Position the dots at the bottom of the slideshow */   
@@ -1080,12 +1081,13 @@ form {
 
     #slideshow {
         max-width: 100%;
-        z-index: 1;
+       
     }
 
     .slide {
         padding: 10px;
         font-size: 14px;
+        z-index: 1;
     }
 
     .dot {
