@@ -8,6 +8,15 @@
       "location": "Near MA College",
       "contact_info": "09...",
       "city": "Assosa"
+    },
+    {
+      "name": "Grand Medium Clinic",
+      "category": "general",
+      "industryOrService": "General Health Care",
+      "licenseNumber": "768",
+      "location": "Health bureau Road",
+      "contact_info": "09...",
+      "city": "Assosa"
     }
   ],
   "storedBusinessData": []
