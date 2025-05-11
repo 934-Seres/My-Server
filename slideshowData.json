@@ -1,13 +1,32 @@
 {
-  "advertMessages": [],
+  "advertMessages": [
+    "Name of Organization: Ozone Clinic\nDetails: •\tGet your health back on track with Medium our Clinic – Comprehensive checkups now!  •\tOur Medium Clinic introduces weekend family wellness packages – because prevention is better than cure! •\tFast, friendly, and professional care. Visit Our Medium Clinic for same-day lab results and expert consultations! •\tFeeling under the weather? Medium Clinic’s internal medicine team is here to help – walk-ins welcome! •\tYour child deserves the best care – visit Medium Clinic’s pediatric department today! •\tIntroducing our new physiotherapy wing! Book your recovery session at Medium Clinic now. •\tWomen’s wellness week – Pap smear, breast exam, and more at special rates at Medium Clinic! •\tMedium Clinic now offers many appointments – consult our doctors from home! •\tWe care for the elderly – Geriatric checkups and chronic care at Medium Clinic with experienced specialists. •\tPlanned Flu season is here! Get vaccinated at Medium Clinic – quick, safe, and affordable."
+  ],
   "noticeMessages": [],
   "storedDatas": {
     "advert": [
       {
         "name": "Ozone Clinic",
         "details": "•\tGet your health back on track with Medium our Clinic – Comprehensive checkups now!  •\tOur Medium Clinic introduces weekend family wellness packages – because prevention is better than cure! •\tFast, friendly, and professional care. Visit Our Medium Clinic for same-day lab results and expert consultations! •\tFeeling under the weather? Medium Clinic’s internal medicine team is here to help – walk-ins welcome! •\tYour child deserves the best care – visit Medium Clinic’s pediatric department today! •\tIntroducing our new physiotherapy wing! Book your recovery session at Medium Clinic now. •\tWomen’s wellness week – Pap smear, breast exam, and more at special rates at Medium Clinic! •\tMedium Clinic now offers many appointments – consult our doctors from home! •\tWe care for the elderly – Geriatric checkups and chronic care at Medium Clinic with experienced specialists. •\tPlanned Flu season is here! Get vaccinated at Medium Clinic – quick, safe, and affordable."
+      },
+      {
+        "name": "Pawi hospital",
+        "details": "•\tGet your health back on track with Medium our Clinic – Comprehensive checkups now!"
+      },
+      {
+        "name": "Ozone Clinic",
+        "details": "• Get your health back on track with Medium our Clinic – Comprehensive checkups now! • Our Medium Clinic introduces weekend family wellness packages – because prevention is better than cure! • Fast, friendly, and professional care. Visit Our Medium Clinic for same-day lab results and expert consultations! • Feeling under the weather? Medium Clinic’s internal medicine team is here to help – walk-ins welcome! • Your child deserves the best care – visit Medium Clinic’s pediatric department today! • Introducing our new physiotherapy wing! Book your recovery session at Medium Clinic now. • Women’s wellness week – Pap smear, breast exam, and more at special rates at Medium Clinic! • Medium Clinic now offers many appointments – consult our doctors from home! • We care for the elderly – Geriatric checkups and chronic care at Medium Clinic with experienced specialists. • Planned Flu season is here! Get vaccinated at Medium Clinic – quick, safe, and affordable."
       }
     ],
-    "notice": []
+    "notice": [
+      {
+        "name": "Ozon Medium Clinic",
+        "details": "•\tGet your health back on track with Medium our Clinic – Comprehensive checkups now!  •\tOur Medium Clinic introduces weekend family wellness packages – because prevention is better than cure! •\tFast, friendly, and professional care. Visit Our Medium Clinic for same-day lab results and expert consultations! •\tFeeling under the weather? Medium Clinic’s internal medicine team is here to help – walk-ins welcome! •\tYour child deserves the best care – visit Medium Clinic’s pediatric department today! •\tIntroducing our new physiotherapy wing! Book your recovery session at Medium Clinic now. •\tWomen’s wellness week – Pap smear, breast exam, and more at special rates at Medium Clinic! •\tMedium Clinic now offers many appointments – consult our doctors from home! •\tWe care for the elderly – Geriatric checkups and chronic care at Medium Clinic with experienced specialists. •\tPlanned Flu season is here! Get vaccinated at Medium Clinic – quick, safe, and affordable."
+      },
+      {
+        "name": "Dessie Hospital",
+        "details": "•\tGet your health back on track with Medium our Clinic – Comprehensive checkups now!  •\tOur Medium Clinic introduces weekend family wellness packages – because prevention is better than cure! •\tFast, friendly, and professional care. Visit Our Medium Clinic for same-day lab results and expert consultations! •\tFeeling under the weather? Medium Clinic’s internal medicine team is here to help – walk-ins welcome! •\tYour child deserves the best care – visit Medium Clinic’s pediatric department today! •\tIntroducing our new physiotherapy wing! Book your recovery session at Medium Clinic now. •\tWomen’s wellness week – Pap smear, breast exam, and more at special rates at Medium Clinic! •\tMedium Clinic now offers many appointments – consult our doctors from home! •\tWe care for the elderly – Geriatric checkups and chronic care at Medium Clinic with experienced specialists. •\tPlanned Flu season is here! Get vaccinated at Medium Clinic – quick, safe, and affordable."
+      }
+    ]
   }
 }

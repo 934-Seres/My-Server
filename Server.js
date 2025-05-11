@@ -49,13 +49,15 @@ app.use(session({
 //  Static Files
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'businessesmedical.html'));
+});
+
+
 // ---  File Paths Setup ---
 const followersFile = path.join(__dirname, 'followers.json');
 const viewerCountFile = path.join(__dirname, 'viewerCount.json');
 const messagesFile = path.join(__dirname, 'messages.json');
-const medicalFile = path.join(__dirname, 'medicalRegistrations.json');
-const businessFile = path.join(__dirname, 'businessRegistrations.json');
-const storedDataFile = path.join(__dirname, 'storedData.json');
 const slideshowDataFile = path.join(__dirname, 'slideshowData.json');
 
 // --- Initial State Variables ---
@@ -63,14 +65,25 @@ let totalViewers = 0;
 let totalFollowers = 0;
 let messages = [];
 let activeUsers = [];
-let medicalRegistrations = [];
-let businessRegistrations = [];
-let storedMedicalData = [];
-let storedBusinessData = [];
+
+
 let advertMessages = [];
 let noticeMessages = [];
 let storedAdvertData = [];
 let storedNoticeData = [];
+let storedMedicalData = [];
+let storedBusinessData = [];
+
+try {
+  const storedRaw = fs.readFileSync('storedData.json');
+  const parsed = JSON.parse(storedRaw);
+  storedMedicalData = parsed.storedMedicalData || [];
+  storedBusinessData = parsed.storedBusinessData || [];
+} catch (err) {
+  console.error("Error loading storedData.json:", err);
+}
+
+
 const MAX_MESSAGES = 100;
 // --- Safe File Load Function ---
 function safeLoad(filePath, fallback) {
@@ -89,16 +102,22 @@ function safeLoad(filePath, fallback) {
 totalViewers = safeLoad(viewerCountFile, { count: 0 }).count;
 totalFollowers = safeLoad(followersFile, { count: 0 }).count;
 messages = safeLoad(messagesFile, []);
-medicalRegistrations = safeLoad(medicalFile, []);
-businessRegistrations = safeLoad(businessFile, []);
-const storedData = safeLoad(storedDataFile, { medical: [], business: [] });
-storedMedicalData = storedData.medical;
-storedBusinessData = storedData.business;
+
 const slideshowData = safeLoad(slideshowDataFile, { advertMessages: [], noticeMessages: [], storedDatas: { advert: [], notice: [] } });
+
 advertMessages = slideshowData.advertMessages;
 noticeMessages = slideshowData.noticeMessages;
 storedAdvertData = slideshowData.storedDatas.advert;
 storedNoticeData = slideshowData.storedDatas.notice;
+
+
+const saveStoredData = () => {
+  const storedData = {
+    storedMedicalData,
+    storedBusinessData
+  };
+  saveToFile(path.join(__dirname, 'storedData.json'), storedData);
+};
 
 // --- File Saving Helpers ---
 const saveToFile = async (file, data) => {
@@ -110,13 +129,13 @@ const saveToFile = async (file, data) => {
   };
   // Function to save data to slideshowData.json
 function saveData(data) {
-    fs.writeFileSync(slideshowDataPath, JSON.stringify(data, null, 2));  // Save formatted JSON data
+    fs.writeFileSync(slideshowDataFile, JSON.stringify(data, null, 2));  // Save formatted JSON data
 }
 
 // Function to load data from slideshowData.json
 function loadData() {
     try {
-        const data = fs.readFileSync(slideshowDataPath);  // Read the data from the file
+        const data = fs.readFileSync(slideshowDataFile);  // Read the data from the file
         return JSON.parse(data);  // Parse and return the JSON data
     } catch (err) {
         // If the file does not exist or an error occurs, return default structure
@@ -128,9 +147,7 @@ function loadData() {
 const saveMessages = () => saveToFile(messagesFile, messages);
 const saveViewerCount = () => saveToFile(viewerCountFile, { count: totalViewers });
 const saveFollowerCount = () => saveToFile(followersFile, { count: totalFollowers });
-const saveMedicalData = () => saveToFile(medicalFile, medicalRegistrations);
-const saveBusinessData = () => saveToFile(businessFile, businessRegistrations);
-const saveStoredData = () => saveToFile(storedDataFile, { medical: storedMedicalData, business: storedBusinessData });
+
 const saveSlideshowData = () => saveToFile(slideshowDataFile, {
     advertMessages,
     noticeMessages,
@@ -139,10 +156,32 @@ const saveSlideshowData = () => saveToFile(slideshowDataFile, {
         notice: storedNoticeData
     }
 });
-// --- Routes: Static Page ---
-app.get('/', (_req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'businessesmedical.html'));
+
+
+
+app.post('/save-stored-data', (req, res) => {
+    const { storedMedicalData: medical, storedBusinessData: business } = req.body;
+    storedMedicalData = medical;
+    storedBusinessData = business;
+    saveStoredData(); // Uses your existing save function
+    res.json({ success: true });
 });
+
+
+app.get('/get-stored-data', (req, res) => {
+    try {
+        const rawData = fs.readFileSync(path.join(__dirname, 'storedData.json'));
+        const data = JSON.parse(rawData);
+        res.json(data);
+    } catch (err) {
+        console.error("Error reading stored data:", err);
+        res.json({ medical: [], business: [] });
+    }
+});
+
+
+
+
 // --- Unified Stored Slideshow Data for All Devices ---
 app.get('/get-advert-notice-data', (_req, res) => {
     res.json({
@@ -163,26 +202,6 @@ app.post('/save-advert-notice-data', (req, res) => {
 });
 
 
-// --- Stored Data API:Stored Registration Data ---
-app.get('/get-stored-data', (_req, res) => {
-    res.json({ medical: storedMedicalData, business: storedBusinessData });
-});
-
-app.post('/save-stored-data', async (req, res) => {
-    const { medical, business } = req.body;
-    try {
-        await Promise.all([
-            saveToFile(medicalFile, medical || []),
-            saveToFile(businessFile, business || [])
-        ]);
-        res.json({ success: true });
-    } catch (err) {
-        console.error('Failed to save registration data:', err);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
-
-
 // Endpoint to get stored slideshow data
 app.get('/get-slideshow-data', (req, res) => {
     const data = loadData();  // Load the data from the file
@@ -196,48 +215,62 @@ app.post('/save-slideshow-data', (req, res) => {
     res.status(200).send('Data saved successfully');  // Send success response
 });
 
-// --- Authentication ---
-app.post('/verify-owner', (req, res) => {
-    res.json({ success: req.body.password === OWNER_PASSWORD });
+app.post('/register-medical', (req, res) => {
+  const medicalEntry = req.body;
+  storedMedicalData.push(medicalEntry);
+  saveStoredData();  // 👈 Save changes to disk
+  res.sendStatus(200);
 });
+
+app.post('/register-business', (req, res) => {
+  const businessEntry = req.body;
+  storedBusinessData.push(businessEntry);
+  saveStoredData();  // 👈 Save changes to disk
+  res.sendStatus(200);
+});
+
+
+
+// --- Authentication ---
+
+
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
     if (username === OWNER_USERNAME && password === OWNER_PASSWORD) {
-        req.session.isOwner = true;
-        res.json({ success: true });
-    }
-    else {
+        req.session.regenerate((err) => {
+            if (err) {
+                console.error('Session regeneration failed:', err);
+                return res.status(500).json({ success: false, message: 'Session error' });
+            }
+            req.session.isOwner = true;
+            res.json({ success: true });
+        });
+    } else {
         res.json({ success: false, message: 'Invalid credentials' });
     }
 });
+
 app.post('/logout', (req, res) => {
-    req.session.destroy(() => res.json({ success: true }));
+    req.session.destroy((err) => {
+        if (err) {
+            console.error('Session destroy error:', err);
+            return res.status(500).json({ success: false });
+        }
+        res.clearCookie('connect.sid'); // Optional: clear cookie
+        res.json({ success: true });
+    });
 });
+
 app.get('/check-owner', (req, res) => {
     res.json({ isOwner: !!req.session.isOwner });
 });
-// ---Registration API: Registration ---
-app.post('/api/register', (req, res) => {
-    const { category, registrationData } = req.body;
-    if (!category || !registrationData) {
-        return res.status(400).json({ success: false, message: 'Missing data' });
-    }
-    if (category === 'Medical') {
-        medicalRegistrations.push(registrationData);
-        saveMedicalData();
-    }
-    else if (category === 'Business') {
-        businessRegistrations.push(registrationData);
-        saveBusinessData();
-    }
-    else {
-        return res.status(400).json({ success: false, message: 'Invalid category' });
-    }
-    res.json({ success: true, message: 'Registration saved' });
-});
-app.get('/api/registrations', (req, res) => {
-    res.json({ medical: medicalRegistrations, business: businessRegistrations });
-});
+
+// Optional — consider removing this for security
+// app.post('/verify-owner', (req, res) => {
+//     res.json({ success: req.body.password === OWNER_PASSWORD });
+// });
+
+
 // --- Socket.IO – Real-time Chat + Stats: Socket.IO Chat and Stats ---
 io.on('connection', (socket) => {
     totalViewers++;

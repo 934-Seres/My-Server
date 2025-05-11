@@ -574,6 +574,8 @@ document.getElementById("searchButton").addEventListener("click", function () {
 
 
 
+
+
 document.addEventListener("DOMContentLoaded", function () {
     const defaultSlides = [
         { category: "Business", name: "Sheraton Addis", service: "International Hotel", location: "Ex. Taitu St.", contact_info: "09...", city: "Addis Ababa" },
@@ -587,71 +589,61 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let storedMedicalData = [];
     let storedBusinessData = [];
-
     let slideIndex = 0;
     let selectedCity = localStorage.getItem("selectedCity") || "All Cities";
 
-    const socket = io();
-
-    const medicalCategorySelect = document.getElementById("medicalCategory");
-    const businessCategorySelect = document.getElementById("businessCategory");
-
-    // Restore original options for the category dropdowns
-    function initializeCategoryDropdowns() {
-        medicalCategorySelect.innerHTML = `
-            <option value="" disabled selected>Select Medical Category</option>
-            <option value="general">General Health Service</option>
-            <option value="dental">Dental Health Service</option>
-            <option value="eye">Eye Medication</option>
-            <option value="heart">Heart Health service</option>
-            <option value="kidney">Kidney Health Service</option>
-            <option value="other">Other(Specify)</option>
-        `;
-        
-        businessCategorySelect.innerHTML = `
-            <option value="" disabled selected>Select business Category</option>
-            <option value="consulting">Consulting Service</option>
-            <option value="internationalHotel">International Hotel Services</option>
-            <option value="noninternationalHotel">Non-International Hotel Service</option>
-            <option value="factoryproduct">Factory Products</option>
-            <option value="importer">Importers</option>
-            <option value="others">Other(Specify)</option>
-        `;
+    function populateDropdown(dropdown, options) {
+        dropdown.innerHTML = '<option value="">Select a category</option>';
+        options.forEach(opt => {
+            const option = document.createElement("option");
+            option.value = opt.toLowerCase();
+            option.textContent = opt;
+            dropdown.appendChild(option);
+        });
     }
 
-    // Call this function at the start to restore options
-    initializeCategoryDropdowns();
+   async function fetchStoredData() {
+    try {
+        const res = await fetch('/get-stored-data');
+        const data = await res.json();
+        storedMedicalData = Array.isArray(data.storedMedicalData) ? data.storedMedicalData : [];
+        storedBusinessData = Array.isArray(data.storedBusinessData) ? data.storedBusinessData : [];
 
-    function fetchStoredData() {
-        fetch('/get-stored-data')
-            .then(response => response.json())
-            .then(data => {
-                storedMedicalData = data.medical || [];
-                storedBusinessData = data.business || [];
-                cycleSlides();  // Run slideshow with real data
-            })
-            .catch(error => {
-                console.error("Failed to fetch stored data:", error);
-                cycleSlides();  // Fallback to default if fetch fails
-            });
+        renderStoredMedicalData(); // Populate UI
+        renderStoredBusinessData(); // Populate UI
+        cycleSlides(); // If slideshow should start
+    } catch (err) {
+        console.error("Error fetching stored data:", err);
     }
-    
-    
+}
+window.addEventListener("DOMContentLoaded", () => {
+    fetchStoredData();
+});
 
-    function saveStoredData() {
-        fetch('/save-stored-data', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                medical: storedMedicalData,
-                business: storedBusinessData
-            })
+
+
+function saveStoredData() {
+    fetch('/save-stored-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            storedMedicalData,
+            storedBusinessData
         })
-        .then(res => res.json())
-        .then(data => console.log("Data saved successfully:", data))
-        .catch(error => console.error("Error saving data:", error));
+    }).catch(err => console.error("Failed to save stored data:", err));
+}
+
+
+    async function initializeCategoryDropdowns() {
+        try {
+            const res = await fetch('/get-categories');
+            const data = await res.json();
+            populateDropdown(document.getElementById("medicalCategory"), data.medical);
+            populateDropdown(document.getElementById("businessCategory"), data.business);
+        } catch (err) {
+            console.error("Error loading categories:", err);
+        }
     }
-    
 
     function showSlides(data) {
         const slideshow = document.getElementById("slideshow");
@@ -662,139 +654,114 @@ document.addEventListener("DOMContentLoaded", function () {
         dotContainer.innerHTML = "";
 
         if (slideInfo) {
-            slideInfo.textContent = data[0]?.default ? "Showing default slides (no stored data found)" : "";
+            slideInfo.textContent = data[0]?.default ? "Showing default slides" : "";
         }
 
-        data.forEach((slideData, index) => {
+        data.forEach((entry, i) => {
             const slide = document.createElement("div");
-            slide.classList.add("slide");
-            if (index === slideIndex) slide.classList.add("active");
-
+            slide.className = "slide" + (i === slideIndex ? " active" : "");
             slide.innerHTML = `
-                <h3>${slideData.category === "Medical" ? "Medical Service" : "Business Organization"}</h3>
-                <p><strong>Name:</strong> ${slideData.name}</p>
-                <p><strong>Service:</strong> ${slideData.industryOrService || slideData.service}</p>
-                <p><strong>Location:</strong> ${slideData.location}</p>
-                <p><strong>City:</strong> ${slideData.city}</p>
-                <p><strong>Contact:</strong> ${slideData.contact_info || slideData.contact}</p>
+                <h3>${entry.category === "Medical" ? "Medical Service" : "Business Organization"}</h3>
+                <p><strong>Name:</strong> ${entry.name}</p>
+                <p><strong>Service:</strong> ${entry.service || entry.industryOrService || "N/A"}</p>
+                <p><strong>Location:</strong> ${entry.location}</p>
+                <p><strong>City:</strong> ${entry.city}</p>
+                <p><strong>Contact:</strong> ${entry.contact_info || entry.contact}</p>
             `;
-
             slideshow.appendChild(slide);
 
             const dot = document.createElement("span");
-            dot.classList.add("dot");
-            if (index === slideIndex) dot.classList.add("active");
-            dot.addEventListener("click", () => {
-                slideIndex = index;
-                cycleSlides();
-            });
-
+            dot.className = "dot" + (i === slideIndex ? " active" : "");
+            dot.onclick = () => { slideIndex = i; cycleSlides(); };
             dotContainer.appendChild(dot);
         });
     }
 
     function cycleSlides() {
         let slides = [...storedMedicalData, ...storedBusinessData].filter(slide =>
-            slide.city === selectedCity || selectedCity === "All Cities"
+            selectedCity === "All Cities" || slide.city === selectedCity
         );
 
         if (slides.length === 0) {
             slides = defaultSlides.filter(slide =>
-                slide.city === selectedCity || selectedCity === "All Cities"
+                selectedCity === "All Cities" || slide.city === selectedCity
             ).map(slide => ({ ...slide, default: true }));
         }
 
+        if (slides.length === 0) return;
+
+        slideIndex = slideIndex % slides.length;
         showSlides(slides);
-        slideIndex = (slideIndex + 1) % (slides.length || 1);
+        slideIndex = (slideIndex + 1) % slides.length;
     }
 
-    setInterval(cycleSlides, 3000);
-
-    document.querySelector(".category-close").addEventListener("click", () => {
-        document.getElementById("categoryDataModal").style.display = "none";
-    });
-
-    document.getElementById("cityFilter").addEventListener("change", function () {
-        selectedCity = this.value;
-        localStorage.setItem("selectedCity", selectedCity);
-        cycleSlides();
-    });
-
     function renderStoredData(type) {
+        const modalDetails = document.getElementById("categoryModalDetails");
         const isMedical = type === "medical";
-        const dataArray = isMedical ? storedMedicalData : storedBusinessData;
+        const dataArr = isMedical ? storedMedicalData : storedBusinessData;
+        const selectedCat = document.getElementById(isMedical ? "medicalCategoryFilter" : "businessCategoryFilter").value;
+        const filtered = !selectedCat || selectedCat === "All"
+            ? dataArr
+            : dataArr.filter(e => e.category?.toLowerCase() === selectedCat.toLowerCase());
 
-        const subcategorySelect = isMedical
-            ? document.getElementById("medicalCategoryFilter")
-            : document.getElementById("businessCategoryFilter");
+        let content = `<h3>${isMedical ? "Medical Services" : "Business Organizations"}</h3>`;
 
-        const selectedSubcategory = subcategorySelect.value;
-
-        const filteredData = selectedSubcategory === "All" || selectedSubcategory.includes("Select")
-            ? dataArray
-            : dataArray.filter(entry => entry.category === selectedSubcategory);
-
-        let details = `<h3>${isMedical ? "Medical Services" : "Business Organizations"}</h3>`;
-
-        if (filteredData.length > 0) {
-            filteredData.forEach((entry, index) => {
-                details += `
-                    <div class="user-entry" data-index="${index}">
+        if (filtered.length === 0) {
+            content += "<p>No data available.</p>";
+        } else {
+            filtered.forEach((entry, i) => {
+                content += `
+                    <div class="user-entry" data-index="${i}">
                         <p><strong>Name:</strong> ${entry.name}</p>
                         <p><strong>Industry/Service:</strong> ${entry.industryOrService}</p>
                         <p><strong>Location:</strong> ${entry.location}</p>
                         <p><strong>City:</strong> ${entry.city}</p>
                         <p><strong>Contact:</strong> ${entry.contact_info}</p>
-                     
-                        ${isOwner ? `
-                            <button class="delBtn" data-type="${type}" data-index="${index}">Delete</button>
-                            
-                        ` : ""}
-                        <hr>
-                    
+                        ${isOwner ? `<button class="delBtn" data-type="${type}" data-index="${i}">Delete</button>` : ""}
                         <hr>
                     </div>
                 `;
             });
-        } else {
-            details += "<p>No data available.</p>";
         }
 
-        document.getElementById("categoryModalDetails").innerHTML = details;
+        modalDetails.innerHTML = content;
         document.getElementById("categoryDataModal").style.display = "block";
-
-        document.querySelectorAll(".delBtn").forEach(button => {
-            button.addEventListener("click", function () {
-                const entryType = this.dataset.type;
-                const index = parseInt(this.dataset.index);
-        
-                if (confirm("Are you sure you want to delete this entry?")) {
-                    if (entryType === "medical") {
-                        storedMedicalData.splice(index, 1);
-                    } else {
-                        storedBusinessData.splice(index, 1);
-                    }
-        
-                    saveStoredData();
-                    cycleSlides();
-                    renderStoredData(entryType);
-                }
-            });
-        
-           
-        });
-        
     }
 
-    document.getElementById("medicalCategoryFilter").addEventListener("change", () => renderStoredData("medical"));
-    document.getElementById("businessCategoryFilter").addEventListener("change", () => renderStoredData("business"));
+    document.querySelector(".category-close").onclick = () => {
+        document.getElementById("categoryDataModal").style.display = "none";
+    };
+
+    document.getElementById("cityFilter").onchange = function () {
+        selectedCity = this.value;
+        localStorage.setItem("selectedCity", selectedCity);
+        cycleSlides();
+    };
+
+    document.getElementById("medicalCategoryFilter").onchange = () => renderStoredData("medical");
+    document.getElementById("businessCategoryFilter").onchange = () => renderStoredData("business");
+
+    document.getElementById("categoryModalDetails").addEventListener("click", function (e) {
+        if (e.target.classList.contains("delBtn")) {
+            const type = e.target.dataset.type;
+            const index = parseInt(e.target.dataset.index);
+            if (confirm("Are you sure you want to delete this entry?")) {
+                if (type === "medical") storedMedicalData.splice(index, 1);
+                else storedBusinessData.splice(index, 1);
+
+                saveStoredData();
+                cycleSlides();
+                renderStoredData(type);
+            }
+        }
+    });
 
     document.getElementById("registrationForm").addEventListener("submit", function (event) {
         event.preventDefault();
 
         const name = document.getElementById("name").value;
         const type = document.getElementById("type").value;
-        const category = (type === "medical")
+        const category = type === "medical"
             ? document.getElementById("medicalCategory").value
             : document.getElementById("businessCategory").value;
         const industryOrService = document.getElementById("industryOrService").value;
@@ -803,7 +770,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const contact_info = document.getElementById("contact_info").value;
         const city = document.getElementById("regionFilter").value;
 
-        if (category.includes("Select")) {
+        if (!category || category.includes("Select")) {
             alert("Please select a valid category.");
             return;
         }
@@ -818,16 +785,15 @@ document.addEventListener("DOMContentLoaded", function () {
             city
         };
 
-        if (type === "medical") {
-            storedMedicalData.push(newEntry);
-        } else {
-            storedBusinessData.push(newEntry);
-        }
-
+        const targetArray = type === "medical" ? storedMedicalData : storedBusinessData;
+        targetArray.push(newEntry);
         saveStoredData();
 
-        const filterDropdown = (type === "medical") ? document.getElementById("medicalCategoryFilter") : document.getElementById("businessCategoryFilter");
-        if (!filterDropdown.querySelector(`option[value="${category}"]`)) {
+        const filterDropdown = type === "medical"
+            ? document.getElementById("medicalCategoryFilter")
+            : document.getElementById("businessCategoryFilter");
+
+        if (!Array.from(filterDropdown.options).some(opt => opt.value === category)) {
             const newOption = document.createElement("option");
             newOption.value = category;
             newOption.textContent = category;
@@ -836,12 +802,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
         alert("Registration successful!");
         this.reset();
-        initializeCategoryDropdowns();  // Reinitialize dropdown options after form reset
+        initializeCategoryDropdowns();
         cycleSlides();
     });
 
-    fetchStoredData(); // Load stored data on startup
+    initializeCategoryDropdowns();
+    fetchStoredData();
+    setInterval(cycleSlides, 3000);
 });
+
 
 
 
