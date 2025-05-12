@@ -240,12 +240,6 @@ body {
 }
 
 
-/* Keep existing styles for the dropdowns (left and right) */
-#select-advert-notice {
-    position: relative;    
-    
-}
-
 /* Make sure the modal for displaying submitted data is on top of other content */
 #submittedDataModal {
     display: none;  /* Hidden initially */
@@ -346,9 +340,9 @@ form button:hover {
 
 /* Dropdown style */
 .select-advert-notice {
-    margin-top: 20px;
+    margin-top: 0px;
     padding: 8px;
-    width: 100%;
+    width: 500px;
     box-sizing: border-box;
 }
 

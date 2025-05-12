@@ -4,20 +4,43 @@
       "name": "Ozon Medium Clinic",
       "category": "general",
       "industryOrService": "General Health Care",
-      "licenseNumber": "768",
+      "licenseNumber": "aaaa",
       "location": "Near MA College",
       "contact_info": "09...",
-      "city": "Assosa"
+      "city": "Assosa",
+      "type": "medical"
     },
     {
       "name": "Grand Medium Clinic",
       "category": "general",
       "industryOrService": "General Health Care",
-      "licenseNumber": "768",
+      "licenseNumber": "xxxx",
       "location": "Health bureau Road",
       "contact_info": "09...",
-      "city": "Assosa"
+      "city": "Assosa",
+      "type": "medical"
+    },
+    {
+      "name": "Seven Dental Clinic",
+      "category": "dental",
+      "industryOrService": "Dental Health Care",
+      "licenseNumber": "123",
+      "location": "22-Bolagul Building area",
+      "contact_info": "09...",
+      "city": "Addis Ababa",
+      "type": "medical"
     }
   ],
-  "storedBusinessData": []
+  "storedBusinessData": [
+    {
+      "name": "Bejai Ethio Industrial and Engineering solution",
+      "category": "factoryproduct",
+      "industryOrService": "Idustrial and Engineering Solution",
+      "licenseNumber": "12345",
+      "location": "Kaliti Sheger Building",
+      "contact_info": "09...",
+      "city": "Addis Ababa",
+      "type": "business"
+    }
+  ]
 }
