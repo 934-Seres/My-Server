@@ -134,6 +134,7 @@ function saveData(data) {
     fs.writeFileSync(slideshowDataFile, JSON.stringify(data, null, 2));  // Save formatted JSON data
 }
 
+
 // Function to load data from slideshowData.json
 function loadData() {
     try {

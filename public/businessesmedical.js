@@ -212,7 +212,8 @@ function openDetailedEntryInNewWindow(type, index) {
         </head>
         <body>
             <h2>${escapeHtml(entry.name || "N/A")}</h2>
-            <p><strong>Details:</strong> ${escapeHtml(entry.details || "N/A")}</p>
+           <p><strong>Details:</strong> ${escapeHtml(entry.details || "N/A").replace(/\n/g, "<br>")}</p>
+
             <div class="nav-buttons">
                 <button onclick="goTo('${type}', ${(index - 1 + storedDatas[type].length) % storedDatas[type].length})">← Previous</button>
                 <button onclick="goTo('${type}', ${(index + 1) % storedDatas[type].length})">Next →</button>
@@ -240,12 +241,7 @@ function openDetailedEntryInNewWindow(type, index) {
             openDetailedEntryInNewWindow(type, newIndex);
         }
     });
-}
-
-    
-
-
-    
+}    
 
 let advertMessages = [];
 let noticeMessages = [];
@@ -414,6 +410,7 @@ function sendStoredData(type, index) {
     showStoredDatas(type);
 }
 
+
 function showStoredDatas(type) {
     const modals = document.getElementById("dataModal");
     const modalsContent = document.getElementById("modalContent");
@@ -424,8 +421,14 @@ function showStoredDatas(type) {
             modalsContent.innerHTML += `
                 <h4>Entry ${index + 1}</h4>
                 <p><strong>Name:</strong> ${entry.name || "N/A"}</p>
-                <p><strong>Details:</strong> <span id="details-${type}-${index}">${shortenText(entry.details)}</span> 
-                    <a href="#" onclick="toggleDetailsStored('${type}', ${index}); return false;" id="toggle-${type}-${index}">more...</a>
+                <p><strong>Details:</strong> 
+                    <span id="details-${type}-${index}">${shortenText(entry.details)}</span> 
+                    <button 
+                        id="toggle-${type}-${index}" 
+                        onclick="toggleDetailsStored('${type}', ${index})"
+                        aria-expanded="false"
+                        style="background:none;border:none;color:blue;cursor:pointer;text-decoration:underline;"
+                    >more...</button>
                 </p>
                 ${isOwner ? `
                     <button class="delete-btn" onclick="deleteStoredData('${type}', ${index})">Delete</button>
@@ -448,16 +451,19 @@ function shortenText(text) {
 }
 
 function toggleDetailsStored(type, index) {
-    const detailsElement = document.getElementById(`details-${type}-${index}`);
-    const toggleElement = document.getElementById(`toggle-${type}-${index}`);
-    const fullText = storedDatas[type][index].details || "N/A";
+    const detailsSpan = document.getElementById(`details-${type}-${index}`);
+    const toggleBtn = document.getElementById(`toggle-${type}-${index}`);
+    const isExpanded = toggleBtn.innerText === "less...";
 
-    if (detailsElement.innerText.includes("...")) {
-        detailsElement.innerText = fullText;
-        toggleElement.innerText = "less...";
+    if (isExpanded) {
+        detailsSpan.innerHTML = shortenText(storedDatas[type][index].details);
+        toggleBtn.innerText = "more...";
+        toggleBtn.setAttribute("aria-expanded", "false");
     } else {
-        detailsElement.innerText = shortenText(fullText);
-        toggleElement.innerText = "more...";
+        const fullText = escapeHtml(storedDatas[type][index].details).replace(/\n/g, "<br>");
+        detailsSpan.innerHTML = fullText;
+        toggleBtn.innerText = "less...";
+        toggleBtn.setAttribute("aria-expanded", "true");
     }
 }
 
@@ -502,13 +508,61 @@ document.addEventListener("DOMContentLoaded", function () {
     loadSlideshowData();
 });
 
+function setupExpandableDetails(fieldId, toggleId) {
+    const toggle = document.getElementById(toggleId);
+    const container = toggle.closest(".details-container");
+
+    toggle.addEventListener("click", toggleHandler);
+    toggle.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggleHandler();
+        }
+    });
+
+    function toggleHandler() {
+        const expanded = toggle.getAttribute("aria-expanded") === "true";
+        if (!expanded) {
+            // Expand to textarea
+            const input = container.querySelector("input[name='details']");
+            const textarea = document.createElement("textarea");
+            textarea.name = "details";
+            textarea.id = input.id;
+            textarea.required = true;
+            textarea.ariaLabel = input.ariaLabel;
+            textarea.value = input.value;
+            textarea.rows = 5;
+
+            container.replaceChild(textarea, input);
+            toggle.innerText = "less...";
+            toggle.setAttribute("aria-expanded", "true");
+        } else {
+            // Collapse back to input
+            const textarea = container.querySelector("textarea[name='details']");
+            const input = document.createElement("input");
+            input.type = "text";
+            input.name = "details";
+            input.id = textarea.id;
+            input.required = true;
+            input.placeholder = "Details:";
+            input.ariaLabel = textarea.ariaLabel;
+            input.value = textarea.value;
+
+            container.replaceChild(input, textarea);
+            toggle.innerText = "more...";
+            toggle.setAttribute("aria-expanded", "false");
+        }
+    }
+}
+
+setupExpandableDetails("detailsAdvert", "moreDetailsAdvert");
+setupExpandableDetails("detailsNotice", "moreDetailsNotice");
 
 
 
  // Array to hold previously selected or searched cities
 let searchedCities = [];
 
-// Function to handle location search
 function searchLocation() {
     const userInput = searchQuery.value.trim();
     const selectedOption = document.querySelector(`#cityList option[value='${userInput}']`);
@@ -519,30 +573,26 @@ function searchLocation() {
         updateMap(lat, lon, userInput);
         addToSearchedCities(userInput);  // Add to the searched list
     } else {
-        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${userInput}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Network response was not ok");
-                }
-                return response.json();
-            })
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(userInput)}`)
+            .then(response => response.json())
             .then(data => {
                 if (data.length > 0) {
                     const { lat, lon, display_name } = data[0];
                     updateMap(lat, lon, display_name);
                     addToSearchedCities(display_name);  // Add to the searched list
                 } else {
-                    alert("Location not found. Please enter a valid city.");
+                    alert("Location not found. Please enter a valid city or organization.");
                 }
             })
             .catch(error => {
                 console.error('Error fetching location data:', error);
-                alert("Failed to fetch location. Please try again.");
+                alert("Failed to fetch location. Please check your internet connection or try again later.");
             });
     }
 
     searchQuery.value = ''; // Reset input after search
 }
+
 
 // Add the searched city to the list
 function addToSearchedCities(cityName) {
