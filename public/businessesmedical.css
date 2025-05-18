@@ -9,7 +9,14 @@ html, body {
     overflow-x: scroll;
   }
   
-
+#googleLocation {
+    background-color: green;
+    color: white;
+    text-decoration: none;
+    margin-left: 2px;
+    left: 0;
+    border-radius: 10px;
+}
   body {
     background-color: var(--background-color);    
 }
@@ -801,6 +808,7 @@ nav ul li a {
    
 }
 #searchLocation {
+   
     width: 80px;
     background-color: gray;
     margin-left: 0px;
@@ -815,7 +823,7 @@ nav ul li a {
     margin-right: 0px;  
 }
 #searchButton {
-    margin-top: 0px;
+    margin-top: 10px;
     width: 80px;
     background-color: green;
     color: white;

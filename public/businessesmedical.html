@@ -122,12 +122,16 @@
                     <option value="Wolita Sodo" data-lat="6.8344" data-lon="37.7500">Wolita Sodo</option>                 
                 </datalist>         
             <button type="button" id="searchButton" onclick="searchLocation()">Search Location</button>
+            <span>OR</span>
+            <a href="https://local.google.com" title="Click here to Google Map" id="googleLocation" target="_blank" rel="noopener">Go to Google Location</a>
         </div>
     
         <!-- Display Latitude & Longitude -->
         <div id="locationInfo">Latitude: - | Longitude: -</div>    
         <!-- Map Container -->
+         
         <div id="map">Map will be displayed here</div>
+        
         <div id="topRightButtons" class="top-right-buttons">
             <button type="button" id="followBtn" class="follow-button">Follow</button>
             <div id="followerCount" class="follower-count">Followers: 0</div>

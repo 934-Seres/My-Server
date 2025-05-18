@@ -181,92 +181,123 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 
+let advertMessages = [];
+let noticeMessages = [];
+let storedDatas = { advert: [], notice: [] };
+let currentAdvertIndex = 0;
+let currentNoticeIndex = 0;
+let advertInterval;
+let noticeInterval;
+
+// Simulated isOwner flag (replace with real session check)
+
+
+function escapeHtml(text) {
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
 
 function openDetailedEntryInNewWindow(type, index) {
     const entry = storedDatas[type][index];
     if (!entry) return;
 
-    const win = window.open('', '_blank', 'width=600,height=500');
+    const safeTitle = escapeHtml(entry.name || "Entry Detail");
+    const safeDetails = escapeHtml(entry.details || "N/A").replace(/\n/g, "<br>");
+    const safeName = escapeHtml(entry.name || "N/A");
+
     const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>${escapeHtml(entry.name || "Entry Detail")}</title>
-            <style>
-                body { font-family: Arial, sans-serif; padding: 20px; text-align: justify; }
-                h2 { margin-top: 0; }
-                p { margin: 8px 0; }
-                .nav-buttons { display: flex; justify-content: space-between; margin-top: 30px; }
-                button { padding: 8px 12px; }
-            </style>
-            <script>
-                function goTo(type, index) {
-                    window.opener.openDetailedEntryInNewWindow(type, index);
-                    window.close();
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>${safeTitle}</title>
+        <style>
+            body { font-family: Arial, sans-serif; padding: 20px; text-align: justify; }
+            h2 { margin-top: 0; }
+            p { margin: 8px 0; }
+            .nav-buttons { display: flex; justify-content: space-between; margin-top: 30px; }
+            button { padding: 8px 12px; }
+        </style>
+        <script>
+            const isOwner = ${isOwner};
+
+            function goTo(type, index) {
+                window.opener.openDetailedEntryInNewWindow(type, index);
+                window.close();
+            }
+            function deleteThis(type, index) {
+                window.opener.deleteEntryFromPopup(type, index);
+                window.close();
+            }
+
+            window.addEventListener('keydown', function (e) {
+                const total = window.opener.storedDatas[type].length;
+                if (e.key === 'ArrowRight') {
+                    goTo(type, (index + 1) % total);
+                } else if (e.key === 'ArrowLeft') {
+                    goTo(type, (index - 1 + total) % total);
                 }
-                function deleteThis(type, index) {
-                    window.opener.deleteEntryFromPopup(type, index);
-                    window.close();
-                }
-            </script>
-        </head>
-        <body>
-            <h2>${escapeHtml(entry.name || "N/A")}</h2>
-           <p><strong>Details:</strong> ${escapeHtml(entry.details || "N/A").replace(/\n/g, "<br>")}</p>
+            });
+        </script>
+    </head>
+    <body>
+        <h2>${safeName}</h2>
+        <p><strong>Details:</strong> ${safeDetails}</p>
+        <div class="nav-buttons">
+            <button onclick="goTo('${type}', ${(index - 1 + storedDatas[type].length) % storedDatas[type].length})">← Previous</button>
+            <button onclick="goTo('${type}', ${(index + 1) % storedDatas[type].length})">Next →</button>
+        </div>
+        ${isOwner ? `<button onclick="deleteThis('${type}', ${index})">Delete This Entry</button>` : ""}
+    </body>
+    </html>`;
 
-            <div class="nav-buttons">
-                <button onclick="goTo('${type}', ${(index - 1 + storedDatas[type].length) % storedDatas[type].length})">← Previous</button>
-                <button onclick="goTo('${type}', ${(index + 1) % storedDatas[type].length})">Next →</button>
-            </div>
-            ${isOwner ? `<button onclick="deleteThis('${type}', ${index})">Delete This Entry</button>` : ""}
-        </body>
-        </html>
-    `;
-    win.document.write(htmlContent);
-    win.document.close();
-
-    // Add arrow key navigation in the new window
-    win.addEventListener('keydown', function (e) {
-        const totalEntries = storedDatas[type].length;
-        let newIndex = index;
-
-        if (e.key === "ArrowRight") {
-            newIndex = (index + 1) % totalEntries;
-        } else if (e.key === "ArrowLeft") {
-            newIndex = (index - 1 + totalEntries) % totalEntries;
-        }
-
-        if (newIndex !== index) {
-            win.close();
-            openDetailedEntryInNewWindow(type, newIndex);
-        }
-    });
-}    
-
-let advertMessages = [];
-let noticeMessages = [];
-let storedDatas = { advert: [], notice: [] };
-
-function saveSlideshowData() {
-    fetch('/save-slideshow-data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            advertMessages,
-            noticeMessages,
-            storedDatas
-        })
-    }).catch(err => console.error('Error saving slideshow data:', err));
+    const win = window.open('', '_blank', 'width=600,height=500');
+    if (win) {
+        win.document.write(htmlContent);
+        win.document.close();
+    } else {
+        alert("Popup blocked. Please allow popups for this site.");
+    }
 }
 
-function addAdvert(text, details) {
-    advertMessages.push(`Name of Organization: ${text}\nDetails: ${details}`);
-    storedDatas.advert.push({ name: text, details });
-    /*updateSlideshow('advert');*/
+function deleteEntryFromPopup(type, index) {
+    const entry = storedDatas[type][index];
+    if (!entry) return;
+
+    const messageArray = type === 'advert' ? advertMessages : noticeMessages;
+
+    // Match message by full content
+    const messageToDelete = `Name of Organization: ${entry.name}\nDetails: ${entry.details}`;
+    const messageIndex = messageArray.findIndex(msg => msg === messageToDelete);
+
+    if (messageIndex !== -1) messageArray.splice(messageIndex, 1); // ✅ Only remove from slideshow
+
+    // ❌ Do NOT delete from storedDatas[type]
+    // storedDatas[type].splice(index, 1); <-- This is removed intentionally
+
+    if (type === 'advert') {
+        currentAdvertIndex = Math.max(0, currentAdvertIndex - 1);
+    } else {
+        currentNoticeIndex = Math.max(0, currentNoticeIndex - 1);
+    }
+
+    updateSlideshow(type);
     saveSlideshowData();
 }
 
 
+function addAdvert(text, details) {
+    const entry = { id: Date.now(), name: text, details };
+    advertMessages.push(`Name of Organization: ${text}\nDetails: ${details}`);
+    storedDatas.advert.push(entry);
+    saveSlideshowData();
+}
+
+function addNotice(text, details) {
+    const entry = { id: Date.now(), name: text, details };
+    noticeMessages.push(`Name of Organization: ${text}\nDetails: ${details}`);
+    storedDatas.notice.push(entry);
+    saveSlideshowData();
+}
 
 async function loadSlideshowData() {
     try {
@@ -282,57 +313,25 @@ async function loadSlideshowData() {
     }
 }
 
-let currentAdvertIndex = 0;
-let currentNoticeIndex = 0;
-let advertInterval;
-let noticeInterval;
-
-function escapeHtml(text) {
-    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-    return text.replace(/[&<>"']/g, m => map[m]);
-}
-
-function deleteEntryFromPopup(type, index) {
-    const messageArray = type === 'advert' ? advertMessages : noticeMessages;
-
-    // Construct the message to remove using the storedDatas entry
-    const entry = storedDatas[type][index];
-    const messageToDelete = `Name of Organization: ${entry.name}\nDetails: ${entry.details}`;
-
-    // Find and remove the exact message from the slideshow array
-    const messageIndex = messageArray.indexOf(messageToDelete);
-    if (messageIndex !== -1) {
-        messageArray.splice(messageIndex, 1);
-    }
-
-    // Adjust current index if needed
-    if (type === 'advert') {
-        currentAdvertIndex = Math.min(currentAdvertIndex, messageArray.length - 1);
-    } else {
-        currentNoticeIndex = Math.min(currentNoticeIndex, messageArray.length - 1);
-    }
-
-    // If the slideshow array is now empty
-    if (messageArray.length === 0) {
-        alert(type === 'advert' ? "No Advertisement data Available" : "No Notice data Available");
-
-        const slideshowContent = document.getElementById(type === 'advert' ? 'advertSlideshowContent' : 'noticeSlideshowContent');
-        if (slideshowContent) slideshowContent.innerHTML = '';
-
-        const dotsContainer = document.getElementById(type === 'advert' ? 'advertDotsContainer' : 'noticeDotsContainer');
-        if (dotsContainer) dotsContainer.innerHTML = '';
-    } else {
-        updateSlideshow(type);
-    }
-
-    saveSlideshowData();
-}
-
-
 function goToSlide(type, index) {
     if (type === 'advert') currentAdvertIndex = index;
     else currentNoticeIndex = index;
     updateSlideshow(type);
+}
+function adjustFontSizeToFit(box) {
+    const maxWidth = box.offsetWidth;
+    const maxHeight = box.offsetHeight;
+    const message = box.querySelector(".clickable-message");
+    if (!message) return;
+    
+    let fontSize = 50;
+    message.style.fontSize = `${fontSize}px`;
+
+    while (message.scrollWidth > maxWidth || message.scrollHeight > maxHeight) {
+        fontSize -= 2;
+        if (fontSize < 10) break;
+        message.style.fontSize = `${fontSize}px`;
+    }
 }
 
 function updateSlideshow(type) {
@@ -345,37 +344,31 @@ function updateSlideshow(type) {
     const box = document.getElementById(boxId);
     const dotContainer = document.getElementById(dotsId);
 
-    function adjustFontSizeToFit(box) {
-        const maxWidth = box.offsetWidth;
-        const maxHeight = box.offsetHeight;
-        const message = box.querySelector(".clickable-message");
-        let fontSize = 50;
-        message.style.fontSize = `${fontSize}px`;
-
-        while (message.scrollWidth > maxWidth || message.scrollHeight > maxHeight) {
-            fontSize -= 2;
-            if (fontSize < 10) break;
-            message.style.fontSize = `${fontSize}px`;
-        }
-    }
+    
 
     function showMessage(index) {
         const msg = messages[index] || `No ${type === 'advert' ? 'Advertisements' : 'Notices'}`;
-        const safeMessage = escapeHtml(msg);
+        
+        const safeMessage = escapeHtml(msg);      
 
-        const entryIndex = storedDatas[type].findIndex(entry => {
-            const fullContent = `Name of Organization: ${entry.name}\nDetails: ${entry.details}`;
-            return fullContent === msg;
-        });
 
-        box.innerHTML = `<span class="clickable-message" onclick="${entryIndex !== -1
-            ? `openDetailedEntryInNewWindow('${type}', ${entryIndex})`
-            : `openInNewWindow('${safeMessage}')`}">${safeMessage}</span>`;
+        const entryIndex = storedDatas[type].findIndex(entry =>
+            `Name of Organization: ${entry.name}\nDetails: ${entry.details}` === msg
+        ); 
+       
+
+        box.innerHTML = `<span class="clickable-message" onclick="${
+            entryIndex !== -1
+                ? `openDetailedEntryInNewWindow('${type}', ${entryIndex})`
+                : `alert('Entry not found or outdated.')`
+        }">${safeMessage}</span>`;
+
         box.style.textAlign = 'justify';
         adjustFontSizeToFit(box);
     }
 
-    showMessage(getIndex());
+   showMessage(getIndex());
+
     clearInterval(type === 'advert' ? advertInterval : noticeInterval);
 
     if (messages.length > 0) {
@@ -398,18 +391,23 @@ function sendStoredData(type, index) {
     const entry = storedDatas[type][index];
     const messageContent = `Name of Organization: ${entry.name}\nDetails: ${entry.details}`;
 
-    if (type === 'advert' && !advertMessages.includes(messageContent)) {
-        advertMessages.push(messageContent);
-    } else if (type === 'notice' && !noticeMessages.includes(messageContent)) {
-        noticeMessages.push(messageContent);
+    const messages = type === 'advert' ? advertMessages : noticeMessages;
+    if (!messages.includes(messageContent)) {
+        messages.push(messageContent);
     }
 
     updateSlideshow(type);
     saveSlideshowData();
     alert(`${entry.name || "This entry"} has been sent to the slideshow.`);
-    showStoredDatas(type);
 }
 
+function saveSlideshowData() {
+    fetch('/save-slideshow-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ advertMessages, noticeMessages, storedDatas })
+    }).catch(err => console.error('Error saving slideshow data:', err));
+}
 
 function showStoredDatas(type) {
     const modals = document.getElementById("dataModal");
@@ -453,19 +451,15 @@ function shortenText(text) {
 function toggleDetailsStored(type, index) {
     const detailsSpan = document.getElementById(`details-${type}-${index}`);
     const toggleBtn = document.getElementById(`toggle-${type}-${index}`);
-    const isExpanded = toggleBtn.innerText === "less...";
+    const entry = storedDatas[type][index];
 
-    if (isExpanded) {
-        detailsSpan.innerHTML = shortenText(storedDatas[type][index].details);
-        toggleBtn.innerText = "more...";
-        toggleBtn.setAttribute("aria-expanded", "false");
-    } else {
-        const fullText = escapeHtml(storedDatas[type][index].details).replace(/\n/g, "<br>");
-        detailsSpan.innerHTML = fullText;
-        toggleBtn.innerText = "less...";
-        toggleBtn.setAttribute("aria-expanded", "true");
-    }
+    const isExpanded = toggleBtn.getAttribute("aria-expanded") === "true";
+    detailsSpan.innerText = isExpanded ? shortenText(entry.details) : entry.details;
+    toggleBtn.innerText = isExpanded ? "more..." : "less...";
+    toggleBtn.setAttribute("aria-expanded", String(!isExpanded));
 }
+
+
 
 function deleteStoredData(type, index) {
     if (confirm("Are you sure you want to delete this entry?")) {
@@ -1539,4 +1533,3 @@ setInterval(() => {
         }
     });
 }, 60000); // Update every 1 minute
-
