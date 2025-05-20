@@ -850,6 +850,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
+
 // This under code will be used during deploying
 /*
 document.getElementById("registrationForm").addEventListener("submit", async function (event) {
