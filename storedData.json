@@ -31,13 +31,13 @@
       "type": "medical"
     },
     {
-      "name": "Rukiya Medium Clinic",
+      "name": "Lancet General Hospital",
       "category": "general",
       "industryOrService": "General Health Care",
-      "licenseNumber": "12345",
-      "location": "Assosa Bus Station/Menaharia area",
+      "licenseNumber": "890",
+      "location": "Megenagna",
       "contact_info": "09...",
-      "city": "Assosa",
+      "city": "Addis Ababa",
       "type": "medical"
     }
   ],
