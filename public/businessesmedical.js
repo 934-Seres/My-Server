@@ -820,6 +820,25 @@ document.addEventListener("DOMContentLoaded", function () {
         const newEntry = {
             name, category, industryOrService, licenseNumber, location, contact_info, city, type
         };
+        // Send data to backend in a safe way (non-blocking, won't break slideshow)
+        try {
+            const endpoint = type === "medical" ? "/register-medical" : "/register-business";
+            fetch(endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(newEntry)
+            })
+            .then(res => {
+                if (!res.ok) {
+                    console.warn("Server responded with error while saving registration.");
+                }
+            })
+            .catch(err => {
+                console.error("Could not reach server:", err);
+            });
+        } catch (err) {
+            console.error("Unexpected error sending data to backend:", err);
+        }
 
         const targetArray = type === "medical" ? storedMedicalData : storedBusinessData;
         targetArray.push(newEntry);

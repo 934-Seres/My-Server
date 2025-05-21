@@ -232,14 +232,14 @@ app.post('/register-business', (req, res) => {
   res.sendStatus(200);
 });
 
-// Get all registered medical entries
-app.get('/get-registered-medical', (req, res) => {
-    res.json(storedMedicalData);
+// Get all stored medical registrations
+app.get('/register-medical', (req, res) => {
+  res.json(storedMedicalData);
 });
 
-// Get all registered business entries
-app.get('/get-registered-business', (req, res) => {
-    res.json(storedBusinessData);
+// Get all stored business registrations
+app.get('/register-business', (req, res) => {
+  res.json(storedBusinessData);
 });
 
 

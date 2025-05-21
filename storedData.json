@@ -19,26 +19,6 @@
       "contact_info": "09...",
       "city": "Assosa",
       "type": "medical"
-    },
-    {
-      "name": "Seven Dental Clinic",
-      "category": "dental",
-      "industryOrService": "Dental Health Care",
-      "licenseNumber": "123",
-      "location": "22-Bolagul Building area",
-      "contact_info": "09...",
-      "city": "Addis Ababa",
-      "type": "medical"
-    },
-    {
-      "name": "Lancet General Hospital",
-      "category": "general",
-      "industryOrService": "General Health Care",
-      "licenseNumber": "890",
-      "location": "Megenagna",
-      "contact_info": "09...",
-      "city": "Addis Ababa",
-      "type": "medical"
     }
   ],
   "storedBusinessData": [
