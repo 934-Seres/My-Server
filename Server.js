@@ -372,13 +372,11 @@ io.on('connection', (socket) => {
     socket.on('stopTyping', ({ username }) => {
         socket.broadcast.emit('stopTyping', { username });
     });
-    socket.on('disconnect', () => {
-        totalViewers--;
-        saveViewerCount();
-        io.emit('viewerCountUpdate', totalViewers);
+   socket.on('disconnect', () => {
         activeUsers = activeUsers.filter(u => u.username !== socket.username);
         io.emit('activeChattersUpdate', activeUsers);
-    });  
+    });
+ 
 
     
 });
