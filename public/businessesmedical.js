@@ -714,7 +714,7 @@ document.addEventListener("DOMContentLoaded", function () {
         let slides = [...storedMedicalData, ...storedBusinessData].filter(slide =>
             selectedCity === "All Cities" || slide.city === selectedCity
         );
-
+         
         if (slides.length === 0) {
             slides = defaultSlides.filter(slide =>
                 selectedCity === "All Cities" || slide.city === selectedCity
@@ -841,6 +841,16 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         const targetArray = type === "medical" ? storedMedicalData : storedBusinessData;
+        const exists = targetArray.some(entry =>
+            entry.name.toLowerCase() === name.toLowerCase() &&
+            entry.city.toLowerCase() === city.toLowerCase() &&
+            entry.type === type
+        );
+        if (exists) {
+            alert("This organization is already registered.");
+            return;
+        }
+
         targetArray.push(newEntry);
         saveStoredData();
 

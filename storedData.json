@@ -19,6 +19,16 @@
       "contact_info": "09...",
       "city": "Assosa",
       "type": "medical"
+    },
+    {
+      "name": "Rukiya Medium Clinic",
+      "category": "general",
+      "industryOrService": "General Health Care",
+      "licenseNumber": "890",
+      "location": "Assosa Bus Station/Menaharia area",
+      "contact_info": "09...",
+      "city": "Assosa",
+      "type": "medical"
     }
   ],
   "storedBusinessData": [
