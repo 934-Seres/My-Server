@@ -746,22 +746,24 @@ document.addEventListener("DOMContentLoaded", function () {
         if (filtered.length === 0) {
             content += "<p>No data available.</p>";
         } else {
-            filtered.forEach((entry, i) => {
-                const heading = `<h3>${entry.type === "medical" ? "Medical Service" : "Business Organization"}</h3>`;
+           filtered.forEach(entry => {
+                const realIndex = dataArr.indexOf(entry); // Find index in the full array
 
+                const heading = `<h3>${entry.type === "medical" ? "Medical Service" : "Business Organization"}</h3>`;
                 content += `
-                    <div class="user-entry" data-index="${i}">
+                    <div class="user-entry" data-index="${realIndex}">
                         ${heading}
                         <p><strong>Name:</strong> ${entry.name}</p>
                         <p><strong>Industry/Service:</strong> ${entry.industryOrService}</p>
                         <p><strong>Location:</strong> ${entry.location}</p>
                         <p><strong>City:</strong> ${entry.city}</p>
                         <p><strong>Contact:</strong> ${entry.contact_info}</p>
-                        ${isOwner ? `<button class="delBtn" data-type="${normalizedType}" data-index="${i}">Delete</button>` : ""}
+                        ${isOwner ? `<button class="delBtn" data-type="${normalizedType}" data-index="${realIndex}">Delete</button>` : ""}
                         <hr>
                     </div>
                 `;
             });
+
         }
 
         modalDetails.innerHTML = content;
@@ -782,20 +784,22 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("medicalCategoryFilter").onchange = () => renderStoredData("medical");
     document.getElementById("businessCategoryFilter").onchange = () => renderStoredData("business");
 
-    document.getElementById("categoryModalDetails").addEventListener("click", function (e) {
-        if (e.target.classList.contains("delBtn")) {
-            const type = e.target.dataset.type;
-            const index = parseInt(e.target.dataset.index);
-            if (confirm("Are you sure you want to delete this entry?")) {
-                if (type === "medical") storedMedicalData.splice(index, 1);
-                else storedBusinessData.splice(index, 1);
+   document.getElementById("categoryModalDetails").addEventListener("click", function (e) {
+            if (e.target.classList.contains("delBtn")) {
+                const type = e.target.dataset.type;
+                const index = parseInt(e.target.dataset.index);
+                const name = e.target.dataset.name || "this entry";
 
-                saveStoredData();
-                cycleSlides();
-                renderStoredData(type);
+                if (confirm(`Are you sure to delete'${name}' ?`)) {
+                    if (type === "medical") storedMedicalData.splice(index, 1);
+                    else storedBusinessData.splice(index, 1);
+
+                    saveStoredData();
+                    cycleSlides();
+                    renderStoredData(type);
+                }
             }
-        }
-    });
+        });
 
     document.getElementById("registrationForm").addEventListener("submit", function (event) {
         event.preventDefault();
