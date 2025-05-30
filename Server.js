@@ -11,8 +11,7 @@ const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser'); 
 const { v4: uuidv4 } = require('uuid');
-
-
+const axios = require('axios'); // FIXED
 
 const cors = require('cors');
 const http = require('http');
@@ -62,7 +61,8 @@ const viewerCountFile = path.join(__dirname, 'viewerCount.json');
 const messagesFile = path.join(__dirname, 'messages.json');
 const slideshowDataFile = path.join(__dirname, 'slideshowData.json');
 const dataDir = path.join(__dirname, 'data');
-const storedDataPath = path.join(dataDir, 'storedData.json');
+// Use the persistent disk path in Render
+const storedDataPath = '/data/storedData.json';
 
 
 // --- Initial State Variables ---
@@ -88,6 +88,11 @@ try {
   console.error("Error loading storedData.json:", err);
 }
 
+// Just ensure file exists; no need to read it
+if (!fs.existsSync(storedDataPath)) {
+  fs.writeFileSync(storedDataPath, JSON.stringify([]));
+}
+
 
 const MAX_MESSAGES = 100;
 // --- Safe File Load Function ---
@@ -102,6 +107,7 @@ function safeLoad(filePath, fallback) {
     }
     return fallback;
 }
+
 
 // --- Load Data From Files ---
 totalViewers = safeLoad(viewerCountFile, { count: 0 }).count;
