@@ -62,20 +62,9 @@ const messagesFile = path.join(__dirname, 'messages.json');
 const slideshowDataFile = path.join(__dirname, 'slideshowData.json');
 const storedDataPath = path.join(__dirname, 'data', 'storedData.json');
 
-let storedData = { users: [] };  // Default if no file exists
 
-try {
-  const fileContent = fs.readFileSync(storedDataPath, 'utf-8');
-  storedData = JSON.parse(fileContent);
-} catch (err) {
-  if (err.code === 'ENOENT') {
-    // File does not exist, create it with users only (no chats)
-    fs.writeFileSync(storedDataPath, JSON.stringify({ users: [] }, null, 2));
-    storedData = { users: [] };
-  } else {
-    console.error('Error reading storedData.json:', err);
-  }
-}
+
+
 
 // --- Initial State Variables ---
 let totalViewers = 0;
@@ -92,12 +81,18 @@ let storedMedicalData = [];
 let storedBusinessData = [];
 
 try {
- const storedRaw = fs.readFileSync(storedDataPath);
-  const parsed = JSON.parse(storedRaw);
+  if (!fs.existsSync(storedDataPath)) {
+    fs.writeFileSync(storedDataPath, JSON.stringify({
+      storedMedicalData: [],
+      storedBusinessData: []
+    }, null, 2));
+  }
+  const fileContent = fs.readFileSync(storedDataPath, 'utf-8');
+  const parsed = JSON.parse(fileContent);
   storedMedicalData = parsed.storedMedicalData || [];
   storedBusinessData = parsed.storedBusinessData || [];
 } catch (err) {
-  console.error("Error loading storedData.json:", err);
+  console.error('Error handling storedData.json:', err);
 }
 
 
