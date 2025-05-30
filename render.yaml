@@ -9,6 +9,7 @@ services:
   - type: web
     name: bizmed-service
     env: node
+    plan: free        # 👈 Add this line!
     buildCommand: npm install
     startCommand: node server.js
     envVars:
