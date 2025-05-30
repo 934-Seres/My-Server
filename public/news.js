@@ -6,7 +6,9 @@ document.addEventListener("DOMContentLoaded", function () {
       ebr: "https://ethiopianbusinessreview.net/category/daily-news", // Replace with the generated RSS feed URL from RSS.app
       nbe:"https://www.newbusinessethiopia.com/",
       af:"https://www.addisfortune.news/",
-      md:"https://www.medicaldaily.com/"      
+      md:"https://www.medicaldaily.com/",
+      mnt:"https//wwww.medicalnewstoday.com/",      
+      mx: "https://www.medicalxpress.com/#google_vignette"   
     };
   
     Object.keys(sources).forEach(id => {
