@@ -61,6 +61,9 @@ const followersFile = path.join(__dirname, 'followers.json');
 const viewerCountFile = path.join(__dirname, 'viewerCount.json');
 const messagesFile = path.join(__dirname, 'messages.json');
 const slideshowDataFile = path.join(__dirname, 'slideshowData.json');
+const dataDir = path.join(__dirname, 'data');
+const storedDataPath = path.join(dataDir, 'storedData.json');
+
 
 // --- Initial State Variables ---
 let totalViewers = 0;
@@ -77,7 +80,7 @@ let storedMedicalData = [];
 let storedBusinessData = [];
 
 try {
-  const storedRaw = fs.readFileSync('storedData.json');
+ const storedRaw = fs.readFileSync(storedDataPath);
   const parsed = JSON.parse(storedRaw);
   storedMedicalData = parsed.storedMedicalData || [];
   storedBusinessData = parsed.storedBusinessData || [];
@@ -118,7 +121,7 @@ const saveStoredData = () => {
     storedMedicalData,
     storedBusinessData
   };
-  saveToFile(path.join(__dirname, 'storedData.json'), storedData);
+  saveToFile(path.join(dataDir, 'storedData.json'), storedData);
 };
 
 // --- File Saving Helpers ---
@@ -173,7 +176,7 @@ app.post('/save-stored-data', (req, res) => {
 
 app.get('/get-stored-data', (req, res) => {
     try {
-        const rawData = fs.readFileSync(path.join(__dirname, 'storedData.json'));
+        const rawData = fs.readFileSync(storedDataPath);
         const data = JSON.parse(rawData);
         res.json(data);
     } catch (err) {
@@ -182,6 +185,10 @@ app.get('/get-stored-data', (req, res) => {
     }
 });
 
+    
+    axios.get('/get-stored-data')
+    .then(response => console.log(response.data))
+    .catch(error => console.error(error));
 
 
 
