@@ -204,10 +204,13 @@ app.get('/get-stored-data', (req, res) => {
 });
 
     
-    axios.get('/get-stored-data')
-    .then(response => console.log(response.data))
-    .catch(error => console.error(error));
-
+axios.get('http://localhost:10000/get-stored-data')
+  .then(response => {
+    console.log('Stored data loaded:', response.data);
+  })
+  .catch(error => {
+    console.error('Failed to load stored data:', error);
+  });
 
 
 // --- Unified Stored Slideshow Data for All Devices ---
