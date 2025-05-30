@@ -100,11 +100,6 @@ try {
   console.error("Error loading storedData.json:", err);
 }
 
-// Just ensure file exists; no need to read it
-if (!fs.existsSync(storedDataPath)) {
-  fs.writeFileSync(storedDataPath, JSON.stringify([]));
-}
-
 
 const MAX_MESSAGES = 100;
 // --- Safe File Load Function ---
@@ -202,15 +197,6 @@ app.get('/get-stored-data', (req, res) => {
         res.json({ medical: [], business: [] });
     }
 });
-
-    
-axios.get('http://localhost:10000/get-stored-data')
-  .then(response => {
-    console.log('Stored data loaded:', response.data);
-  })
-  .catch(error => {
-    console.error('Failed to load stored data:', error);
-  });
 
 
 // --- Unified Stored Slideshow Data for All Devices ---
