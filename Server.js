@@ -60,10 +60,22 @@ const followersFile = path.join(__dirname, 'followers.json');
 const viewerCountFile = path.join(__dirname, 'viewerCount.json');
 const messagesFile = path.join(__dirname, 'messages.json');
 const slideshowDataFile = path.join(__dirname, 'slideshowData.json');
-const dataDir = path.join(__dirname, 'data');
-// Use the persistent disk path in Render
-const storedDataPath = '/data/storedData.json';
+const storedDataPath = path.join(__dirname, 'data', 'storedData.json');
 
+let storedData = { users: [] };  // Default if no file exists
+
+try {
+  const fileContent = fs.readFileSync(storedDataPath, 'utf-8');
+  storedData = JSON.parse(fileContent);
+} catch (err) {
+  if (err.code === 'ENOENT') {
+    // File does not exist, create it with users only (no chats)
+    fs.writeFileSync(storedDataPath, JSON.stringify({ users: [] }, null, 2));
+    storedData = { users: [] };
+  } else {
+    console.error('Error reading storedData.json:', err);
+  }
+}
 
 // --- Initial State Variables ---
 let totalViewers = 0;
