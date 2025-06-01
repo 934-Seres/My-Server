@@ -149,7 +149,7 @@ app.post('/save-stored-data', (req, res) => {
     storedMedicalData = medical;
     storedBusinessData = business;
     saveStoredData();
-    res.json({ success: true });
+   res.redirect('/thank-you');
 });
 
 app.get('/get-stored-data', (req, res) => {
