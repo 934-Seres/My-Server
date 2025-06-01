@@ -1,3 +1,4 @@
+
 // --- Load Environment First => Strict Mode and Core Modules ---
 "use strict";
 require('dotenv').config();
@@ -15,6 +16,8 @@ const cors = require('cors');
 const http = require('http');
 const socketIO = require('socket.io');
 
+const { Pool } = require('pg');
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server, { cors: { origin: '*' } });
@@ -28,6 +31,14 @@ if (!OWNER_USERNAME || !OWNER_PASSWORD || !SESSION_SECRET) {
     console.error('❌ Missing environment variables: OWNER_USERNAME, OWNER_PASSWORD, or SESSION_SECRET');
     process.exit(1);
 }
+
+// --- PostgreSQL Pool Setup ---
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 // --- Middleware ---
 app.use(cors());
@@ -57,7 +68,6 @@ if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
 }
 
-const storedDataPath = path.join(dataDir, 'storedData.json');
 const followersFile = path.join(__dirname, 'followers.json');
 const viewerCountFile = path.join(__dirname, 'viewerCount.json');
 const messagesFile = path.join(__dirname, 'messages.json');
@@ -72,28 +82,8 @@ let advertMessages = [];
 let noticeMessages = [];
 let storedAdvertData = [];
 let storedNoticeData = [];
-let storedMedicalData = [];
-let storedBusinessData = [];
 
-// --- Ensure storedData.json exists, then read ---
-try {
-    if (!fs.existsSync(storedDataPath)) {
-        fs.writeFileSync(storedDataPath, JSON.stringify({
-            storedMedicalData: [],
-            storedBusinessData: []
-        }, null, 2));
-    }
-    const fileContent = fs.readFileSync(storedDataPath, 'utf-8');
-    const parsed = JSON.parse(fileContent);
-    storedMedicalData = parsed.storedMedicalData || [];
-    storedBusinessData = parsed.storedBusinessData || [];
-} catch (err) {
-    console.error('Error handling storedData.json:', err);
-    storedMedicalData = [];
-    storedBusinessData = [];
-}
-
-const MAX_MESSAGES = 100;
+// --- Helper for safe loading JSON files ---
 const safeLoad = (filePath, fallback) => {
     try {
         if (fs.existsSync(filePath)) {
@@ -123,14 +113,6 @@ const saveToFile = async (file, data) => {
     }
 };
 
-const saveStoredData = () => {
-    const data = {
-        storedMedicalData,
-        storedBusinessData
-    };
-    saveToFile(storedDataPath, data);
-};
-
 const saveMessages = () => saveToFile(messagesFile, messages);
 const saveViewerCount = () => saveToFile(viewerCountFile, { count: totalViewers });
 const saveFollowerCount = () => saveToFile(followersFile, { count: totalFollowers });
@@ -143,26 +125,27 @@ const saveSlideshowData = () => saveToFile(slideshowDataFile, {
     }
 });
 
+const MAX_MESSAGES = 100;
+
 // --- API Routes ---
-app.post('/save-stored-data', (req, res) => {
-    const { storedMedicalData: medical, storedBusinessData: business } = req.body;
-    storedMedicalData = medical;
-    storedBusinessData = business;
-    saveStoredData();
-   res.redirect('/thank-you');
+
+// Fetch medical and business data from PostgreSQL
+app.get('/get-stored-data', async (req, res) => {
+  try {
+    const businessResult = await pool.query('SELECT * FROM businesses ORDER BY "createdAt" DESC');
+    const medicalResult = await pool.query('SELECT * FROM medical ORDER BY "createdAt" DESC');
+
+    res.json({
+      storedBusinessData: businessResult.rows,
+      storedMedicalData: medicalResult.rows
+    });
+  } catch (error) {
+    console.error('Error fetching stored data:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
-app.get('/get-stored-data', (req, res) => {
-    try {
-        const rawData = fs.readFileSync(storedDataPath);
-        const data = JSON.parse(rawData);
-        res.json(data);
-    } catch (err) {
-        console.error("Error reading stored data:", err);
-        res.json({ medical: [], business: [] });
-    }
-});
-
+// Advert & notice data remains file based
 app.get('/get-advert-notice-data', (_req, res) => {
     res.json({ advert: storedAdvertData, notice: storedNoticeData });
 });
@@ -187,22 +170,69 @@ app.post('/save-slideshow-data', (req, res) => {
     res.status(200).send('Data saved successfully');
 });
 
-app.post('/register-medical', (req, res) => {
-    storedMedicalData.push(req.body);
-    saveStoredData();
-    res.sendStatus(200);
+// Register business - save to PostgreSQL
+app.post('/register-business', async (req, res) => {
+  const {
+    name, category, industryOrService, licenseNumber,
+    location, contact_info, city, type
+  } = req.body;
+
+  try {
+    // Optional duplicate check
+    const existing = await pool.query(
+      `SELECT id FROM businesses WHERE LOWER(name) = LOWER($1) AND LOWER(city) = LOWER($2)`,
+      [name, city]
+    );
+
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ message: 'This business is already registered.' });
+    }
+
+    await pool.query(
+      `INSERT INTO businesses (name, category, "industryOrService", "licenseNumber", location, contact_info, city, type)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [name, category, industryOrService, licenseNumber, location, contact_info, city, type || 'business']
+    );
+
+    res.status(201).json({ message: 'Business registered successfully.' });
+  } catch (err) {
+    console.error('Error registering business:', err);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
 });
 
-app.post('/register-business', (req, res) => {
-    storedBusinessData.push(req.body);
-    saveStoredData();
-    res.sendStatus(200);
+// Register medical - save to PostgreSQL
+app.post('/register-medical', async (req, res) => {
+  const {
+    name, category, industryOrService, licenseNumber,
+    location, contact_info, city, type
+  } = req.body;
+
+  try {
+    // Optional duplicate check
+    const existing = await pool.query(
+      `SELECT id FROM medical WHERE LOWER(name) = LOWER($1) AND LOWER(city) = LOWER($2)`,
+      [name, city]
+    );
+
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ message: 'This medical service is already registered.' });
+    }
+
+    await pool.query(
+      `INSERT INTO medical (name, category, "industryOrService", "licenseNumber", location, contact_info, city, type)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [name, category, industryOrService, licenseNumber, location, contact_info, city, type || 'medical']
+    );
+
+    res.status(201).json({ message: 'Medical service registered successfully.' });
+  } catch (err) {
+    console.error('Error registering medical service:', err);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
 });
 
-app.get('/register-medical', (req, res) => res.json(storedMedicalData));
-app.get('/register-business', (req, res) => res.json(storedBusinessData));
-
-// --- Auth ---
+// Auth routes unchanged
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
     if (username === OWNER_USERNAME && password === OWNER_PASSWORD) {
@@ -334,5 +364,4 @@ io.on('connection', (socket) => {
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Server running at http://localhost:${PORT}`);
 });
-server.keepAliveTimeout = 120000;
-server.headersTimeout = 120000;
+server.keep

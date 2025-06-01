@@ -1,4 +1,16 @@
 {
-  "storedMedicalData": [],
+  "storedMedicalData": [
+    {
+      "name": "Ozon Medium Clinic",
+      "category": "general",
+      "industryOrService": "General Health Care",
+      "licenseNumber": "123",
+      "location": "Near MA College",
+      "contact_info": "09...",
+      "city": "Assosa",
+      "type": "medical",
+      "createdAt": "2025-06-01T11:20:16.401Z"
+    }
+  ],
   "storedBusinessData": []
 }

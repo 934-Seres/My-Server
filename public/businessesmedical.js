@@ -633,6 +633,23 @@ document.addEventListener("DOMContentLoaded", function () {
     let slideIndex = 0;
     let selectedCity = localStorage.getItem("selectedCity") || "All Cities";
 
+    function formatRelativeTime(dateString) {
+        const now = new Date();
+        const date = new Date(dateString);
+        const diffInSeconds = Math.floor((now - date) / 1000);
+
+        if (diffInSeconds < 1) return "just now";
+        if (diffInSeconds < 60) return `before ${diffInSeconds} second${diffInSeconds !== 1 ? 's' : ''}`;
+        
+        const diffInMinutes = Math.floor(diffInSeconds / 60);
+        if (diffInMinutes < 60) return `before ${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''}`;
+
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        if (diffInHours < 24) return `before ${diffInHours} hour${diffInHours !== 1 ? 's' : ''}`;
+
+        return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+    }
+
     function populateDropdown(dropdown, options) {
         dropdown.innerHTML = '<option value="">Select a category</option>';
         options.forEach(opt => {
@@ -653,14 +670,6 @@ document.addEventListener("DOMContentLoaded", function () {
         } catch (err) {
             console.error("Error fetching stored data:", err);
         }
-    }
-
-    function saveStoredData() {
-        fetch('/save-stored-data', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ storedMedicalData, storedBusinessData })
-        }).catch(err => console.error("Failed to save stored data:", err));
     }
 
     async function initializeCategoryDropdowns() {
@@ -691,7 +700,6 @@ document.addEventListener("DOMContentLoaded", function () {
             slide.className = "slide" + (i === slideIndex ? " active" : "");
             slide.innerHTML = `
                 <h3>${entry.type === "medical" ? "Medical Service" : "Business Organization"}</h3>
-
                 <p><strong>Name:</strong> ${entry.name}</p>
                 <p><strong>Service:</strong> ${entry.service || entry.industryOrService || "N/A"}</p>
                 <p><strong>Location:</strong> ${entry.location}</p>
@@ -714,7 +722,7 @@ document.addEventListener("DOMContentLoaded", function () {
         let slides = [...storedMedicalData, ...storedBusinessData].filter(slide =>
             selectedCity === "All Cities" || slide.city === selectedCity
         );
-         
+
         if (slides.length === 0) {
             slides = defaultSlides.filter(slide =>
                 selectedCity === "All Cities" || slide.city === selectedCity
@@ -724,7 +732,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (slides.length === 0) return;
 
         slideIndex = slideIndex % slides.length;
-        
+
         showSlides(slides);
         slideIndex = (slideIndex + 1) % slides.length;
     }
@@ -746,10 +754,11 @@ document.addEventListener("DOMContentLoaded", function () {
         if (filtered.length === 0) {
             content += "<p>No data available.</p>";
         } else {
-           filtered.forEach(entry => {
-                const realIndex = dataArr.indexOf(entry); // Find index in the full array
-
+            filtered.forEach(entry => {
+                const realIndex = dataArr.indexOf(entry);
                 const heading = `<h3>${entry.type === "medical" ? "Medical Service" : "Business Organization"}</h3>`;
+                const timeDisplay = entry.createdAt ? `<p><strong>Posted:</strong> ${formatRelativeTime(entry.createdAt)}</p>` : "";
+
                 content += `
                     <div class="user-entry" data-index="${realIndex}">
                         ${heading}
@@ -758,19 +767,19 @@ document.addEventListener("DOMContentLoaded", function () {
                         <p><strong>Location:</strong> ${entry.location}</p>
                         <p><strong>City:</strong> ${entry.city}</p>
                         <p><strong>Contact:</strong> ${entry.contact_info}</p>
+                        ${timeDisplay}
                         ${isOwner ? `<button class="delBtn" data-type="${normalizedType}" data-index="${realIndex}">Delete</button>` : ""}
                         <hr>
                     </div>
                 `;
             });
-
         }
 
         modalDetails.innerHTML = content;
         document.getElementById("categoryDataModal").style.display = "block";
     }
 
-    // Event listeners
+    // Event Listeners
     document.querySelector(".category-close").onclick = () => {
         document.getElementById("categoryDataModal").style.display = "none";
     };
@@ -784,22 +793,24 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("medicalCategoryFilter").onchange = () => renderStoredData("medical");
     document.getElementById("businessCategoryFilter").onchange = () => renderStoredData("business");
 
-   document.getElementById("categoryModalDetails").addEventListener("click", function (e) {
-            if (e.target.classList.contains("delBtn")) {
-                const type = e.target.dataset.type;
-                const index = parseInt(e.target.dataset.index);
-                const name = e.target.dataset.name || "this entry";
+    document.getElementById("categoryModalDetails").addEventListener("click", function (e) {
+        if (e.target.classList.contains("delBtn")) {
+            const type = e.target.dataset.type;
+            const index = parseInt(e.target.dataset.index);
+            const name = e.target.dataset.name || "this entry";
 
-                if (confirm(`Are you sure to delete'${name}' ?`)) {
-                    if (type === "medical") storedMedicalData.splice(index, 1);
-                    else storedBusinessData.splice(index, 1);
+            if (confirm(`Are you sure to delete '${name}' ?`)) {
+                if (type === "medical") storedMedicalData.splice(index, 1);
+                else storedBusinessData.splice(index, 1);
 
-                    saveStoredData();
-                    cycleSlides();
-                    renderStoredData(type);
-                }
+                // Optional: Send delete to backend
+                // await fetch(`/delete-${type}`, { method: 'POST', body: JSON.stringify({ id: ... }) });
+
+                cycleSlides();
+                renderStoredData(type);
             }
-        });
+        }
+    });
 
     document.getElementById("registrationForm").addEventListener("submit", function (event) {
         event.preventDefault();
@@ -820,29 +831,17 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-
         const newEntry = {
-            name, category, industryOrService, licenseNumber, location, contact_info, city, type
+            name, category, industryOrService, licenseNumber, location, contact_info, city, type,
+            createdAt: new Date().toISOString()
         };
-        // Send data to backend in a safe way (non-blocking, won't break slideshow)
-        try {
-            const endpoint = type === "medical" ? "/register-medical" : "/register-business";
-            fetch(endpoint, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(newEntry)
-            })
-            .then(res => {
-                if (!res.ok) {
-                    console.warn("Server responded with error while saving registration.");
-                }
-            })
-            .catch(err => {
-                console.error("Could not reach server:", err);
-            });
-        } catch (err) {
-            console.error("Unexpected error sending data to backend:", err);
-        }
+
+        const endpoint = type === "medical" ? "/register-medical" : "/register-business";
+        fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newEntry)
+        }).catch(err => console.error("Could not reach server:", err));
 
         const targetArray = type === "medical" ? storedMedicalData : storedBusinessData;
         const exists = targetArray.some(entry =>
@@ -856,7 +855,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         targetArray.push(newEntry);
-        saveStoredData();
 
         const filterDropdown = type === "medical"
             ? document.getElementById("medicalCategoryFilter")
@@ -879,6 +877,7 @@ document.addEventListener("DOMContentLoaded", function () {
     fetchStoredData();
     setInterval(cycleSlides, 3000);
 });
+
 
 
 
@@ -1352,21 +1351,21 @@ function formatTimeAgo(timestamp) {
     const now = Date.now();
     const diff = now - timestamp;
 
-    if (diff < 60000) return 'just now';
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const oneDay = 24 * 60 * 60 * 1000;
 
-    const minutes = Math.floor(diff / 60000);
-    if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+    if (diff < 1000) return 'just now';
+    if (diff < 60000) return `${seconds} second${seconds !== 1 ? 's' : ''} ago`;
+    if (diff < 3600000) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+    if (diff < oneDay) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
 
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
-
-    // If more than 24 hours, show actual date
+    // If 24+ hours, show exact date
     const date = new Date(timestamp);
-    const options = { year: 'numeric', month: 'short', day: 'numeric' }; // e.g., "Jun 1, 2025"
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return date.toLocaleDateString(undefined, options);
 }
-
-
 // --- Update Times Periodically ---
 setInterval(() => {
     document.querySelectorAll(".message-thread, .comment").forEach(msg => {
