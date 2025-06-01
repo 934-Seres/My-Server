@@ -180,7 +180,6 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 
-
 let advertMessages = [];
 let noticeMessages = [];
 let storedDatas = { advert: [], notice: [] };
@@ -190,7 +189,6 @@ let advertInterval;
 let noticeInterval;
 
 // Simulated isOwner flag (replace with real session check)
-
 
 function escapeHtml(text) {
     const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
@@ -284,7 +282,6 @@ function deleteEntryFromPopup(type, index) {
     saveSlideshowData();
 }
 
-
 function addAdvert(text, details) {
     const entry = { id: Date.now(), name: text, details };
     advertMessages.push(`Name of Organization: ${text}\nDetails: ${details}`);
@@ -350,7 +347,6 @@ function updateSlideshow(type) {
         const msg = messages[index] || `No ${type === 'advert' ? 'Advertisements' : 'Notices'}`;
         
         const safeMessage = escapeHtml(msg);      
-
 
         const entryIndex = storedDatas[type].findIndex(entry =>
             `Name of Organization: ${entry.name}\nDetails: ${entry.details}` === msg
@@ -460,7 +456,6 @@ function toggleDetailsStored(type, index) {
 }
 
 
-
 function deleteStoredData(type, index) {
     if (confirm("Are you sure you want to delete this entry?")) {
         storedDatas[type].splice(index, 1);
@@ -480,7 +475,6 @@ function handleFormSubmit(event, type) {
     alert(`Form submitted under: ${type === "advert" ? "Advertises" : "Notices"}`);
     event.target.reset();
 }
-
 
 document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("advertForm")?.addEventListener("submit", e => handleFormSubmit(e, "advert"));
@@ -553,7 +547,6 @@ setupExpandableDetails("detailsAdvert", "moreDetailsAdvert");
 setupExpandableDetails("detailsNotice", "moreDetailsNotice");
 
 
-
  // Array to hold previously selected or searched cities
 let searchedCities = [];
 
@@ -587,7 +580,6 @@ function searchLocation() {
     searchQuery.value = ''; // Reset input after search
 }
 
-
 // Add the searched city to the list
 function addToSearchedCities(cityName) {
     if (!searchedCities.includes(cityName)) {
@@ -614,7 +606,6 @@ document.getElementById("searchButton").addEventListener("click", function () {
     clearTimeout(debounceTimeout);
     debounceTimeout = setTimeout(searchLocation, 500); // Adjust debounce delay as needed
 });
-
 
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -670,6 +661,14 @@ document.addEventListener("DOMContentLoaded", function () {
         } catch (err) {
             console.error("Error fetching stored data:", err);
         }
+    }
+
+    function saveStoredData() {
+        fetch('/save-stored-data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ storedMedicalData, storedBusinessData })
+        }).catch(err => console.error("Failed to save stored data:", err));
     }
 
     async function initializeCategoryDropdowns() {
@@ -803,9 +802,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (type === "medical") storedMedicalData.splice(index, 1);
                 else storedBusinessData.splice(index, 1);
 
-                // Optional: Send delete to backend
-                // await fetch(`/delete-${type}`, { method: 'POST', body: JSON.stringify({ id: ... }) });
-
+                saveStoredData();
                 cycleSlides();
                 renderStoredData(type);
             }
@@ -855,6 +852,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         targetArray.push(newEntry);
+        saveStoredData();
 
         const filterDropdown = type === "medical"
             ? document.getElementById("medicalCategoryFilter")
@@ -877,8 +875,6 @@ document.addEventListener("DOMContentLoaded", function () {
     fetchStoredData();
     setInterval(cycleSlides, 3000);
 });
-
-
 
 
 
@@ -992,7 +988,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 
-
 let isOwner = false;
 
 // Check session status on DOM load
@@ -1098,7 +1093,6 @@ function toggleOwnerUI(isOwner) {
     deleteBtns.forEach(btn => btn.style.display = isOwner ? "inline-block" : "none");
     sendBtns.forEach(btn => btn.style.display = isOwner ? "inline-block" : "none");
 }
-
 
 // --- Initialize Socket.IO connection ---
 const socket = io();
