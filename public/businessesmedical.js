@@ -994,25 +994,36 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
-
-// Security Code for owner check
 let isOwner = false;
 
-// Check session status on load
-window.onload = async function () {
-    const res = await fetch('/check-owner');
-    const data = await res.json();
-    isOwner = data.isOwner;
-    toggleOwnerUI(isOwner);
-};
+// Check session status on DOM load
+document.addEventListener("DOMContentLoaded", async function () {
+    try {
+        const res = await fetch('/check-owner');
+        const data = await res.json();
+        isOwner = data.isOwner;
+        toggleOwnerUI(isOwner);
+    } catch (err) {
+        console.error("Error checking owner status:", err);
+        alert("Failed to check login status. Please try again.");
+    }
+});
 
 // Login Function
 function login() {
     const usernameInput = document.getElementById("username");
     const passwordInput = document.getElementById("password");
+    const loginBtn = document.getElementById("loginButton");
 
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value.trim();
+    const username = usernameInput?.value.trim();
+    const password = passwordInput?.value.trim();
+
+    if (!username || !password) {
+        alert("Please enter both username and password.");
+        return;
+    }
+
+    loginBtn.disabled = true;
 
     fetch('/login', {
         method: 'POST',
@@ -1021,7 +1032,7 @@ function login() {
     })
         .then(res => res.json())
         .then(data => {
-            // Clear inputs regardless of success
+            console.log("Login response:", data);
             usernameInput.value = "";
             passwordInput.value = "";
 
@@ -1030,31 +1041,44 @@ function login() {
                 toggleOwnerUI(true);
                 alert("Logged in Successfully");
             } else {
-                alert("Login failed: " + data.message + "!");
+                alert("Login failed: Invalid username or password.");
             }
+        })
+        .catch(err => {
+            console.error("Login error:", err);
+            alert("An error occurred during login.");
+        })
+        .finally(() => {
+            loginBtn.disabled = false;
         });
 }
 
 // Logout Function
 function logout() {
     fetch('/logout', { method: 'POST' })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-        isOwner = false;
-        toggleOwnerUI(false);
-        document.getElementById("username").value = "";
-        document.getElementById("password").value = "";
-        alert("Logged out");
-        window.location.reload(); // optional but safer
-    } else {
-        alert("Logout failed.");
-    }
-  })
-  .catch(err => {
-    console.error('Logout error:', err);
-    alert("An error occurred during logout.");
-  });
+        .then(res => res.json())
+        .then(data => {
+            console.log("Logout response:", data);
+            if (data.success) {
+                isOwner = false;
+                toggleOwnerUI(false);
+
+                const usernameInput = document.getElementById("username");
+                const passwordInput = document.getElementById("password");
+
+                if (usernameInput) usernameInput.value = "";
+                if (passwordInput) passwordInput.value = "";
+
+                alert("Logged out");
+                window.location.reload(); // Optional for reset
+            } else {
+                alert("Logout failed.");
+            }
+        })
+        .catch(err => {
+            console.error('Logout error:', err);
+            alert("An error occurred during logout.");
+        });
 }
 
 // Toggle UI based on Owner status
@@ -1064,13 +1088,11 @@ function toggleOwnerUI(isOwner) {
     const noticeContainer = document.getElementById("noticeInputContainer");
     const deleteNotice = document.getElementById("deleteNoticeBtn");
 
-    // Show elements for advert and notice manipulation
     if (advertContainer) advertContainer.style.display = isOwner ? "inline-block" : "none";
     if (deleteAdvert) deleteAdvert.style.display = isOwner ? "inline-block" : "none";
     if (noticeContainer) noticeContainer.style.display = isOwner ? "inline-block" : "none";
     if (deleteNotice) deleteNotice.style.display = isOwner ? "inline-block" : "none";
 
-    // New elements for stored data management
     const deleteBtns = document.querySelectorAll('.delete-btn');
     const sendBtns = document.querySelectorAll('.send-btn');
 
@@ -1082,37 +1104,6 @@ function toggleOwnerUI(isOwner) {
 // --- Initialize Socket.IO connection ---
 const socket = io();
 
-// --- Update time for small screen (optional) ---
-function updateMessageTime(timestamp) {
-    const now = Date.now();
-    const diff = now - timestamp;
-    const timeSpan = document.querySelector(".message-time");
-
-    if (timeSpan) {
-        timeSpan.textContent = ` (${formatTimeAgo(timestamp)})`;
-
-        // If the screen is small, adjust the text size dynamically
-        if (window.innerWidth <= 768) {
-            timeSpan.style.fontSize = '12px';
-        } else {
-            timeSpan.style.fontSize = '14px';
-        }
-    }
-}
-
-function formatTimeAgo(timestamp) {
-    const now = Date.now();
-    const diff = now - timestamp;
-
-    if (diff < 60000) return 'just now';
-    const minutes = Math.floor(diff / 60000);
-    if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
-    const days = Math.floor(hours / 24);
-    return `${days} day${days !== 1 ? 's' : ''} ago`;
-}
-
 // --- Viewer Count ---
 socket.on('viewerCountUpdate', (count) => {
     const viewerElement = document.getElementById('viewerCount');
@@ -1123,15 +1114,10 @@ socket.on('viewerCountUpdate', (count) => {
 const followButtonHandler = function () {
     const followButton = document.getElementById('followBtn');
     if (followButton) {
-        if (followButton.textContent === 'Follow') {
-            socket.emit('follow');
-            followButton.textContent = 'Unfollow';
-            alert('You followed the website!');
-        } else {
-            socket.emit('unfollow');
-            followButton.textContent = 'Follow';
-            alert('You unfollowed the website!');
-        }
+        const isFollowing = followButton.textContent === 'Follow';
+        socket.emit(isFollowing ? 'follow' : 'unfollow');
+        followButton.textContent = isFollowing ? 'Unfollow' : 'Follow';
+        alert(isFollowing ? 'You followed the website!' : 'You unfollowed the website!');
     }
 };
 
@@ -1149,46 +1135,38 @@ socket.on('followerCountUpdate', (count) => {
     if (followerElement) followerElement.textContent = `Followers: ${count}`;
 });
 
-// --- Active Chatters ---
+// --- Device & User Tracking ---
 const username = 'Guest' + Math.floor(Math.random() * 10000);
-
-// Detect device info
-const userAgent = navigator.userAgent || 'Unknown Device';
-const deviceInfo = detectDevice(userAgent);
-
-// Send username + device info to server
+const deviceInfo = detectDevice(navigator.userAgent);
 socket.emit('joinChat', { username, deviceInfo });
-
-// Function to detect device from userAgent
-function detectDevice(userAgent) {
-    userAgent = userAgent.toLowerCase();
-    if (userAgent.includes('iphone')) return 'iPhone';
-    if (userAgent.includes('android')) return 'Android Phone';
-    if (userAgent.includes('ipad')) return 'iPad';
-    if (userAgent.includes('windows')) return 'Windows PC';
-    if (userAgent.includes('mac')) return 'Mac';
-    if (userAgent.includes('linux')) return 'Linux PC';
-    return 'Unknown Device';
-}
 
 window.addEventListener('beforeunload', () => {
     socket.emit('leaveChat', username);
 });
 
+function detectDevice(userAgent) {
+    const ua = userAgent.toLowerCase();
+    if (ua.includes('iphone')) return 'iPhone';
+    if (ua.includes('android')) return 'Android Phone';
+    if (ua.includes('ipad')) return 'iPad';
+    if (ua.includes('windows')) return 'Windows PC';
+    if (ua.includes('mac')) return 'Mac';
+    if (ua.includes('linux')) return 'Linux PC';
+    return 'Unknown Device';
+}
+
+// --- Active Chatters ---
 socket.on('activeChattersUpdate', (chatters) => {
     const chattersList = document.getElementById('chattersList');
     if (chattersList) {
-        if (chatters.length > 0) {
-            const formattedChatters = chatters.map(c => `${c.username} (${c.deviceInfo})`);
-            chattersList.textContent = formattedChatters.join(', ');
-        } else {
-            chattersList.textContent = 'None';
-        }
+        chattersList.textContent = chatters.length > 0
+            ? chatters.map(c => `${c.username} (${c.deviceInfo})`).join(', ')
+            : 'None';
     }
 });
 
-
-document.addEventListener("DOMContentLoaded", function () {
+// --- Messaging UI Setup ---
+document.addEventListener("DOMContentLoaded", () => {
     const messageBox = document.getElementById("messageBox");
     const messageIcon = document.getElementById("messageIcon");
     const closeButton = document.querySelector(".message-button-close");
@@ -1196,17 +1174,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const sendMessage = document.getElementById("sendMessage");
     const messageContent = document.getElementById("messageContent");
 
-    messageIcon.addEventListener("click", () => {
-        messageBox.style.display = "flex";
-    });
+    messageIcon?.addEventListener("click", () => messageBox.style.display = "flex");
+    closeButton?.addEventListener("click", () => messageBox.style.display = "none");
 
-    closeButton.addEventListener("click", () => {
-        messageBox.style.display = "none";
-    });
+    sendMessage?.addEventListener("click", sendMainMessage);
 
-    sendMessage.addEventListener("click", sendMainMessage);
-
-    messageInput.addEventListener("keydown", function (e) {
+    messageInput?.addEventListener("keydown", (e) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             sendMainMessage();
@@ -1214,11 +1187,13 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     function sendMainMessage() {
-        const text = messageInput.value.trim();
-        if (text !== "") {
-            const sender = username; // Ensure you are using the logged-in user's username
-            const messageId = generateUniqueId();
-            socket.emit("sendMessage", { text, messageId, sender });
+        const text = messageInput?.value.trim();
+        if (text) {
+            socket.emit("sendMessage", {
+                text,
+                messageId: generateUniqueId(),
+                sender: username
+            });
             messageInput.value = "";
         }
     }
@@ -1227,153 +1202,129 @@ document.addEventListener("DOMContentLoaded", function () {
         return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     }
 
-function createMessageElement(text, isReply = false, sender = 'Someone', messageId = '', timestamp = Date.now()) {
-    const container = document.createElement('div');
-    container.classList.add(isReply ? "comment" : "message-thread");
-    container.setAttribute('data-message-id', messageId);
-    container.setAttribute('data-timestamp', timestamp);
+    // --- Render Messages & Replies ---
+    function createMessageElement(text, isReply = false, sender = 'Someone', messageId = '', timestamp = Date.now()) {
+        const container = document.createElement('div');
+        container.classList.add(isReply ? "comment" : "message-thread");
+        container.dataset.messageId = messageId;
+        container.dataset.timestamp = timestamp;
 
-    const messageText = document.createElement("p");
-    messageText.classList.add("message-text");
-    messageText.textContent = isReply ? `${sender}: ${text}` : text;
+        const messageText = document.createElement("p");
+        messageText.classList.add("message-text");
+        messageText.textContent = isReply ? `${sender}: ${text}` : text;
 
-    const timeSpan = document.createElement("span");
-    timeSpan.classList.add("message-time");
-    timeSpan.textContent = ` (${formatTimeAgo(timestamp)})`;
+        const timeSpan = document.createElement("span");
+        timeSpan.classList.add("message-time");
+        timeSpan.textContent = ` (${formatTimeAgo(timestamp)})`;
+        messageText.appendChild(timeSpan);
+        container.appendChild(messageText);
 
-    messageText.appendChild(timeSpan);
-    container.appendChild(messageText);
+        // Buttons
+        const buttonsWrapper = document.createElement("div");
+        buttonsWrapper.classList.add("message-buttons");
+        buttonsWrapper.style.cssText = "display: flex; justify-content: flex-end; gap: 5px;";
 
-    const buttonsWrapper = document.createElement("div");
-    buttonsWrapper.classList.add("message-buttons");
-    buttonsWrapper.style.display = "flex";
-    buttonsWrapper.style.justifyContent = "flex-end";
-    buttonsWrapper.style.gap = "5px";
+        const replyBtn = createButton("Reply...", "reply-button");
+        const editBtn = createButton("Edit", "edit-button");
+        const deleteBtn = createButton("Delete", "delete-button");
 
-    const replyBtn = document.createElement("button");
-    replyBtn.textContent = "Reply...";
-    replyBtn.classList.add("reply-button");
+        if (isOwner) buttonsWrapper.appendChild(deleteBtn);
+        buttonsWrapper.appendChild(replyBtn);
+        buttonsWrapper.appendChild(editBtn);
+        container.appendChild(buttonsWrapper);
 
-    const editBtn = document.createElement("button");
-    editBtn.textContent = "Edit";
-    editBtn.classList.add("edit-button");
+        // Reply Box
+        const replyBox = document.createElement("div");
+        replyBox.classList.add("reply-box");
+        replyBox.style.display = "none";
 
-    const deleteBtn = document.createElement("button");
-    deleteBtn.textContent = "Delete";
-    deleteBtn.classList.add("delete-button");
+        const replyInput = document.createElement("textarea");
+        replyInput.classList.add("reply-input");
+        replyInput.placeholder = "Write a reply...";
+        replyBox.appendChild(replyInput);
 
-    // Only show delete button for the owner
-    if (isOwner) {
-        buttonsWrapper.appendChild(deleteBtn);
+        const replySend = createButton("Send Reply", "reply-send");
+        replyBox.appendChild(replySend);
+        container.appendChild(replyBox);
+
+        // Replies container
+        const repliesContainer = document.createElement("div");
+        repliesContainer.classList.add("replies-container");
+        container.appendChild(repliesContainer);
+
+        // Event Handlers
+        replyBtn.addEventListener("click", () => {
+            replyBox.style.display = replyBox.style.display === "none" ? "block" : "none";
+            replyInput.focus();
+        });
+
+        replyInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                const replyText = replyInput.value.trim();
+                if (replyText) {
+                    socket.emit('sendReply', { replyText, messageId });
+                    replyInput.value = "";
+                    replyBox.style.display = "none";
+                }
+            }
+        });
+
+        deleteBtn.addEventListener("click", () => {
+            if (confirm("Are you sure you want to delete this message?")) {
+                socket.emit('deleteMessage', { messageId });
+                container.remove();
+            }
+        });
+
+        editBtn.addEventListener("click", () => {
+            const editTextarea = document.createElement("textarea");
+            editTextarea.value = text;
+            editTextarea.classList.add("edit-textarea");
+
+            const saveBtn = createButton("Save", "save-button");
+            const cancelBtn = createButton("Cancel", "cancel-button");
+
+            container.innerHTML = "";
+            container.append(editTextarea, saveBtn, cancelBtn);
+
+            saveBtn.addEventListener("click", () => {
+                const newText = editTextarea.value.trim();
+                if (newText) {
+                    socket.emit('updateMessage', { newText, messageId });
+                    const updated = createMessageElement(newText, true, sender, messageId, Date.now());
+                    container.replaceWith(updated);
+                }
+            });
+
+            cancelBtn.addEventListener("click", () => {
+                const restored = createMessageElement(text, isReply, sender, messageId, timestamp);
+                container.replaceWith(restored);
+            });
+        });
+
+        return container;
     }
 
-    buttonsWrapper.appendChild(replyBtn);
-    buttonsWrapper.appendChild(editBtn);
-    container.appendChild(buttonsWrapper);
+    function createButton(text, className) {
+        const btn = document.createElement("button");
+        btn.textContent = text;
+        btn.classList.add(className);
+        return btn;
+    }
 
-    const replyBox = document.createElement("div");
-    replyBox.classList.add("reply-box");
-    replyBox.style.display = "none";
-
-    const replyInput = document.createElement("textarea");
-    replyInput.classList.add("reply-input");
-    replyInput.placeholder = "Write a reply...";
-    replyBox.appendChild(replyInput);
-
-    const replySend = document.createElement("button");
-    replySend.classList.add("reply-send");
-    replySend.textContent = "Send Reply";
-    replyBox.appendChild(replySend);
-
-    container.appendChild(replyBox);
-
-    const repliesContainer = document.createElement("div");
-    repliesContainer.classList.add("replies-container");
-    container.appendChild(repliesContainer);
-
-    // Reply button functionality
-    replyBtn.addEventListener("click", () => {
-        replyBox.style.display = replyBox.style.display === "none" ? "block" : "none";
-        replyInput.focus();
-    });
-
-    // Edit button functionality
-    editBtn.addEventListener("click", () => {
-        const editTextarea = document.createElement("textarea");
-        editTextarea.value = text;
-        editTextarea.classList.add("edit-textarea");
-
-        const saveBtn = document.createElement("button");
-        saveBtn.textContent = "Save";
-        saveBtn.classList.add("save-button");
-
-        const cancelBtn = document.createElement("button");
-        cancelBtn.textContent = "Cancel";
-        cancelBtn.classList.add("cancel-button");
-
-        container.innerHTML = "";
-        container.appendChild(editTextarea);
-        container.appendChild(saveBtn);
-        container.appendChild(cancelBtn);
-
-        saveBtn.addEventListener("click", () => {
-            const newText = editTextarea.value.trim();
-            if (newText !== "") {
-                socket.emit('updateMessage', { newText, messageId });
-                const updatedReply = createMessageElement(newText, true, sender, messageId, Date.now());
-                container.replaceWith(updatedReply);
-            }
-        });
-
-        cancelBtn.addEventListener("click", () => {
-            const restored = createMessageElement(text, isReply, sender, messageId, timestamp);
-            container.replaceWith(restored);
-        });
-    });
-
-    // Reply input functionality
-    replyInput.addEventListener("keydown", function (e) {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            const replyText = replyInput.value.trim();
-            if (replyText !== "") {
-                socket.emit('sendReply', { replyText, messageId });
-                replyInput.value = "";
-                replyBox.style.display = "none";
-            }
-        }
-    });
-
-    // Delete button functionality
-    deleteBtn.addEventListener("click", () => {
-        if (confirm("Are you sure you want to delete this message?")) {
-            socket.emit('deleteMessage', { messageId });
-            container.remove(); // Remove the message locally
-        }
-    });
-
-    return container;
-}
-
-    socket.emit("joinChat", {
-        username,
-        deviceInfo: navigator.userAgent
-    });
-
+    // --- Message Socket Events ---
     socket.on('loadMessages', (messages) => {
-        messageContent.innerHTML = ''; // Clear existing
-
+        messageContent.innerHTML = '';
         messages.forEach(({ text, sender, messageId, timestamp, replies }) => {
             const messageEl = createMessageElement(text, false, sender, messageId, timestamp);
             messageContent.appendChild(messageEl);
 
             const replyContainer = messageEl.querySelector(".replies-container");
-            if (Array.isArray(replies)) {
-                replies.forEach(({ replyText, sender: replySender, timestamp: replyTime }) => {
-                    const replyEl = createMessageElement(replyText, true, replySender, messageId, replyTime);
-                    replyContainer.appendChild(replyEl);
-                });
-            }
+            replies?.forEach(({ replyText, sender: replySender, timestamp: replyTime }) => {
+                const replyEl = createMessageElement(replyText, true, replySender, messageId, replyTime);
+                replyContainer?.appendChild(replyEl);
+            });
         });
     });
 
@@ -1384,53 +1335,45 @@ function createMessageElement(text, isReply = false, sender = 'Someone', message
 
     socket.on('newReply', ({ replyText, sender, messageId, timestamp }) => {
         const reply = createMessageElement(replyText, true, sender, messageId, timestamp);
-        const parentMessage = document.querySelector(`[data-message-id='${messageId}'] .replies-container`);
-        if (parentMessage) {
-            parentMessage.appendChild(reply);
-        }
+        const parent = document.querySelector(`[data-message-id='${messageId}'] .replies-container`);
+        parent?.appendChild(reply);
     });
 
     socket.on('updateMessage', ({ newText, messageId }) => {
-        const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
-        if (messageElement) {
-            const messageText = messageElement.querySelector(".message-text");
-            if (messageText && messageElement.classList.contains("comment")) {
-                messageText.childNodes[0].nodeValue = newText;
-            } else {
-                console.log("Cannot update the original message text, only replies.");
-            }
+        const msg = document.querySelector(`[data-message-id="${messageId}"]`);
+        const textNode = msg?.querySelector(".message-text")?.childNodes[0];
+        if (msg?.classList.contains("comment") && textNode) {
+            textNode.nodeValue = newText;
         }
     });
 });
 
-
 function formatTimeAgo(timestamp) {
     const now = Date.now();
     const diff = now - timestamp;
-    const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
-    const oneDay = 24 * 60 * 60 * 1000; // 1 day in milliseconds
 
-    if (diff < oneDay) {
-        const seconds = Math.floor(diff / 1000);
-        const minutes = Math.floor(seconds / 60);
-        const hours = Math.floor(minutes / 60);
+    if (diff < 60000) return 'just now';
 
-        if (seconds < 60) return `${seconds} seconds ago`;
-        if (minutes < 60) return `${minutes} minutes ago`;
-        return `${hours} hours ago`;
-    } else {
-        const date = new Date(timestamp);
-        return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
-    }
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+
+    // If more than 24 hours, show actual date
+    const date = new Date(timestamp);
+    const options = { year: 'numeric', month: 'short', day: 'numeric' }; // e.g., "Jun 1, 2025"
+    return date.toLocaleDateString(undefined, options);
 }
 
+
+// --- Update Times Periodically ---
 setInterval(() => {
-    const allMessages = document.querySelectorAll(".message-thread, .comment");
-    allMessages.forEach(msg => {
-        const timestamp = parseInt(msg.getAttribute('data-timestamp'), 10);
+    document.querySelectorAll(".message-thread, .comment").forEach(msg => {
+        const timestamp = parseInt(msg.dataset.timestamp, 10);
         const timeSpan = msg.querySelector(".message-time");
         if (timestamp && timeSpan) {
-            timeSpan.textContent = ` (${formatTimeAgo(timestamp)})`;  // Update the timestamp
+            timeSpan.textContent = ` (${formatTimeAgo(timestamp)})`;
         }
     });
-}, 60000); // Update every 1 minute
+}, 60000);

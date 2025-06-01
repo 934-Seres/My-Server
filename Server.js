@@ -212,7 +212,7 @@ app.post('/login', (req, res) => {
             res.json({ success: true });
         });
     } else {
-        res.json({ success: false, message: 'Invalid credentials' });
+        res.json({ success: false, message: 'Invalid username or password' });
     }
 });
 
