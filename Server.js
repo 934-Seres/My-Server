@@ -188,16 +188,40 @@ app.post('/save-slideshow-data', (req, res) => {
 });
 
 app.post('/register-medical', (req, res) => {
-    storedMedicalData.push(req.body);
-    saveStoredData();
-    res.sendStatus(200);
+    const newEntry = req.body;
+
+    const isDuplicate = storedMedicalData.some(entry =>
+        entry.name === newEntry.name &&
+        entry.city === newEntry.city &&
+        entry.category === newEntry.category
+    );
+
+    if (!isDuplicate) {
+        storedMedicalData.push(newEntry);
+        saveStoredData();
+    }
+
+    res.redirect('/thank-you');  // Or use a success page
 });
 
+
 app.post('/register-business', (req, res) => {
-    storedBusinessData.push(req.body);
-    saveStoredData();
-    res.sendStatus(200);
+    const newEntry = req.body;
+
+    const isDuplicate = storedBusinessData.some(entry =>
+        entry.name === newEntry.name &&
+        entry.city === newEntry.city &&
+        entry.category === newEntry.category
+    );
+
+    if (!isDuplicate) {
+        storedBusinessData.push(newEntry);
+        saveStoredData();
+    }
+
+    res.redirect('/thank-you');  // Or use a success page
 });
+
 
 app.get('/register-medical', (req, res) => res.json(storedMedicalData));
 app.get('/register-business', (req, res) => res.json(storedBusinessData));
