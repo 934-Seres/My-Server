@@ -10,6 +10,17 @@
       "city": "Assosa",
       "type": "medical",
       "createdAt": "2025-06-01T11:20:16.401Z"
+    },
+    {
+      "name": "Grand Medium Clinic",
+      "category": "general",
+      "industryOrService": "General Health Care",
+      "licenseNumber": "12345",
+      "location": "Below Finance Bureau",
+      "contact_info": "09...",
+      "city": "Assosa",
+      "type": "medical",
+      "createdAt": "2025-06-01T12:35:02.106Z"
     }
   ],
   "storedBusinessData": []
