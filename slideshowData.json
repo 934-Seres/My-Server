@@ -1,13 +1,40 @@
 {
-  "advertMessages": [],
-  "noticeMessages": [],
+  "advertMessages": [
+    "Name of Organization: MBD Website\nDetails: \n📢 Promote Your Medical or Business Organization Online – Absolutely Free!\nAre you a medical service provider or business owner looking to reach more customers with ease?\n\nWe’re excited to announce the launch of our Medical and Business Organization Directory – a powerful and free platform designed to connect you with the community!\n\n✅ Get Discovered Easily\nBy registering your organization, you’ll be listed in a public directory where customers can quickly find your name, location, and services.\n\n✅ Advertise Effortlessly\nUse your directory listing as a free advertisement board! Post updates, promote your services, or share announcements — all in one place.\n\n✅ Notice Board for Your Customers\nThink of it as your digital signpost. Registered organizations can post notices that are visible to visitors instantly.",
+    "Name of Organization: MBD Website\nDetails: \n💻 How to Join?\nSimply visit our website and register your organization in a few easy steps. It’s completely free and takes less than 5 minutes.\n\n📍 Put your business on the map. Get noticed. Stay connected.\nCONTACT AS"
+  ],
+  "noticeMessages": [
+    "Name of Organization: MBD Website\nDetails: \n🩺📣 Promote Your Medical or Business Organization – For FREE!\nLooking to reach more people with your clinic, pharmacy, hospital, shop, or service?\nWe’ve launched a FREE Online Directory to connect medical and business organizations with their community.\n\n🌐 Register your organization now to:\n✔ Be easily discovered by customers\n✔ Use a public notice board for updates\n✔ Advertise your services for FREE\n✔ Post announcements and contact info\n✔ Build your online presence in minutes\n\n🕒 Registration takes less than 5 minutes!\n📍 Open to all medical and business entities.\n\n📌 Don’t miss out – Put your organization on the map!",
+    "Name of Organization: MBD Website\nDetails: \nPromote Your Clinic or Business for Free 🩺🏢\nGet Listed. Get Seen. Post Notices. At Zero Cost!\n📢 Calling all medical services and local businesses:\nWant to reach more customers and post your notices online?\n\nRegister your organization in our FREE online directory and enjoy:\n✅ Easy discovery by the public\n✅ Free advertising for your services\n✅ A digital notice board for updates\n✅ A professional online presence\n\n🌐 Join in less than 5 minutes. It’s fast, simple, and FREE!"
+  ],
   "storedDatas": {
     "advert": [
       {
         "name": "Ozone Clinic",
         "details": "• Get your health back on track with Medium our Clinic – Comprehensive checkups now! • Our Medium Clinic introduces weekend family wellness packages – because prevention is better than cure! • Fast, friendly, and professional care. Visit Our Medium Clinic for same-day lab results and expert consultations! • Feeling under the weather? Medium Clinic’s internal medicine team is here to help – walk-ins welcome! • Your child deserves the best care – visit Medium Clinic’s pediatric department today! • Introducing our new physiotherapy wing! Book your recovery session at Medium Clinic now. • Women’s wellness week – Pap smear, breast exam, and more at special rates at Medium Clinic! • Medium Clinic now offers many appointments – consult our doctors from home! • We care for the elderly – Geriatric checkups and chronic care at Medium Clinic with experienced specialists. • Planned Flu season is here! Get vaccinated at Medium Clinic – quick, safe, and affordable."
+      },
+      {
+        "name": "MBD Website",
+        "details": "\n📢 Promote Your Medical or Business Organization Online – Absolutely Free!\nAre you a medical service provider or business owner looking to reach more customers with ease?\n\nWe’re excited to announce the launch of our Medical and Business Organization Directory – a powerful and free platform designed to connect you with the community!\n\n✅ Get Discovered Easily\nBy registering your organization, you’ll be listed in a public directory where customers can quickly find your name, location, and services.\n\n✅ Advertise Effortlessly\nUse your directory listing as a free advertisement board! Post updates, promote your services, or share announcements — all in one place.\n\n✅ Notice Board for Your Customers\nThink of it as your digital signpost. Registered organizations can post notices that are visible to visitors instantly.",
+        "id": 1749036260410
+      },
+      {
+        "name": "MBD Website",
+        "details": "\n💻 How to Join?\nSimply visit our website and register your organization in a few easy steps. It’s completely free and takes less than 5 minutes.\n\n📍 Put your business on the map. Get noticed. Stay connected.\nCONTACT AS",
+        "id": 1749039239452
       }
     ],
-    "notice": []
+    "notice": [
+      {
+        "name": "MBD Website",
+        "details": "\n🩺📣 Promote Your Medical or Business Organization – For FREE!\nLooking to reach more people with your clinic, pharmacy, hospital, shop, or service?\nWe’ve launched a FREE Online Directory to connect medical and business organizations with their community.\n\n🌐 Register your organization now to:\n✔ Be easily discovered by customers\n✔ Use a public notice board for updates\n✔ Advertise your services for FREE\n✔ Post announcements and contact info\n✔ Build your online presence in minutes\n\n🕒 Registration takes less than 5 minutes!\n📍 Open to all medical and business entities.\n\n📌 Don’t miss out – Put your organization on the map!",
+        "id": 1749039339625
+      },
+      {
+        "name": "MBD Website",
+        "details": "\nPromote Your Clinic or Business for Free 🩺🏢\nGet Listed. Get Seen. Post Notices. At Zero Cost!\n📢 Calling all medical services and local businesses:\nWant to reach more customers and post your notices online?\n\nRegister your organization in our FREE online directory and enjoy:\n✅ Easy discovery by the public\n✅ Free advertising for your services\n✅ A digital notice board for updates\n✅ A professional online presence\n\n🌐 Join in less than 5 minutes. It’s fast, simple, and FREE!",
+        "id": 1749039415992
+      }
+    ]
   }
 }

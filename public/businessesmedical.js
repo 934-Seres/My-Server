@@ -188,8 +188,6 @@ let currentNoticeIndex = 0;
 let advertInterval;
 let noticeInterval;
 
-// Simulated isOwner flag (replace with real session check)
-
 function escapeHtml(text) {
     const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
     return text.replace(/[&<>"']/g, m => map[m]);
@@ -217,7 +215,6 @@ function openDetailedEntryInNewWindow(type, index) {
         </style>
         <script>
             const isOwner = ${isOwner};
-
             function goTo(type, index) {
                 window.opener.openDetailedEntryInNewWindow(type, index);
                 window.close();
@@ -226,7 +223,6 @@ function openDetailedEntryInNewWindow(type, index) {
                 window.opener.deleteEntryFromPopup(type, index);
                 window.close();
             }
-
             window.addEventListener('keydown', function (e) {
                 const total = window.opener.storedDatas[type].length;
                 if (e.key === 'ArrowRight') {
@@ -262,38 +258,32 @@ function deleteEntryFromPopup(type, index) {
     if (!entry) return;
 
     const messageArray = type === 'advert' ? advertMessages : noticeMessages;
-
-    // Match message by full content
     const messageToDelete = `Name of Organization: ${entry.name}\nDetails: ${entry.details}`;
     const messageIndex = messageArray.findIndex(msg => msg === messageToDelete);
 
-    if (messageIndex !== -1) messageArray.splice(messageIndex, 1); // ✅ Only remove from slideshow
+    if (messageIndex !== -1) messageArray.splice(messageIndex, 1);
 
-    // ❌ Do NOT delete from storedDatas[type]
-    // storedDatas[type].splice(index, 1); <-- This is removed intentionally
-
-    if (type === 'advert') {
-        currentAdvertIndex = Math.max(0, currentAdvertIndex - 1);
-    } else {
-        currentNoticeIndex = Math.max(0, currentNoticeIndex - 1);
-    }
+    if (type === 'advert') currentAdvertIndex = Math.max(0, currentAdvertIndex - 1);
+    else currentNoticeIndex = Math.max(0, currentNoticeIndex - 1);
 
     updateSlideshow(type);
     saveSlideshowData();
 }
 
-function addAdvert(text, details) {
+function addEntry(type, text, details) {
     const entry = { id: Date.now(), name: text, details };
-    advertMessages.push(`Name of Organization: ${text}\nDetails: ${details}`);
-    storedDatas.advert.push(entry);
+    storedDatas[type].push(entry);
+    const messageArray = type === 'advert' ? advertMessages : noticeMessages;
+    messageArray.push(`Name of Organization: ${text}\nDetails: ${details}`);
     saveSlideshowData();
 }
 
+function addAdvert(text, details) {
+    addEntry('advert', text, details);
+}
+
 function addNotice(text, details) {
-    const entry = { id: Date.now(), name: text, details };
-    noticeMessages.push(`Name of Organization: ${text}\nDetails: ${details}`);
-    storedDatas.notice.push(entry);
-    saveSlideshowData();
+    addEntry('notice', text, details);
 }
 
 async function loadSlideshowData() {
@@ -315,12 +305,13 @@ function goToSlide(type, index) {
     else currentNoticeIndex = index;
     updateSlideshow(type);
 }
+
 function adjustFontSizeToFit(box) {
     const maxWidth = box.offsetWidth;
     const maxHeight = box.offsetHeight;
     const message = box.querySelector(".clickable-message");
     if (!message) return;
-    
+
     let fontSize = 50;
     message.style.fontSize = `${fontSize}px`;
 
@@ -341,17 +332,13 @@ function updateSlideshow(type) {
     const box = document.getElementById(boxId);
     const dotContainer = document.getElementById(dotsId);
 
-    
-
     function showMessage(index) {
         const msg = messages[index] || `No ${type === 'advert' ? 'Advertisements' : 'Notices'}`;
-        
-        const safeMessage = escapeHtml(msg);      
+        const safeMessage = escapeHtml(msg);
 
         const entryIndex = storedDatas[type].findIndex(entry =>
             `Name of Organization: ${entry.name}\nDetails: ${entry.details}` === msg
-        ); 
-       
+        );
 
         box.innerHTML = `<span class="clickable-message" onclick="${
             entryIndex !== -1
@@ -363,7 +350,7 @@ function updateSlideshow(type) {
         adjustFontSizeToFit(box);
     }
 
-   showMessage(getIndex());
+    showMessage(getIndex());
 
     clearInterval(type === 'advert' ? advertInterval : noticeInterval);
 
@@ -386,15 +373,16 @@ function updateSlideshow(type) {
 function sendStoredData(type, index) {
     const entry = storedDatas[type][index];
     const messageContent = `Name of Organization: ${entry.name}\nDetails: ${entry.details}`;
-
     const messages = type === 'advert' ? advertMessages : noticeMessages;
+
     if (!messages.includes(messageContent)) {
         messages.push(messageContent);
+        saveSlideshowData();
+        updateSlideshow(type);
+        alert(`${entry.name || "This entry"} has been sent to the slideshow.`);
+    } else {
+        alert("Already sent to slideshow.");
     }
-
-    updateSlideshow(type);
-    saveSlideshowData();
-    alert(`${entry.name || "This entry"} has been sent to the slideshow.`);
 }
 
 function saveSlideshowData() {
@@ -455,10 +443,16 @@ function toggleDetailsStored(type, index) {
     toggleBtn.setAttribute("aria-expanded", String(!isExpanded));
 }
 
-
 function deleteStoredData(type, index) {
     if (confirm("Are you sure you want to delete this entry?")) {
+        const entry = storedDatas[type][index];
+        const message = `Name of Organization: ${entry.name}\nDetails: ${entry.details}`;
         storedDatas[type].splice(index, 1);
+
+        const messages = type === 'advert' ? advertMessages : noticeMessages;
+        const messageIndex = messages.findIndex(msg => msg === message);
+        if (messageIndex !== -1) messages.splice(messageIndex, 1);
+
         saveSlideshowData();
         showStoredDatas(type);
         updateSlideshow(type);
@@ -469,8 +463,8 @@ function handleFormSubmit(event, type) {
     event.preventDefault();
     const formData = new FormData(event.target);
     const formObject = Object.fromEntries(formData);
+    formObject.id = Date.now();
     storedDatas[type].push(formObject);
-
     saveSlideshowData();
     alert(`Form submitted under: ${type === "advert" ? "Advertises" : "Notices"}`);
     event.target.reset();

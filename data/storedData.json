@@ -43,6 +43,17 @@
       "city": "Addis Ababa",
       "type": "medical",
       "createdAt": "2025-06-01T18:21:44.230Z"
+    },
+    {
+      "name": "Rukiya Medium Clinic",
+      "category": "general",
+      "industryOrService": "General Health Care",
+      "licenseNumber": "xxxx",
+      "location": "Assosa Bus Station/Menaharia area",
+      "contact_info": "09...",
+      "city": "Assosa",
+      "type": "medical",
+      "createdAt": "2025-06-04T11:31:59.037Z"
     }
   ],
   "storedBusinessData": []

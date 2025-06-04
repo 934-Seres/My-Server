@@ -1,10 +1,8 @@
-// --- Load Environment First => Strict Mode and Core Modules ---
 "use strict";
 require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
 
-// Essential Libraries & Server Setup---
 const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser'); 
@@ -19,17 +17,16 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server, { cors: { origin: '*' } });
 
-// --- Environment Variables ---
 const PORT = process.env.PORT || 3000;
 const OWNER_USERNAME = process.env.OWNER_USERNAME;
 const OWNER_PASSWORD = process.env.OWNER_PASSWORD;
 const SESSION_SECRET = process.env.SESSION_SECRET;
+
 if (!OWNER_USERNAME || !OWNER_PASSWORD || !SESSION_SECRET) {
     console.error('❌ Missing environment variables: OWNER_USERNAME, OWNER_PASSWORD, or SESSION_SECRET');
     process.exit(1);
 }
 
-// --- Middleware ---
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -51,7 +48,6 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'businessesmedical.html'));
 });
 
-// --- File Paths ---
 const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
@@ -63,7 +59,6 @@ const viewerCountFile = path.join(__dirname, 'viewerCount.json');
 const messagesFile = path.join(__dirname, 'messages.json');
 const slideshowDataFile = path.join(__dirname, 'slideshowData.json');
 
-// --- State Variables ---
 let totalViewers = 0;
 let totalFollowers = 0;
 let messages = [];
@@ -75,7 +70,6 @@ let storedNoticeData = [];
 let storedMedicalData = [];
 let storedBusinessData = [];
 
-// --- Ensure storedData.json exists, then read ---
 try {
     if (!fs.existsSync(storedDataPath)) {
         fs.writeFileSync(storedDataPath, JSON.stringify({
@@ -89,8 +83,6 @@ try {
     storedBusinessData = parsed.storedBusinessData || [];
 } catch (err) {
     console.error('Error handling storedData.json:', err);
-    storedMedicalData = [];
-    storedBusinessData = [];
 }
 
 const MAX_MESSAGES = 100;
@@ -105,7 +97,6 @@ const safeLoad = (filePath, fallback) => {
     return fallback;
 };
 
-// --- Load other data ---
 totalViewers = safeLoad(viewerCountFile, { count: 0 }).count;
 totalFollowers = safeLoad(followersFile, { count: 0 }).count;
 messages = safeLoad(messagesFile, []);
@@ -124,11 +115,10 @@ const saveToFile = async (file, data) => {
 };
 
 const saveStoredData = () => {
-    const data = {
+    saveToFile(storedDataPath, {
         storedMedicalData,
         storedBusinessData
-    };
-    saveToFile(storedDataPath, data);
+    });
 };
 
 const saveMessages = () => saveToFile(messagesFile, messages);
@@ -146,20 +136,27 @@ const saveSlideshowData = () => saveToFile(slideshowDataFile, {
 // --- API Routes ---
 app.post('/save-stored-data', (req, res) => {
     const { storedMedicalData: medical, storedBusinessData: business } = req.body;
+    if (!Array.isArray(medical) || !Array.isArray(business)) {
+        return res.status(400).json({ success: false, message: 'Invalid data format' });
+    }
+
     storedMedicalData = medical;
     storedBusinessData = business;
     saveStoredData();
-   res.redirect('/thank-you');
+    res.redirect('/thank-you');
 });
 
 app.get('/get-stored-data', (req, res) => {
     try {
-        const rawData = fs.readFileSync(storedDataPath);
+        const rawData = fs.readFileSync(storedDataPath, 'utf8');
         const data = JSON.parse(rawData);
-        res.json(data);
+        res.json({
+            storedMedicalData: data.storedMedicalData || [],
+            storedBusinessData: data.storedBusinessData || []
+        });
     } catch (err) {
         console.error("Error reading stored data:", err);
-        res.json({ medical: [], business: [] });
+        res.json({ storedMedicalData: [], storedBusinessData: [] });
     }
 });
 
@@ -167,61 +164,66 @@ app.get('/get-advert-notice-data', (_req, res) => {
     res.json({ advert: storedAdvertData, notice: storedNoticeData });
 });
 
-app.post('/save-advert-notice-data', (req, res) => {
-    const { advert, notice } = req.body;
-    if (!Array.isArray(advert) || !Array.isArray(notice)) {
-        return res.status(400).json({ success: false, message: 'Invalid data format' });
-    }
-    storedAdvertData = advert;
-    storedNoticeData = notice;
-    saveSlideshowData();
-    res.sendStatus(200);
-});
 
+
+// GET route to load slideshow data
 app.get('/get-slideshow-data', (req, res) => {
-    res.json(slideshowData);
+    const filePath = path.join(__dirname, 'slideshowData.json');
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Failed to read slideshow data:', err);
+            return res.json({ advertMessages: [], noticeMessages: [], storedDatas: { advert: [], notice: [] } });
+        }
+        try {
+            const parsed = JSON.parse(data);
+            res.json(parsed);
+        } catch (e) {
+            console.error('Failed to parse slideshow data:', e);
+            res.json({ advertMessages: [], noticeMessages: [], storedDatas: { advert: [], notice: [] } });
+        }
+    });
 });
 
+// POST route to save slideshow data
 app.post('/save-slideshow-data', (req, res) => {
-    saveToFile(slideshowDataFile, req.body);
-    res.status(200).send('Data saved successfully');
+    const filePath = path.join(__dirname, 'slideshowData.json');
+    fs.writeFile(filePath, JSON.stringify(req.body, null, 2), (err) => {
+        if (err) {
+            console.error('Failed to write slideshow data:', err);
+            return res.status(500).send('Failed to save data.');
+        }
+        res.sendStatus(200);
+    });
 });
+
 
 app.post('/register-medical', (req, res) => {
     const newEntry = req.body;
-
     const isDuplicate = storedMedicalData.some(entry =>
         entry.name === newEntry.name &&
         entry.city === newEntry.city &&
         entry.category === newEntry.category
     );
-
     if (!isDuplicate) {
         storedMedicalData.push(newEntry);
         saveStoredData();
     }
-
-    res.redirect('/thank-you');  // Or use a success page
+    res.redirect('/thank-you');
 });
-
 
 app.post('/register-business', (req, res) => {
     const newEntry = req.body;
-
     const isDuplicate = storedBusinessData.some(entry =>
         entry.name === newEntry.name &&
         entry.city === newEntry.city &&
         entry.category === newEntry.category
     );
-
     if (!isDuplicate) {
         storedBusinessData.push(newEntry);
         saveStoredData();
     }
-
-    res.redirect('/thank-you');  // Or use a success page
+    res.redirect('/thank-you');
 });
-
 
 app.get('/register-medical', (req, res) => res.json(storedMedicalData));
 app.get('/register-business', (req, res) => res.json(storedBusinessData));
@@ -252,7 +254,7 @@ app.get('/check-owner', (req, res) => {
     res.json({ isOwner: !!req.session.isOwner });
 });
 
-// --- Socket.IO Chat and Stats ---
+// --- Socket.IO ---
 io.on('connection', (socket) => {
     totalViewers++;
     saveViewerCount();
@@ -337,6 +339,7 @@ io.on('connection', (socket) => {
         const index = messages.findIndex(msg => msg.messageId === messageId);
         if (index !== -1) {
             messages.splice(index, 1);
+            saveMessages();
             io.emit('loadMessages', messages);
         }
     });
