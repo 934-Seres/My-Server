@@ -54,6 +54,17 @@
       "city": "Assosa",
       "type": "medical",
       "createdAt": "2025-06-04T11:31:59.037Z"
+    },
+    {
+      "name": "Bejai Ethio Industrial and Engineering solution",
+      "category": "general",
+      "industryOrService": "Idustrial and Engineering Solution",
+      "licenseNumber": "aaaa",
+      "location": "Kaliti Sheger Building",
+      "contact_info": "09...",
+      "city": "Addis Ababa",
+      "type": "medical",
+      "createdAt": "2025-06-05T17:07:53.829Z"
     }
   ],
   "storedBusinessData": []

@@ -12,6 +12,7 @@ const axios = require('axios');
 const cors = require('cors');
 const http = require('http');
 const socketIO = require('socket.io');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const server = http.createServer(app);
@@ -133,6 +134,31 @@ const saveSlideshowData = () => saveToFile(slideshowDataFile, {
     }
 });
 
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER, // 'aragaw007@gmail.com'
+    pass: process.env.EMAIL_PASS  // your Gmail App Password
+  }
+});
+
+function sendChatAlert(sender, messageText) {
+  transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: process.env.EMAIL_USER, // or use SMS gateway email address later
+    subject: '📨 New Message on Your Website Chat',
+    text: `💬 ${sender} says: "${messageText}"`
+  }, (err, info) => {
+    if (err) {
+      console.error('❌ Failed to send email:', err);
+    } else {
+      console.log('✅ Email sent:', info.response);
+    }
+  });
+}
+
+
+
 // --- API Routes ---
 app.post('/save-stored-data', (req, res) => {
     const { storedMedicalData: medical, storedBusinessData: business } = req.body;
@@ -253,6 +279,34 @@ app.post('/logout', (req, res) => {
 app.get('/check-owner', (req, res) => {
     res.json({ isOwner: !!req.session.isOwner });
 });
+app.get('/sitemap.xml', (req, res) => {
+    const baseUrl = 'https://my-server-2xjg.onrender.com';
+    const today = new Date().toISOString().split('T')[0];
+
+    const routes = [
+        { url: '/', changefreq: 'daily', priority: 1.0 },
+        { url: '/register-medical', changefreq: 'weekly', priority: 0.8 },
+        { url: '/register-business', changefreq: 'weekly', priority: 0.8 },
+        { url: '/chat', changefreq: 'daily', priority: 0.6 },
+        { url: '/about', changefreq: 'monthly', priority: 0.5 },
+        { url: '/contact', changefreq: 'monthly', priority: 0.5 },
+        { url: '/news', changefreq: 'daily', priority: 0.7 } // if available
+    ];
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${routes.map(route => `
+    <url>
+        <loc>${baseUrl}${route.url}</loc>
+        <lastmod>${today}</lastmod>
+        <changefreq>${route.changefreq}</changefreq>
+        <priority>${route.priority}</priority>
+    </url>`).join('')}
+</urlset>`;
+
+    res.header('Content-Type', 'application/xml');
+    res.send(xml);
+});
 
 // --- Socket.IO ---
 io.on('connection', (socket) => {
@@ -295,7 +349,7 @@ io.on('connection', (socket) => {
         io.emit('followerCountUpdate', totalFollowers);
     });
 
-    socket.on('sendMessage', ({ text, messageId, timestamp }) => {
+   socket.on('sendMessage', ({ text, messageId, timestamp }) => {
         const newMessage = {
             text,
             sender: socket.username,
@@ -308,9 +362,14 @@ io.on('connection', (socket) => {
         if (messages.length > MAX_MESSAGES) {
             messages = messages.slice(-MAX_MESSAGES);
         }
+
         saveMessages();
         io.emit('newMessage', newMessage);
+
+        // ✅ Email alert for new message only
+        sendChatAlert(socket.username, text);
     });
+
 
     socket.on('sendReply', ({ replyText, messageId, timestamp }) => {
         const parent = messages.find(m => m.messageId === messageId);
