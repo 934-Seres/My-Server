@@ -1,8 +1,16 @@
 {
-  "advertMessages": [],
+  "advertMessages": [
+    "Name of Organization: MBD_WEBSITE\nDetails: \n🩺📣 Promote Your Medical or Business Organization – For FREE!\nLooking to reach more people with your clinic, pharmacy, hospital, shop, or service?\nWe’ve launched a FREE Online Directory to connect medical and business organizations with their community.\n\n🌐 Register your organization now to:\n✔ Be easily discovered by customers\n✔ Use a public notice board for updates\n✔ Advertise your services for FREE\n✔ Post announcements and contact info\n✔ Build your online presence in minutes\n\n🕒 Registration takes less than 5 minutes!\n📍 Open to all medical and business entities.\n\n📌 Don’t miss out – Put your organization on the map!\n"
+  ],
   "noticeMessages": [],
   "storedDatas": {
-    "advert": [],
+    "advert": [
+      {
+        "name": "MBD_WEBSITE",
+        "details": "\n🩺📣 Promote Your Medical or Business Organization – For FREE!\nLooking to reach more people with your clinic, pharmacy, hospital, shop, or service?\nWe’ve launched a FREE Online Directory to connect medical and business organizations with their community.\n\n🌐 Register your organization now to:\n✔ Be easily discovered by customers\n✔ Use a public notice board for updates\n✔ Advertise your services for FREE\n✔ Post announcements and contact info\n✔ Build your online presence in minutes\n\n🕒 Registration takes less than 5 minutes!\n📍 Open to all medical and business entities.\n\n📌 Don’t miss out – Put your organization on the map!\n",
+        "id": 1756149946886
+      }
+    ],
     "notice": []
   }
 }
