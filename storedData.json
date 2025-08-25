@@ -1,35 +1,4 @@
 {
-  "storedMedicalData": [
-    {
-      "name": "Ozon Medium Clinic",
-      "category": "general",
-      "industryOrService": "General Health Care",
-      "licenseNumber": "123",
-      "location": "Near MA College",
-      "contact_info": "09...",
-      "city": "Assosa",
-      "type": "medical"
-    },
-    {
-      "name": "Grand Medium Clinic",
-      "category": "general",
-      "industryOrService": "General Health Care",
-      "licenseNumber": "123",
-      "location": "Below Finance Bureau",
-      "contact_info": "09...",
-      "city": "Assosa",
-      "type": "medical"
-    },
-    {
-      "name": "Seven Dental Clinic",
-      "category": "general",
-      "industryOrService": "Dental Health Care",
-      "licenseNumber": "768",
-      "location": "22-Bolagul Building area",
-      "contact_info": "09...",
-      "city": "Addis Ababa",
-      "type": "medical"
-    }
-  ],
+  "storedMedicalData": [],
   "storedBusinessData": []
 }

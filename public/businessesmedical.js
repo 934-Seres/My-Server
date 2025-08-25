@@ -1,3 +1,13 @@
+
+document.addEventListener("DOMContentLoaded", function () {
+    const menuToggle = document.getElementById("mobile__menu");
+    const navLinks = menuToggle.nextElementSibling; // the <ul> after toggle
+
+    menuToggle.addEventListener("click", () => {
+      navLinks.classList.toggle("active");
+    });
+  });
+//
 const myHeader = document.querySelector('h1');
 if (myHeader) {
     const originalText = myHeader.textContent;
@@ -11,120 +21,7 @@ if (myHeader) {
 }
 
 //
-document.addEventListener("DOMContentLoaded", function () {
-    const languageSelect = document.getElementById("languageSelect");
-
-    if (!languageSelect) {
-        console.error("languageSelect not found");
-        return;
-    }
-
-    const translations = {
-        en: {
-            title: "Medical & Business Directory",
-            searchPlaceholder: "Search or select a city...",
-            registerTitle: "Register Your Business/Medical Entity",
-            namePlaceholder: "Name of Organization",
-            industryPlaceholder: "Industry/Service",
-            locationPlaceholder: "Area/Zone",
-            contactPlaceholder: "Phone/email",
-            registerButton: "Register/Submit"
-        },
-        am: {
-            title: "የሕክምና እና የንግድ ማውጫ",
-            searchPlaceholder: "ከተማ ፈልግ ወይም ይምረጡ...",
-            registerTitle: "የንግድ/ሕክምና ድርጅትዎን ይመዝግቡ",
-            namePlaceholder: "የድርጅት ስም",
-            industryPlaceholder: "ዘርፍ/አገልግሎት",
-            locationPlaceholder: "አካባቢ/ዞን",
-            contactPlaceholder: "ስልክ/ኢሜል",
-            registerButton: "ይመዝገቡ/ያቀርቡ"
-        },
-        om: {
-            title: "Direektaroota Yaalaa fi Daldalaa",
-            searchPlaceholder: "Magaalaa fili ykn barbaadi...",
-            registerTitle: "Daldala/Teeknooloojii Fayyaa Keessan Galmeessi",
-            namePlaceholder: "Maqaa Dhaabbata",
-            industryPlaceholder: "Indastirii/Tajaajila",
-            locationPlaceholder: "Naannoo/Godina",
-            contactPlaceholder: "Bilbila/email",
-            registerButton: "Galmeessi/Ergi"
-        },
-        af: {
-            title: "Diiwaanka Ganacsiga iyo Caafimaadka",
-            searchPlaceholder: "Magaala dooro ama raadso...",
-            registerTitle: "Mee Ganacsigaaga/Goobta Caafimaadka Diiwaangali",
-            namePlaceholder: "Magaca Ururka",
-            industryPlaceholder: "Warshad/Adeeg",
-            locationPlaceholder: "Goob/Qayb",
-            contactPlaceholder: "Taleefoon/imeyl",
-            registerButton: "Diiwaangali/Dir"
-        },
-        ti: {
-            title: "መዝገብ ንግድን ሕክምናን",
-            searchPlaceholder: "ከተማ ምረጥ ወይ ድለይ...",
-            registerTitle: "ድርጅትኻ ወይ ሕክምና መዝግብ",
-            namePlaceholder: "ስም ድርጅት",
-            industryPlaceholder: "ኢንዱስትሪ/አገልግሎት",
-            locationPlaceholder: "አካባቢ/ዞባ",
-            contactPlaceholder: "ስልክ/ኢሜል",
-            registerButton: "መዝግብ/ላእ"
-        },
-        so: {
-            title: "Tusmada Ganacsi & Caafimaad",
-            searchPlaceholder: "Raadi ama dooro magaalo...",
-            registerTitle: "Diiwaangeli Ganacsigaaga/Agaasimaha Caafimaadka",
-            namePlaceholder: "Magaca Hay'adda",
-            industryPlaceholder: "Warshad/Adeeg",
-            locationPlaceholder: "Aagga/Deegaanka",
-            contactPlaceholder: "Telefoon/email",
-            registerButton: "Diiwaangeli/Dir"
-        },
-        ar: {
-            title: "الدليل الطبي والتجاري",
-            searchPlaceholder: "ابحث عن مدينة أو حددها...",
-            registerTitle: "سجل كيانك التجاري/الطبي",
-            namePlaceholder: "اسم المنظمة",
-            industryPlaceholder: "الصناعة/الخدمة",
-            locationPlaceholder: "المنطقة/المنطقة",
-            contactPlaceholder: "الهاتف/البريد الإلكتروني",
-            registerButton: "تسجيل/إرسال"            
-        }
-    }
-
-    function changeLanguage() {
-        const selectedLanguage = languageSelect.value;
-        if (translations[selectedLanguage]) {
-            console.log("Changing language to:", selectedLanguage);
-
-            document.getElementById("pageTitle").textContent = translations[selectedLanguage].title;
-            document.getElementById("searchQuery").placeholder = translations[selectedLanguage].searchPlaceholder;
-            document.getElementById("registerTitle").textContent = translations[selectedLanguage].registerTitle;
-            document.getElementById("name").placeholder = translations[selectedLanguage].namePlaceholder;
-            document.getElementById("industryOrService").placeholder = translations[selectedLanguage].industryPlaceholder;
-            document.getElementById("location").placeholder = translations[selectedLanguage].locationPlaceholder;
-            document.getElementById("contact_info").placeholder = translations[selectedLanguage].contactPlaceholder;
-            document.getElementById("register").textContent = translations[selectedLanguage].registerButton;
-            
-            // Optionally save the language choice in localStorage
-            localStorage.setItem('selectedLanguage', selectedLanguage);
-        } else {
-            console.error("Translation for language not found:", selectedLanguage);
-        }
-    }
-
-    // Load language preference from localStorage
-    const savedLanguage = localStorage.getItem('selectedLanguage');
-    if (savedLanguage) {
-        languageSelect.value = savedLanguage;
-    }
-
-    // Initialize language on page load
-    changeLanguage();
-
-    // Add event listener to dropdown
-    languageSelect.addEventListener("change", changeLanguage);
-});
+  
        
 //This below is the Adverte or Notice elements window display, and window close functionality in Advertisement Link
 
@@ -180,19 +77,37 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 
+// ==========================
+// Global Data Structures
+// ==========================
 let advertMessages = [];
 let noticeMessages = [];
 let storedDatas = { advert: [], notice: [] };
 let currentAdvertIndex = 0;
 let currentNoticeIndex = 0;
-let advertInterval;
-let noticeInterval;
+const intervals = { advert: null, notice: null }; // track intervals centrally
 
+// ==========================
+// Utilities
+// ==========================
 function escapeHtml(text) {
     const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
     return text.replace(/[&<>"']/g, m => map[m]);
 }
 
+function formatMessage(entry) {
+    return `Name of Organization: ${entry.name}\nDetails: ${entry.details}`;
+}
+
+function shortenText(text) {
+    if (!text) return "N/A";
+    const words = text.split(" ");
+    return words.length > 3 ? words.slice(0, 3).join(" ") + "..." : text;
+}
+
+// ==========================
+// Detailed Popup
+// ==========================
 function openDetailedEntryInNewWindow(type, index) {
     const entry = storedDatas[type][index];
     if (!entry) return;
@@ -214,22 +129,22 @@ function openDetailedEntryInNewWindow(type, index) {
             button { padding: 8px 12px; }
         </style>
         <script>
+            const type = "${type}";
+            const index = ${index};
             const isOwner = ${isOwner};
-            function goTo(type, index) {
-                window.opener.openDetailedEntryInNewWindow(type, index);
+
+            function goTo(t, i) {
+                window.opener.openDetailedEntryInNewWindow(t, i);
                 window.close();
             }
-            function deleteThis(type, index) {
-                window.opener.deleteEntryFromPopup(type, index);
+            function deleteThis(t, i) {
+                window.opener.deleteEntryFromPopup(t, i);
                 window.close();
             }
             window.addEventListener('keydown', function (e) {
                 const total = window.opener.storedDatas[type].length;
-                if (e.key === 'ArrowRight') {
-                    goTo(type, (index + 1) % total);
-                } else if (e.key === 'ArrowLeft') {
-                    goTo(type, (index - 1 + total) % total);
-                }
+                if (e.key === 'ArrowRight') goTo(type, (index + 1) % total);
+                else if (e.key === 'ArrowLeft') goTo(type, (index - 1 + total) % total);
             });
         </script>
     </head>
@@ -244,7 +159,7 @@ function openDetailedEntryInNewWindow(type, index) {
     </body>
     </html>`;
 
-    const win = window.open('', '_blank', 'width=600,height=500');
+    const win = window.open('', `entry-${type}-${index}`, 'width=600,height=500');
     if (win) {
         win.document.write(htmlContent);
         win.document.close();
@@ -253,59 +168,54 @@ function openDetailedEntryInNewWindow(type, index) {
     }
 }
 
-function deleteEntryFromPopup(type, index) {
-    const entry = storedDatas[type][index];
-    if (!entry) return;
+// ==========================
+// CRUD Operations
+// ==========================
+function deleteStoredData(type, index) {
+    if (confirm("Are you sure you want to delete this entry?")) {
+        const entry = storedDatas[type][index];
+        const message = `Name of Organization: ${entry.name}\nDetails: ${entry.details}`;
+        storedDatas[type].splice(index, 1);
 
-    const messageArray = type === 'advert' ? advertMessages : noticeMessages;
-    const messageToDelete = `Name of Organization: ${entry.name}\nDetails: ${entry.details}`;
-    const messageIndex = messageArray.findIndex(msg => msg === messageToDelete);
+        const messages = type === 'advert' ? advertMessages : noticeMessages;
+        const messageIndex = messages.findIndex(msg => msg === message);
+        if (messageIndex !== -1) messages.splice(messageIndex, 1);
 
-    if (messageIndex !== -1) messageArray.splice(messageIndex, 1);
-
-    if (type === 'advert') currentAdvertIndex = Math.max(0, currentAdvertIndex - 1);
-    else currentNoticeIndex = Math.max(0, currentNoticeIndex - 1);
-
-    updateSlideshow(type);
-    saveSlideshowData();
+        saveSlideshowData();
+        showStoredDatas(type);
+        updateSlideshow(type);
+    }
 }
+
 
 function addEntry(type, text, details) {
     const entry = { id: Date.now(), name: text, details };
     storedDatas[type].push(entry);
     const messageArray = type === 'advert' ? advertMessages : noticeMessages;
-    messageArray.push(`Name of Organization: ${text}\nDetails: ${details}`);
+    messageArray.push(formatMessage(entry));
     saveSlideshowData();
 }
+function addAdvert(text, details) { addEntry('advert', text, details); }
+function addNotice(text, details) { addEntry('notice', text, details); }
 
-function addAdvert(text, details) {
-    addEntry('advert', text, details);
-}
+function deleteStoredDatas(type, index) {
+    if (confirm("Are you sure you want to delete this entry?")) {
+        const entry = storedDatas[type][index];
+        storedDatas[type].splice(index, 1);
 
-function addNotice(text, details) {
-    addEntry('notice', text, details);
-}
+        const messages = type === 'advert' ? advertMessages : noticeMessages;
+        const messageIndex = messages.findIndex(msg => msg === formatMessage(entry));
+        if (messageIndex !== -1) messages.splice(messageIndex, 1);
 
-async function loadSlideshowData() {
-    try {
-        const res = await fetch('/get-slideshow-data');
-        const data = await res.json();
-        advertMessages = data.advertMessages || [];
-        noticeMessages = data.noticeMessages || [];
-        storedDatas = data.storedDatas || { advert: [], notice: [] };
-        updateSlideshow('advert');
-        updateSlideshow('notice');
-    } catch (err) {
-        console.error('Error loading slideshow data:', err);
+        saveSlideshowData();
+        showStoredDatas(type);
+        updateSlideshow(type);
     }
 }
 
-function goToSlide(type, index) {
-    if (type === 'advert') currentAdvertIndex = index;
-    else currentNoticeIndex = index;
-    updateSlideshow(type);
-}
-
+// ==========================
+// Slideshow Logic
+// ==========================
 function adjustFontSizeToFit(box) {
     const maxWidth = box.offsetWidth;
     const maxHeight = box.offsetHeight;
@@ -336,63 +246,56 @@ function updateSlideshow(type) {
         const msg = messages[index] || `No ${type === 'advert' ? 'Advertisements' : 'Notices'}`;
         const safeMessage = escapeHtml(msg);
 
-        const entryIndex = storedDatas[type].findIndex(entry =>
-            `Name of Organization: ${entry.name}\nDetails: ${entry.details}` === msg
-        );
+        const entryIndex = storedDatas[type].findIndex(entry => formatMessage(entry) === msg);
 
-        box.innerHTML = `<span class="clickable-message" onclick="${
-            entryIndex !== -1
-                ? `openDetailedEntryInNewWindow('${type}', ${entryIndex})`
-                : `alert('Entry not found or outdated.')`
-        }">${safeMessage}</span>`;
+        // Build message element safely
+        const span = document.createElement("span");
+        span.classList.add("clickable-message");
+        span.innerText = safeMessage;
+        if (entryIndex !== -1) {
+            span.addEventListener("click", () => openDetailedEntryInNewWindow(type, entryIndex));
+        } else {
+            span.addEventListener("click", () => alert('Entry not found or outdated.'));
+        }
 
+        box.innerHTML = "";
+        box.appendChild(span);
         box.style.textAlign = 'justify';
         adjustFontSizeToFit(box);
+
+        // Update dots
+        dotContainer.innerHTML = "";
+        messages.forEach((_, i) => {
+            const dot = document.createElement("button");
+            dot.className = `dot ${i === index ? 'active' : ''}`;
+            dot.setAttribute("aria-label", `Go to ${type} slide ${i + 1}`);
+            dot.addEventListener("click", () => goToSlide(type, i));
+            dotContainer.appendChild(dot);
+        });
     }
 
     showMessage(getIndex());
 
-    clearInterval(type === 'advert' ? advertInterval : noticeInterval);
-
+    // Clear existing interval before setting new
+    clearInterval(intervals[type]);
     if (messages.length > 0) {
-        const intervalId = setInterval(() => {
+        intervals[type] = setInterval(() => {
             const newIndex = (getIndex() + 1) % messages.length;
             setIndex(newIndex);
             showMessage(newIndex);
-
-            dotContainer.innerHTML = messages.map((_, i) =>
-                `<span class="dot ${i === newIndex ? 'active' : ''}" onclick="goToSlide('${type}', ${i})"></span>`
-            ).join("");
         }, 5000);
-
-        if (type === 'advert') advertInterval = intervalId;
-        else noticeInterval = intervalId;
     }
 }
 
-function sendStoredData(type, index) {
-    const entry = storedDatas[type][index];
-    const messageContent = `Name of Organization: ${entry.name}\nDetails: ${entry.details}`;
-    const messages = type === 'advert' ? advertMessages : noticeMessages;
-
-    if (!messages.includes(messageContent)) {
-        messages.push(messageContent);
-        saveSlideshowData();
-        updateSlideshow(type);
-        alert(`${entry.name || "This entry"} has been sent to the slideshow.`);
-    } else {
-        alert("Already sent to slideshow.");
-    }
+function goToSlide(type, index) {
+    if (type === 'advert') currentAdvertIndex = index;
+    else currentNoticeIndex = index;
+    updateSlideshow(type);
 }
 
-function saveSlideshowData() {
-    fetch('/save-slideshow-data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ advertMessages, noticeMessages, storedDatas })
-    }).catch(err => console.error('Error saving slideshow data:', err));
-}
-
+// ==========================
+// Stored Data Modal
+// ==========================
 function showStoredDatas(type) {
     const modals = document.getElementById("dataModal");
     const modalsContent = document.getElementById("modalContent");
@@ -422,14 +325,7 @@ function showStoredDatas(type) {
     } else {
         modalsContent.innerHTML = "<p>No data available.</p>";
     }
-
     modals.style.display = "flex";
-}
-
-function shortenText(text) {
-    if (!text) return "N/A";
-    const words = text.split(" ");
-    return words.length > 3 ? words.slice(0, 3).join(" ") + "..." : text;
 }
 
 function toggleDetailsStored(type, index) {
@@ -443,22 +339,53 @@ function toggleDetailsStored(type, index) {
     toggleBtn.setAttribute("aria-expanded", String(!isExpanded));
 }
 
-function deleteStoredData(type, index) {
-    if (confirm("Are you sure you want to delete this entry?")) {
-        const entry = storedDatas[type][index];
-        const message = `Name of Organization: ${entry.name}\nDetails: ${entry.details}`;
-        storedDatas[type].splice(index, 1);
-
-        const messages = type === 'advert' ? advertMessages : noticeMessages;
-        const messageIndex = messages.findIndex(msg => msg === message);
-        if (messageIndex !== -1) messages.splice(messageIndex, 1);
-
-        saveSlideshowData();
-        showStoredDatas(type);
-        updateSlideshow(type);
+// ==========================
+// Save/Load
+// ==========================
+async function loadSlideshowData() {
+    try {
+        const res = await fetch('/get-slideshow-data');
+        const data = await res.json();
+        advertMessages = data.advertMessages || [];
+        noticeMessages = data.noticeMessages || [];
+        storedDatas = data.storedDatas || { advert: [], notice: [] };
+        updateSlideshow('advert');
+        updateSlideshow('notice');
+    } catch (err) {
+        console.error('Error loading slideshow data:', err);
+        alert("Failed to load slideshow data.");
     }
 }
 
+function saveSlideshowData() {
+    fetch('/save-slideshow-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ advertMessages, noticeMessages, storedDatas })
+    }).catch(err => {
+        console.error('Error saving slideshow data:', err);
+        alert("Error saving data.");
+    });
+}
+
+function sendStoredData(type, index) {
+    const entry = storedDatas[type][index];
+    const messageContent = formatMessage(entry);
+    const messages = type === 'advert' ? advertMessages : noticeMessages;
+
+    if (!messages.includes(messageContent)) {
+        messages.push(messageContent);
+        saveSlideshowData();
+        updateSlideshow(type);
+        alert(`${entry.name || "This entry"} has been sent to the slideshow.`);
+    } else {
+        alert("Already sent to slideshow.");
+    }
+}
+
+// ==========================
+// Form Handling
+// ==========================
 function handleFormSubmit(event, type) {
     event.preventDefault();
     const formData = new FormData(event.target);
@@ -468,32 +395,17 @@ function handleFormSubmit(event, type) {
     saveSlideshowData();
     alert(`Form submitted under: ${type === "advert" ? "Advertises" : "Notices"}`);
     event.target.reset();
+    showStoredDatas(type);
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById("advertForm")?.addEventListener("submit", e => handleFormSubmit(e, "advert"));
-    document.getElementById("noticeForm")?.addEventListener("submit", e => handleFormSubmit(e, "notice"));
-    document.querySelector(".select-advert-notice")?.addEventListener("change", function () {
-        showStoredDatas(this.value);
-    });
-
-    document.querySelector(".modal-close").addEventListener("click", () => {
-        document.getElementById("dataModal").style.display = "none";
-    });
-
-    window.addEventListener("click", function (event) {
-        if (event.target === document.getElementById("dataModal")) {
-            document.getElementById("dataModal").style.display = "none";
-        }
-    });
-
-    loadSlideshowData();
-});
-
+// ==========================
+// Expandable Input (form)
+// ==========================
 function setupExpandableDetails(fieldId, toggleId) {
     const toggle = document.getElementById(toggleId);
-    const container = toggle.closest(".details-container");
+    if (!toggle) return;
 
+    const container = toggle.closest(".details-container");
     toggle.addEventListener("click", toggleHandler);
     toggle.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -505,7 +417,6 @@ function setupExpandableDetails(fieldId, toggleId) {
     function toggleHandler() {
         const expanded = toggle.getAttribute("aria-expanded") === "true";
         if (!expanded) {
-            // Expand to textarea
             const input = container.querySelector("input[name='details']");
             const textarea = document.createElement("textarea");
             textarea.name = "details";
@@ -514,12 +425,10 @@ function setupExpandableDetails(fieldId, toggleId) {
             textarea.ariaLabel = input.ariaLabel;
             textarea.value = input.value;
             textarea.rows = 5;
-
             container.replaceChild(textarea, input);
             toggle.innerText = "less...";
             toggle.setAttribute("aria-expanded", "true");
         } else {
-            // Collapse back to input
             const textarea = container.querySelector("textarea[name='details']");
             const input = document.createElement("input");
             input.type = "text";
@@ -529,7 +438,6 @@ function setupExpandableDetails(fieldId, toggleId) {
             input.placeholder = "Details:";
             input.ariaLabel = textarea.ariaLabel;
             input.value = textarea.value;
-
             container.replaceChild(input, textarea);
             toggle.innerText = "more...";
             toggle.setAttribute("aria-expanded", "false");
@@ -537,8 +445,379 @@ function setupExpandableDetails(fieldId, toggleId) {
     }
 }
 
-setupExpandableDetails("detailsAdvert", "moreDetailsAdvert");
-setupExpandableDetails("detailsNotice", "moreDetailsNotice");
+// ==========================
+// Init
+// ==========================
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("advertForm")?.addEventListener("submit", e => handleFormSubmit(e, "advert"));
+    document.getElementById("noticeForm")?.addEventListener("submit", e => handleFormSubmit(e, "notice"));
+
+    document.querySelector(".select-advert-notice")?.addEventListener("change", function () {
+        showStoredDatas(this.value);
+    });
+
+    document.querySelector(".modal-close")?.addEventListener("click", () => {
+        document.getElementById("dataModal").style.display = "none";
+    });
+
+    window.addEventListener("click", function (event) {
+        if (event.target === document.getElementById("dataModal")) {
+            document.getElementById("dataModal").style.display = "none";
+        }
+    });
+
+    // Expandable details for both forms
+    ["Advert", "Notice"].forEach(type => {
+        setupExpandableDetails(`details${type}`, `moreDetails${type}`);
+    });
+
+    loadSlideshowData();
+}); 
+
+
+
+/*About section and Policy section */
+document.addEventListener("DOMContentLoaded", function () {
+  const aboutLink = document.getElementById("aboutsite");
+  const policyLink = document.getElementById("policytitle");
+  const showcaseLink = document.getElementById("showcases");
+
+  // About/Policy modal
+  const aboutPolicyModal = document.getElementById("aboutPolicyModal");
+  const aboutPolicyText = document.getElementById("about-policy-text");
+  const aboutPolicyClose = document.querySelector(".about-policy-close-btn");
+
+  // Showcase modal
+  const showcaseModal = document.getElementById("showcaseModal");
+  const showcaseContent = document.getElementById("showcase-content");
+  const showcaseClose = document.getElementById("closeShowcase");
+
+  // Content blocks
+  const aboutContent = `
+    <h2>About This Site</h2>
+    <p>This site is designed to connect communities with reliable 
+    businesses and medical services. You can register organizations, 
+    explore providers, and stay updated through news and announcements.</p>
+    <ul>
+      <li>Register your business or service</li>
+      <li>Search by category or city</li>
+      <li>Stay informed with updates</li>
+      <li>Explore featured providers</li>
+    </ul>
+  `;
+
+  const policyContent = `
+    <h2>Policies</h2>
+    <p>By using this platform, you agree to the following policies:</p>
+    <h3>Data Use & Privacy</h3>
+    <p>Your registration info will be shown publicly but never sold or misused.</p>
+    <h3>User Responsibilities</h3>
+    <p>Provide accurate information, avoid offensive content, and respect others.</p>
+    <h3>Content Moderation</h3>
+    <p>Admins may remove false or harmful entries.</p>
+    <h3>Security</h3>
+    <p>We protect your data, but exercise caution when contacting providers.</p>
+  `;
+
+  // Fallback sample showcase items
+  /*const sampleShowcases = [
+    { name: "🌟 Sheraton Addis", description: "International hotel providing world-class hospitality in Addis Ababa." },
+    { name: "🏥 Washington Medical Center", description: "Trusted general healthcare services serving the community." },
+    { name: "🐟 Fishery Development Project", description: "Innovative project supporting food security and local livelihoods." }
+  ];
+
+  // Build showcase grid (dynamic + fallback)
+  async function buildShowcases() {
+    let showcasesHTML = `
+      <h2>ShowCases</h2>
+      <p>Discover highlights from our community — businesses, medical providers, and organizations that make a difference.</p>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-top:15px;">
+    `;
+
+    try {
+      const res = await fetch("/get-stored-data");
+      if (!res.ok) throw new Error("Failed to fetch showcases");
+      const data = await res.json();
+
+      const combined = [...(data.business || []), ...(data.medical || [])];
+
+      combined.slice(0, 6).forEach(item => {
+        showcasesHTML += `
+          <div style="background:#f9f9f9; padding:15px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+            <h3>${item.name}</h3>
+            <p>${item.service || "No description provided"}</p>
+            <p><small>📍 ${item.city || "Location not specified"}</small></p>
+          </div>
+        `;
+      });
+
+      if (combined.length === 0) {
+        sampleShowcases.forEach(sample => {
+          showcasesHTML += `
+            <div style="background:#f9f9f9; padding:15px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+              <h3>${sample.name}</h3>
+              <p>${sample.description}</p>
+            </div>
+          `;
+        });
+      }
+    } catch (err) {
+      console.error("Showcases fetch failed:", err);
+      sampleShowcases.forEach(sample => {
+        showcasesHTML += `
+          <div style="background:#f9f9f9; padding:15px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+            <h3>${sample.name}</h3>
+            <p>${sample.description}</p>
+          </div>
+        `;
+      });
+    }
+
+    showcasesHTML += "</div>";
+    return showcasesHTML;
+  } */
+
+  // Event bindings
+  aboutLink.addEventListener("click", function (e) {
+    e.preventDefault();
+    aboutPolicyText.innerHTML = aboutContent;
+    aboutPolicyModal.style.display = "block";
+  });
+
+  policyLink.addEventListener("click", function (e) {
+    e.preventDefault();
+    aboutPolicyText.innerHTML = policyContent;
+    aboutPolicyModal.style.display = "block";
+  });
+
+  showcaseLink.addEventListener("click", async function (e) {
+    e.preventDefault();
+    const showcaseHTML = await buildShowcases();
+    showcaseContent.innerHTML = showcaseHTML;
+    showcaseModal.style.display = "block";
+  });
+
+  // Close modals
+  aboutPolicyClose.addEventListener("click", function () {
+    aboutPolicyModal.style.display = "none";
+  });
+  showcaseClose.addEventListener("click", function () {
+    showcaseModal.style.display = "none";
+  });
+
+  window.addEventListener("click", function (e) {
+    if (e.target === aboutPolicyModal) {
+      aboutPolicyModal.style.display = "none";
+    }
+    if (e.target === showcaseModal) {
+      showcaseModal.style.display = "none";
+    }
+  });
+});
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const showcaseModal = document.getElementById("showcaseModal");
+    const uploadBtn = showcaseModal.querySelector("#uploadShowcaseBtn");
+    const uploadForm = showcaseModal.querySelector("#uploadShowcaseForm");
+    const showcaseContent = document.getElementById("showcase-content");
+    const showcaseLink = document.getElementById("showcases");
+    const showcaseClose = document.getElementById("closeShowcase");
+    const imageInput = document.getElementById("imageInput"); // file input
+    const previewContainer = document.getElementById("previewContainer"); // live preview container
+
+    const defaultShowcases = [
+        { title: "🌟 Sheraton Addis", description: "International hotel providing world-class hospitality in Addis Ababa.", image: "/images/default-hotel.jpg" },
+        { title: "🏥 Washington Medical Center", description: "Trusted general healthcare services serving the community.", image: "/images/default-hospital.jpg" },
+        { title: "🐟 Fishery Development Project", description: "Innovative project supporting food security and local livelihoods.", image: "/images/default-fishery.jpg" },
+    ];
+
+    // Live preview function
+    function updatePreview() {
+        previewContainer.innerHTML = "";
+
+        const previewCard = document.createElement("div");
+        previewCard.classList.add("showcase-card");
+
+        const file = imageInput.files[0];
+        const imageUrl = file ? URL.createObjectURL(file) : "/images/placeholder.png";
+        previewCard.style.backgroundImage = `url('${imageUrl}')`;
+
+        const overlay = document.createElement("div");
+        overlay.classList.add("showcase-overlay");
+        previewCard.appendChild(overlay);
+
+        const textContainer = document.createElement("div");
+        textContainer.classList.add("showcase-text");
+
+        const title = document.getElementById("title").value || "Preview Title";
+        const description = document.getElementById("description").value || "Preview description";
+        const authorName = document.getElementById("authorName").value || "Your Name";
+        const authorContact = document.getElementById("authorContact").value || "Contact Info";
+
+        textContainer.innerHTML = `
+            <h3>${title}</h3>
+            <p>${description}</p>
+            <small>By: ${authorName} | Contact: ${authorContact}</small>
+        `;
+
+        previewCard.appendChild(textContainer);
+        previewContainer.appendChild(previewCard);
+    }
+
+    // Render showcases
+    function renderShowcases(showcases) {
+        showcaseContent.innerHTML = "";
+
+        if (!showcases || showcases.length === 0) {
+            showcaseContent.innerHTML = "<p>No showcases available yet.</p>";
+            return;
+        }
+
+        showcases.forEach((sc) => {
+            const card = document.createElement("div");
+            card.classList.add("showcase-card");
+            card.style.backgroundImage = `url('${sc.image && sc.image.trim() !== "" ? sc.image : "/images/placeholder.png"}')`;
+
+            const overlay = document.createElement("div");
+            overlay.classList.add("showcase-overlay");
+            card.appendChild(overlay);
+
+            const textContainer = document.createElement("div");
+            textContainer.classList.add("showcase-text");
+            textContainer.innerHTML = `
+                <h3>${sc.title || "Untitled"}</h3>
+                <p>${sc.description || ""}</p>
+                <small>By: ${sc.authorName || "Unknown"} | Contact: ${sc.authorContact || "N/A"}</small>
+            `;
+            card.appendChild(textContainer);
+
+            // Delete button only visible for owner
+            if (sc.id && window.isOwner) {
+                const deleteBtn = document.createElement("button");
+                deleteBtn.textContent = "Delete";
+                deleteBtn.classList.add("delete-btn");
+                deleteBtn.onclick = async () => {
+                    if (!confirm("Are you sure you want to delete this showcase?")) return;
+                    try {
+                        const res = await fetch(`/delete-showcase/${sc.id}`, { method: "DELETE" });
+                        const result = await res.json();
+                        if (result.success) loadShowcases();
+                        else alert("❌ Failed to delete showcase: " + result.message);
+                    } catch (err) {
+                        console.error(err);
+                        alert("❌ Something went wrong while deleting.");
+                    }
+                };
+                card.appendChild(deleteBtn);
+            }
+
+            showcaseContent.appendChild(card);
+        });
+    }
+
+    async function loadShowcases() {
+        try {
+            const res = await fetch("/get-showcases");
+            const data = await res.json();
+            let showcases = data.storedShowcaseData || [];
+
+            if (showcases.length < 3) {
+                const remaining = 3 - showcases.length;
+                showcases = showcases.concat(defaultShowcases.slice(0, remaining));
+            }
+
+            renderShowcases(showcases);
+        } catch (err) {
+            console.error("Error loading showcases:", err);
+            renderShowcases([]);
+        }
+    }
+
+    // Open modal
+    showcaseLink.addEventListener("click", async function (e) {
+        e.preventDefault();
+        await loadShowcases();
+        showcaseModal.style.display = "block";
+    });
+
+    // Close modal
+    showcaseClose.addEventListener("click", function () {
+        showcaseModal.style.display = "none";
+    });
+
+    window.addEventListener("click", function (e) {
+        if (e.target === showcaseModal) {
+            showcaseModal.style.display = "none";
+        }
+    });
+
+    // Toggle upload form
+    if (uploadBtn && uploadForm) {
+        uploadBtn.addEventListener("click", function () {
+            uploadForm.style.display =
+                uploadForm.style.display === "none" || uploadForm.style.display === ""
+                    ? "block"
+                    : "none";
+        });
+    }
+
+    // Upload and live preview
+    if (uploadForm) {
+        // Live preview triggers
+        ["input", "change"].forEach(event => {
+            uploadForm.addEventListener(event, updatePreview);
+        });
+
+        uploadForm.addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            try {
+                const orgName = document.getElementById("authorName").value.trim();
+                const contactInfo = document.getElementById("authorContact").value.trim();
+
+                const regRes = await fetch("/check-registration");
+                const regData = await regRes.json();
+                const registeredData = regData.registeredData || [];
+
+                const isRegistered = registeredData.some(entry =>
+                    entry.name.trim().toLowerCase() === orgName.toLowerCase() &&
+                    ((entry.email_info && entry.email_info.trim().toLowerCase() === contactInfo.toLowerCase()) ||
+                        (entry.phone_info && entry.phone_info.trim() === contactInfo))
+                );
+
+                if (!isRegistered) {
+                    alert("⚠️ You are not registered!!");
+                    return;
+                }
+
+                const formData = new FormData(uploadForm);
+                const uploadRes = await fetch("/upload-showcase", {
+                    method: "POST",
+                    body: formData
+                });
+                const result = await uploadRes.json();
+
+                if (result.success) {
+                    alert("✅ Successfully submitted!!");
+                    uploadForm.reset();
+                    uploadForm.style.display = "none";
+                    previewContainer.innerHTML = ""; // clear preview
+                    loadShowcases();
+                } else {
+                    alert("❌ Upload failed: " + result.message);
+                }
+            } catch (err) {
+                console.error("Error:", err);
+                alert("❌ Something went wrong during submission.");
+            }
+        });
+    }
+
+    showcaseContent.classList.add("scrollable-content");
+});
+
 
 
  // Array to hold previously selected or searched cities
@@ -602,21 +881,44 @@ document.getElementById("searchButton").addEventListener("click", function () {
 });
 
 
+
 document.addEventListener("DOMContentLoaded", function () {
+    // --- Default slides ---
     const defaultSlides = [
-        { category: "Business", name: "Sheraton Addis", service: "International Hotel", location: "Ex. Taitu St.", contact_info: "09...", city: "Addis Ababa", type: "business" },
-        { category: "Medical", name: "Washington Medical center", service: "General Health", location: "Ex. Bole Rwanda Embassi", contact_info: "09...", city: "Addis Ababa", type: "medical" },
-        { category: "Business", name: "Ethiopian Consultancy", service: "Consulting", location: "Ex. ...", contact_info: "09...", city: "Adama", type: "business" },
-        { category: "Medical", name: "Smile Dental", service: "Dental Care", location: "Ex.Bole Rwanda Embassi ", contact_info: "0904222324", city: "Hawassa", type: "medical" },
-        { category: "Business", name: "Luxury Hotel", service: "International Hotel", location: "Ex. ...", contact_info: "09...", city: "Bahir Dar", type: "business" },
-        { category: "Medical", name: "Seven Dental", service: "Dental Care", location: "Golagul/22", contact_info: "09...", city: "Addis Ababa", type: "medical" },
-        { category: "Medical", name: "Ozon Medium Clinc", service: "General Health", location: "Assosa", contact_info: "09...", city: "Assosa", type: "medical" }
+        { id: "d1", category: "Business", name: "Sheraton Addis", service: "International Hotel", location: "Ex. Taitu St.", phone_info: "09...", city: "Addis Ababa", type: "business" },
+        { id: "d2", category: "Medical", name: "Washington Medical center", service: "General Health", location: "Ex. Bole Rwanda Embassi", phone_info: "09...", city: "Addis Ababa", type: "medical" },
+        { id: "d3", category: "Business", name: "Ethiopian Consultancy", service: "Consulting", location: "Ex. ...", phone_info: "09...", city: "Adama", type: "business" },
+        { id: "d4", category: "Medical", name: "Smile Dental", service: "Dental Care", location: "Ex.Bole Rwanda Embassi ", phone_info: "0904222324", city: "Hawassa", type: "medical" },
+        { id: "d5", category: "Business", name: "Luxury Hotel", service: "International Hotel", location: "Ex. ...", phone_info: "09...", city: "Bahir Dar", type: "business" },
+        { id: "d6", category: "Medical", name: "Seven Dental", service: "Dental Care", location: "Golagul/22", phone_info: "09...", city: "Addis Ababa", type: "medical" },
+        { id: "d7", category: "Medical", name: "Ozon Medium Clinc", service: "General Health", location: "Assosa", phone_info: "09...", city: "Assosa", type: "medical" }
     ];
 
     let storedMedicalData = [];
     let storedBusinessData = [];
     let slideIndex = 0;
+
+    // --- Utility: Generate unique ID ---
+    function generateId() {
+        return 'id-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
+    }
+
+    // --- City filter persistence + dynamic adding ---
+    const cityFilter = document.getElementById("cityFilter");
+    const savedCities = JSON.parse(localStorage.getItem("customCities") || "[]");
     let selectedCity = localStorage.getItem("selectedCity") || "All Cities";
+
+    function addCityOption(city) {
+        if ([...cityFilter.options].some(opt => opt.value === city)) return;
+        const option = document.createElement("option");
+        option.value = city;
+        option.textContent = city;
+        const otherOption = cityFilter.querySelector("option[value='otherCities']");
+        cityFilter.insertBefore(option, otherOption);
+    }
+
+    savedCities.forEach(c => addCityOption(c));
+    cityFilter.value = selectedCity;
 
     function formatRelativeTime(dateString) {
         const now = new Date();
@@ -625,7 +927,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (diffInSeconds < 1) return "just now";
         if (diffInSeconds < 60) return `before ${diffInSeconds} second${diffInSeconds !== 1 ? 's' : ''}`;
-        
+
         const diffInMinutes = Math.floor(diffInSeconds / 60);
         if (diffInMinutes < 60) return `before ${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''}`;
 
@@ -645,6 +947,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // --- Fetch stored data ---
     async function fetchStoredData() {
         try {
             const res = await fetch('/get-stored-data');
@@ -676,6 +979,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+
+    // --- Show slideshow ---
     function showSlides(data) {
         const slideshow = document.getElementById("slideshow");
         const dotContainer = document.getElementById("dotContainer");
@@ -684,9 +989,7 @@ document.addEventListener("DOMContentLoaded", function () {
         slideshow.innerHTML = "";
         dotContainer.innerHTML = "";
 
-        if (slideInfo) {
-            slideInfo.textContent = data[0]?.default ? "Showing default slides" : "";
-        }
+        if (slideInfo) slideInfo.textContent = data[0]?.default ? "Showing default slides" : "";
 
         data.forEach((entry, i) => {
             const slide = document.createElement("div");
@@ -697,16 +1000,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 <p><strong>Service:</strong> ${entry.service || entry.industryOrService || "N/A"}</p>
                 <p><strong>Location:</strong> ${entry.location}</p>
                 <p><strong>City:</strong> ${entry.city}</p>
-                <p><strong>Contact:</strong> ${entry.contact_info || entry.contact}</p>
+                <p><strong>Email:</strong> ${entry.email_info || entry.contact || "N/A"}</p>
+                <p><strong>Phone:</strong> ${entry.phone_info}</p>
             `;
             slideshow.appendChild(slide);
 
             const dot = document.createElement("span");
             dot.className = "dot" + (i === slideIndex ? " active" : "");
-            dot.onclick = () => {
-                slideIndex = i;
-                showSlides(data);
-            };
+            dot.onclick = () => { slideIndex = i; showSlides(data); };
             dotContainer.appendChild(dot);
         });
     }
@@ -725,67 +1026,94 @@ document.addEventListener("DOMContentLoaded", function () {
         if (slides.length === 0) return;
 
         slideIndex = slideIndex % slides.length;
-
         showSlides(slides);
         slideIndex = (slideIndex + 1) % slides.length;
     }
 
-    function renderStoredData(type) {
-        const normalizedType = (type || "").toLowerCase();
-        const isMedical = normalizedType === "medical";
+    // --- Render stored data in modal ---
+function renderStoredData(type) {
+    const normalizedType = (type || "").toLowerCase();
+    const isMedical = normalizedType === "medical";
 
-        const modalDetails = document.getElementById("categoryModalDetails");
-        const dataArr = isMedical ? storedMedicalData : storedBusinessData;
-        const selectedCat = document.getElementById(isMedical ? "medicalCategoryFilter" : "businessCategoryFilter").value;
+    const modalDetails = document.getElementById("categoryModalDetails");
+    const dataArr = isMedical ? storedMedicalData : storedBusinessData;
+    const filterDropdown = document.getElementById(isMedical ? "medicalCategoryFilter" : "businessCategoryFilter");
+    const selectedCat = filterDropdown.value;
 
-        const filtered = !selectedCat || selectedCat === "All"
-            ? dataArr
-            : dataArr.filter(e => e.category?.toLowerCase() === selectedCat.toLowerCase());
+    // Filter entries based on selected category
+    const filtered = !selectedCat || selectedCat === "All"
+        ? dataArr
+        : dataArr.filter(entry =>
+            (entry.category || "").trim().toLowerCase() === selectedCat.trim().toLowerCase()
+        );
 
-        let content = "";
+    let content = "";
 
-        if (filtered.length === 0) {
-            content += "<p>No data available.</p>";
-        } else {
-            filtered.forEach(entry => {
-                const realIndex = dataArr.indexOf(entry);
-                const heading = `<h3>${entry.type === "medical" ? "Medical Service" : "Business Organization"}</h3>`;
-                const timeDisplay = entry.createdAt ? `<p><strong>Posted:</strong> ${formatRelativeTime(entry.createdAt)}</p>` : "";
+    if (filtered.length === 0) {
+        content = "<p>No data available.</p>";
+    } else {
+        filtered.forEach((entry, realIndex) => {
+            const heading = `<h3>${entry.type === "medical" ? "Medical Service" : "Business Organization"}</h3>`;
+            const timeDisplay = entry.createdAt
+                ? `<p><strong>Posted:</strong> ${formatRelativeTime(entry.createdAt)}</p>`
+                : "";
 
-                content += `
-                    <div class="user-entry" data-index="${realIndex}">
-                        ${heading}
-                        <p><strong>Name:</strong> ${entry.name}</p>
-                        <p><strong>Industry/Service:</strong> ${entry.industryOrService}</p>
-                        <p><strong>Location:</strong> ${entry.location}</p>
-                        <p><strong>City:</strong> ${entry.city}</p>
-                        <p><strong>Contact:</strong> ${entry.contact_info}</p>
-                        ${timeDisplay}
-                        ${isOwner ? `<button class="delBtn" data-type="${normalizedType}" data-index="${realIndex}">Delete</button>` : ""}
-                        <hr>
-                    </div>
-                `;
-            });
-        }
-
-        modalDetails.innerHTML = content;
-        document.getElementById("categoryDataModal").style.display = "block";
+            content += `
+                <div class="user-entry" data-id="${entry.id}">
+                    ${heading}
+                    <p><strong>Name:</strong> ${entry.name}</p>
+                    <p><strong>Industry/Service:</strong> ${entry.industryOrService || entry.service || "N/A"}</p>
+                    <p><strong>Location:</strong> ${entry.location}</p>
+                    <p><strong>City:</strong> ${entry.city}</p>
+                    <p><strong>Email:</strong> ${entry.email_info || "N/A"}</p>
+                    <p><strong>Phone:</strong> ${entry.phone_info}</p>
+                    ${timeDisplay}
+                    ${isOwner
+                        ? `<button class="delBtn" data-type="${normalizedType}" data-index="${realIndex}" data-name="${entry.name}">Delete</button>`
+                        : ""}
+                    <hr>
+                </div>
+            `;
+        });
     }
+
+    modalDetails.innerHTML = content;
+
+    // Open modal
+    const modal = document.getElementById("categoryDataModal");
+    if (modal) modal.style.display = "block";
+}
+
 
     // Event Listeners
     document.querySelector(".category-close").onclick = () => {
         document.getElementById("categoryDataModal").style.display = "none";
     };
 
-    document.getElementById("cityFilter").onchange = function () {
-        selectedCity = this.value;
+    // --- updated city filter logic ---
+    cityFilter.onchange = function () {
+        if (this.value === "otherCities") {
+            const newCity = prompt("Enter the name of the city:");
+            if (newCity && newCity.trim() !== "") {
+                const formattedCity = newCity.trim();
+                addCityOption(formattedCity);
+                savedCities.push(formattedCity);
+                localStorage.setItem("customCities", JSON.stringify(savedCities));
+                this.value = formattedCity;
+                selectedCity = formattedCity;
+            } else {
+                this.value = selectedCity; // reset
+                return;
+            }
+        } else {
+            selectedCity = this.value;
+        }
         localStorage.setItem("selectedCity", selectedCity);
         cycleSlides();
     };
 
     document.getElementById("medicalCategoryFilter").onchange = () => renderStoredData("medical");
     document.getElementById("businessCategoryFilter").onchange = () => renderStoredData("business");
-
     document.getElementById("categoryModalDetails").addEventListener("click", function (e) {
         if (e.target.classList.contains("delBtn")) {
             const type = e.target.dataset.type;
@@ -803,27 +1131,43 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    // Registration form submission
     document.getElementById("registrationForm").addEventListener("submit", function (event) {
         event.preventDefault();
 
         const name = document.getElementById("name").value;
         const type = document.getElementById("type").value;
-        const category = type === "medical"
+        let category = type === "medical"
             ? document.getElementById("medicalCategory").value
             : document.getElementById("businessCategory").value;
+
         const industryOrService = document.getElementById("industryOrService").value;
         const licenseNumber = document.getElementById("licenseNumber").value;
         const location = document.getElementById("location").value;
-        const contact_info = document.getElementById("contact_info").value;
-        const city = document.getElementById("regionFilter").value;
+        const email_info = document.getElementById("email_info").value;
+        const phone_info = document.getElementById("phone_info").value;
+        let city = document.getElementById("regionFilter").value;
 
-        if (!name || !industryOrService || !location || !contact_info || !city) {
+        if (type === "medical" && category === "other") {
+            const custom = document.getElementById("medicalOther").value;
+            if (custom) category = custom;
+        }
+        if (type === "business" && category === "other") {
+            const custom = document.getElementById("businessOther").value;
+            if (custom) category = custom;
+        }
+        if (city === "addOther") {
+            const customCity = document.getElementById("cityOther").value;
+            if (customCity) city = customCity;
+        }
+
+        if (!name || !industryOrService || !location || !email_info || !phone_info || !city) {
             alert("Please fill in all required fields.");
             return;
         }
 
         const newEntry = {
-            name, category, industryOrService, licenseNumber, location, contact_info, city, type,
+            name, category, industryOrService, licenseNumber, location, email_info, phone_info, city, type,
             createdAt: new Date().toISOString()
         };
 
@@ -870,497 +1214,577 @@ document.addEventListener("DOMContentLoaded", function () {
     setInterval(cycleSlides, 3000);
 });
 
-
-
+// ------------------------------
+// Extra "Other" input fields
+// ------------------------------
 document.addEventListener("DOMContentLoaded", function () {
-    // Select form elements
     const typeSelect = document.getElementById("type");
     const medicalCategory = document.getElementById("medicalCategory");
     const businessCategory = document.getElementById("businessCategory");
+    const regionFilter = document.getElementById("regionFilter");
 
-    // Check if elements exist to prevent errors
-    if (typeSelect && medicalCategory && businessCategory) {
-        // Create input fields dynamically for "Other" selections
-        const medicalOtherInput = document.createElement("input");
-        medicalOtherInput.type = "text";
-        medicalOtherInput.id = "medicalOther";
-        medicalOtherInput.placeholder = "Specify Medical Category";
-        medicalOtherInput.style.display = "none"; // Hidden by default
+    const medicalOtherInput = document.createElement("input");
+    medicalOtherInput.type = "text";
+    medicalOtherInput.id = "medicalOther";
+    medicalOtherInput.placeholder = "Specify Medical Category";
+    medicalOtherInput.style.display = "none";
 
-        const businessOtherInput = document.createElement("input");
-        businessOtherInput.type = "text";
-        businessOtherInput.id = "businessOther";
-        businessOtherInput.placeholder = "Specify Business Category";
-        businessOtherInput.style.display = "none"; // Hidden by default
+    const businessOtherInput = document.createElement("input");
+    businessOtherInput.type = "text";
+    businessOtherInput.id = "businessOther";
+    businessOtherInput.placeholder = "Specify Business Category";
+    businessOtherInput.style.display = "none";
 
-        // Insert inputs after their respective select elements
-        medicalCategory.parentNode.insertBefore(medicalOtherInput, medicalCategory.nextSibling);
-        businessCategory.parentNode.insertBefore(businessOtherInput, businessCategory.nextSibling);
+    const cityOtherInput = document.createElement("input");
+    cityOtherInput.type = "text";
+    cityOtherInput.id = "cityOther";
+    cityOtherInput.placeholder = "Enter City Name";
+    cityOtherInput.style.display = "none";
 
-        // Event Listener for Type Selection (Enable/Disable categories)
-        typeSelect.addEventListener("change", function () {
-            if (typeSelect.value === "medical") {
-                medicalCategory.disabled = false;
-                businessCategory.disabled = true;
-                businessCategory.value = ""; // Reset business category selection
-                businessOtherInput.style.display = "none"; // Hide "Other" input for business
-                businessOtherInput.required = false;
-            } else if (typeSelect.value === "business") {
-                medicalCategory.disabled = true;
-                businessCategory.disabled = false;
-                medicalCategory.value = ""; // Reset medical category selection
-                medicalOtherInput.style.display = "none"; // Hide "Other" input for medical
-                medicalOtherInput.required = false;
-            } else {
-                // Reset both if no selection
-                medicalCategory.disabled = true;
-                businessCategory.disabled = true;
-                medicalOtherInput.style.display = "none";
-                businessOtherInput.style.display = "none";
-            }
-        });
+    medicalCategory.parentNode.insertBefore(medicalOtherInput, medicalCategory.nextSibling);
+    businessCategory.parentNode.insertBefore(businessOtherInput, businessCategory.nextSibling);
+    regionFilter.parentNode.insertBefore(cityOtherInput, regionFilter.nextSibling);
 
-        // Event Listener for Medical Category Selection
-        medicalCategory.addEventListener("change", function () {
-            if (medicalCategory.value === "other") {
-                medicalOtherInput.style.display = "block";
-                medicalOtherInput.required = true;
-            } else {
-                medicalOtherInput.style.display = "none";
-                medicalOtherInput.required = false;
-                medicalOtherInput.value = ""; // Clear input when not needed
-            }
-        });
+    typeSelect.addEventListener("change", function () {
+        if (typeSelect.value === "medical") {
+            medicalCategory.disabled = false;
+            businessCategory.disabled = true;
+            businessCategory.value = "";
+            businessOtherInput.style.display = "none";
+            businessOtherInput.required = false;
+        } else if (typeSelect.value === "business") {
+            medicalCategory.disabled = true;
+            businessCategory.disabled = false;
+            medicalCategory.value = "";
+            medicalOtherInput.style.display = "none";
+            medicalOtherInput.required = false;
+        } else {
+            medicalCategory.disabled = true;
+            businessCategory.disabled = true;
+            medicalOtherInput.style.display = "none";
+            businessOtherInput.style.display = "none";
+        }
+    });
 
-        // Event Listener for Business Category Selection
-        businessCategory.addEventListener("change", function () {
-            if (businessCategory.value === "others") {
-                businessOtherInput.style.display = "block";
-                businessOtherInput.required = true;
-            } else {
-                businessOtherInput.style.display = "none";
-                businessOtherInput.required = false;
-                businessOtherInput.value = ""; // Clear input when not needed
-            }
-        });
+    medicalCategory.addEventListener("change", function () {
+        if (medicalCategory.value === "other") {
+            medicalOtherInput.style.display = "block";
+            medicalOtherInput.required = true;
+        } else {
+            medicalOtherInput.style.display = "none";
+            medicalOtherInput.required = false;
+            medicalOtherInput.value = "";
+        }
+    });
 
-        // Event Listener for Form Submission
-        const registrationForm = document.getElementById("registrationForm");
-        registrationForm.addEventListener("submit", function (event) {
-            event.preventDefault(); // Prevent form submission for now (for demonstration)
+    businessCategory.addEventListener("change", function () {
+        if (businessCategory.value === "other") {
+            businessOtherInput.style.display = "block";
+            businessOtherInput.required = true;
+        } else {
+            businessOtherInput.style.display = "none";
+            businessOtherInput.required = false;
+            businessOtherInput.value = "";
+        }
+    });
 
-            // Get the selected category value
-            let medicalSelected = medicalCategory.value;
-            let businessSelected = businessCategory.value;
+    regionFilter.addEventListener("change", function () {
+        if (regionFilter.value === "addOther") {
+            cityOtherInput.style.display = "block";
+            cityOtherInput.required = true;
+        } else {
+            cityOtherInput.style.display = "none";
+            cityOtherInput.required = false;
+            cityOtherInput.value = "";
+        }
+    });
+});
 
-            // Get the custom input values
-            const customMedical = medicalOtherInput.value;
-            const customBusiness = businessOtherInput.value;
+// ------------------------------
+// Registration link toggle
+// ------------------------------
+document.addEventListener("DOMContentLoaded", function () {
+    const registerLink = document.getElementById("registeruser");
+    const registrationContainer = document.getElementById("registrationContainer");
+    const registrationForm = document.getElementById("registrationForm");
+    const closeBtn = document.getElementById("closeRegistration");
 
-            // Replace "Other" or "Others" with custom input if available
-            if (medicalSelected === "other" && customMedical) {
-                medicalSelected = customMedical; // Save the user-specified title for medical category
-            }
+    registerLink.addEventListener("click", function (e) {
+        e.preventDefault();
+        if (registrationContainer.style.display === "none" || registrationContainer.style.display === "") {
+            registrationContainer.style.display = "block";
+        } else {
+            registrationContainer.style.display = "none";
+        }
+    });
 
-            if (businessSelected === "others" && customBusiness) {
-                businessSelected = customBusiness; // Save the user-specified title for business category
-            }
+    closeBtn.addEventListener("click", function () {
+        registrationContainer.style.display = "none";
+        registrationForm.reset();
+    });
 
-            // Prepare the data to display in the model window
-            const displayTitle = `Type: ${typeSelect.value === "medical" ? "Medical" : "Business"} | Category: ${medicalSelected || businessSelected}`;
-
-            // Assume there's a modal window or an element where we want to display this data
-            const modelWindow = document.getElementById("modelWindow"); // Your model window element
-            if (modelWindow) {
-                modelWindow.innerHTML = `<p>${displayTitle}</p>`;
-            }
-
-            // Log data for testing purposes (you can remove this later)
-            console.log(displayTitle);
-        });
-    }
+    registrationForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        registrationContainer.style.display = "none";
+        registrationForm.reset();
+    });
 });
 
 
-let isOwner = false;
 
-// Check session status on DOM load
-document.addEventListener("DOMContentLoaded", async function () {
-    try {
-        const res = await fetch('/check-owner');
-        const data = await res.json();
-        isOwner = data.isOwner;
-        toggleOwnerUI(isOwner);
-    } catch (err) {
-        console.error("Error checking owner status:", err);
-        alert("Failed to check login status. Please try again.");
-    }
+/* ===========================
+   OWNER / AUTH STATE
+   =========================== */
+window.isOwner = false; // single source of truth
+
+// On first paint, check owner state and update UI
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const res = await fetch("/check-owner");
+    const data = await res.json();
+    window.isOwner = !!data.isOwner;
+    toggleOwnerUI(window.isOwner);
+  } catch (err) {
+    console.error("Error checking owner status:", err);
+    // Don't block UI; just show non-owner state
+    toggleOwnerUI(false);
+  }
 });
 
-// Login Function
-function login() {
-    const usernameInput = document.getElementById("username");
-    const passwordInput = document.getElementById("password");
-    const loginBtn = document.getElementById("loginButton");
+// Login (kept compatible with your HTML IDs)
+async function login() {
+  const usernameInput = document.getElementById("username");
+  const passwordInput = document.getElementById("password");
+  const loginBtn = document.getElementById("loginButton");
 
-    const username = usernameInput?.value.trim();
-    const password = passwordInput?.value.trim();
+  const username = usernameInput?.value.trim();
+  const password = passwordInput?.value.trim();
 
-    if (!username || !password) {
-        alert("Please enter both username and password.");
-        return;
+  if (!username || !password) {
+    alert("Please enter both username and password.");
+    return;
+  }
+
+  if (loginBtn) loginBtn.disabled = true;
+
+  try {
+    const res = await fetch("/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+
+    if (usernameInput) usernameInput.value = "";
+    if (passwordInput) passwordInput.value = "";
+
+    if (data.success) {
+      window.isOwner = true;
+      toggleOwnerUI(true);
+      alert("Logged in Successfully");
+    } else {
+      alert("Login failed: Invalid username or password.");
     }
-
-    loginBtn.disabled = true;
-
-    fetch('/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-    })
-        .then(res => res.json())
-        .then(data => {
-            console.log("Login response:", data);
-            usernameInput.value = "";
-            passwordInput.value = "";
-
-            if (data.success) {
-                isOwner = true;
-                toggleOwnerUI(true);
-                alert("Logged in Successfully");
-            } else {
-                alert("Login failed: Invalid username or password.");
-            }
-        })
-        .catch(err => {
-            console.error("Login error:", err);
-            alert("An error occurred during login.");
-        })
-        .finally(() => {
-            loginBtn.disabled = false;
-        });
+  } catch (err) {
+    console.error("Login error:", err);
+    alert("An error occurred during login.");
+  } finally {
+    if (loginBtn) loginBtn.disabled = false;
+  }
 }
 
-// Logout Function
-function logout() {
-    fetch('/logout', { method: 'POST' })
-        .then(res => res.json())
-        .then(data => {
-            console.log("Logout response:", data);
-            if (data.success) {
-                isOwner = false;
-                toggleOwnerUI(false);
+// Logout
+async function logout() {
+  try {
+    const res = await fetch("/logout", { method: "POST" });
+    const data = await res.json();
+    if (data.success) {
+      window.isOwner = false;
+      toggleOwnerUI(false);
 
-                const usernameInput = document.getElementById("username");
-                const passwordInput = document.getElementById("password");
+      const usernameInput = document.getElementById("username");
+      const passwordInput = document.getElementById("password");
+      if (usernameInput) usernameInput.value = "";
+      if (passwordInput) passwordInput.value = "";
 
-                if (usernameInput) usernameInput.value = "";
-                if (passwordInput) passwordInput.value = "";
-
-                alert("Logged out");
-                window.location.reload(); // Optional for reset
-            } else {
-                alert("Logout failed.");
-            }
-        })
-        .catch(err => {
-            console.error('Logout error:', err);
-            alert("An error occurred during logout.");
-        });
+      alert("Logged out");
+      // optional hard reset:
+      window.location.reload();
+    } else {
+      alert("Logout failed.");
+    }
+  } catch (err) {
+    console.error("Logout error:", err);
+    alert("An error occurred during logout.");
+  }
 }
 
-// Toggle UI based on Owner status
+// Show/hide owner-only controls everywhere (including chat)
 function toggleOwnerUI(isOwner) {
-    const advertContainer = document.getElementById("advertInputContainer");
-    const deleteAdvert = document.getElementById("deleteAdvertBtn");
-    const noticeContainer = document.getElementById("noticeInputContainer");
-    const deleteNotice = document.getElementById("deleteNoticeBtn");
+  // Your existing controls
+  const advertContainer = document.getElementById("advertInputContainer");
+  const deleteAdvert = document.getElementById("deleteAdvertBtn");
+  const noticeContainer = document.getElementById("noticeInputContainer");
+  const deleteNotice = document.getElementById("deleteNoticeBtn");
 
-    if (advertContainer) advertContainer.style.display = isOwner ? "inline-block" : "none";
-    if (deleteAdvert) deleteAdvert.style.display = isOwner ? "inline-block" : "none";
-    if (noticeContainer) noticeContainer.style.display = isOwner ? "inline-block" : "none";
-    if (deleteNotice) deleteNotice.style.display = isOwner ? "inline-block" : "none";
+  if (advertContainer) advertContainer.style.display = isOwner ? "inline-block" : "none";
+  if (deleteAdvert) deleteAdvert.style.display = isOwner ? "inline-block" : "none";
+  if (noticeContainer) noticeContainer.style.display = isOwner ? "inline-block" : "none";
+  if (deleteNotice) deleteNotice.style.display = isOwner ? "inline-block" : "none";
 
-    const deleteBtns = document.querySelectorAll('.delete-btn');
-    const sendBtns = document.querySelectorAll('.send-btn');
+  // Global buttons that you already use elsewhere
+  const deleteBtns = document.querySelectorAll(".delete-btn");
+  const sendBtns = document.querySelectorAll(".send-btn");
+  deleteBtns.forEach(btn => (btn.style.display = isOwner ? "inline-block" : "none"));
+  sendBtns.forEach(btn => (btn.style.display = isOwner ? "inline-block" : "none"));
 
-    deleteBtns.forEach(btn => btn.style.display = isOwner ? "inline-block" : "none");
-    sendBtns.forEach(btn => btn.style.display = isOwner ? "inline-block" : "none");
+  // Chat-specific buttons (edit/delete in message threads)
+  document.querySelectorAll(".message-thread, .comment").forEach(msg => {
+    const del = msg.querySelector(".delete-button");
+    const edit = msg.querySelector(".edit-button");
+    if (del) del.style.display = isOwner ? "inline-block" : "none";
+    if (edit) edit.style.display = isOwner ? "inline-block" : "none";
+  });
 }
 
-// --- Initialize Socket.IO connection ---
-const socket = io();
+/* ===========================
+   SOCKET.IO + REALTIME UI
+   =========================== */
 
-// --- Viewer Count ---
-socket.on('viewerCountUpdate', (count) => {
-    const viewerElement = document.getElementById('viewerCount');
-    if (viewerElement) viewerElement.textContent = `Viewers: ${count}`;
+// Initialize Socket.IO once
+const socket = io({ transports: ["polling", "websocket"] });
+
+// Persist a friendly username for continuity
+function getOrCreateUsername() {
+  const key = "mbd_username";
+  let name = localStorage.getItem(key);
+  if (!name) {
+    name = "Guest" + Math.floor(Math.random() * 10000);
+    localStorage.setItem(key, name);
+  }
+  return name;
+}
+const username = getOrCreateUsername();
+
+// Minimal UA detection (kept as-is)
+function detectDevice(userAgent) {
+  const ua = userAgent.toLowerCase();
+  if (ua.includes("iphone")) return "iPhone";
+  if (ua.includes("android")) return "Android Phone";
+  if (ua.includes("ipad")) return "iPad";
+  if (ua.includes("windows")) return "Windows PC";
+  if (ua.includes("mac")) return "Mac";
+  if (ua.includes("linux")) return "Linux PC";
+  return "Unknown Device";
+}
+const deviceInfo = detectDevice(navigator.userAgent);
+
+// Join chat when Socket is ready
+socket.emit("joinChat", { username, deviceInfo });
+
+// Leave cleanly on unload
+window.addEventListener("beforeunload", () => {
+  socket.emit("leaveChat", username);
 });
 
-// --- Follower Count and Follow Button ---
-const followButtonHandler = function () {
-    const followButton = document.getElementById('followBtn');
-    if (followButton) {
-        const isFollowing = followButton.textContent === 'Follow';
-        socket.emit(isFollowing ? 'follow' : 'unfollow');
-        followButton.textContent = isFollowing ? 'Unfollow' : 'Follow';
-        alert(isFollowing ? 'You followed the website!' : 'You unfollowed the website!');
-    }
-};
+// Viewer count
+socket.on("viewerCountUpdate", count => {
+  const el = document.getElementById("viewerCount");
+  if (el) el.textContent = `Viewers: ${count}`;
+});
 
+// Followers
+function followButtonHandler() {
+  const followButton = document.getElementById("followBtn");
+  if (!followButton) return;
+  const isFollowing = followButton.textContent.trim().toLowerCase() === "follow";
+  socket.emit(isFollowing ? "follow" : "unfollow");
+  followButton.textContent = isFollowing ? "Unfollow" : "Follow";
+  alert(isFollowing ? "You followed the website!" : "You unfollowed the website!");
+}
 function attachFollowButtonListener() {
-    const followButton = document.getElementById('followBtn');
-    if (followButton) {
-        followButton.removeEventListener('click', followButtonHandler);
-        followButton.addEventListener('click', followButtonHandler);
-    }
+  const followButton = document.getElementById("followBtn");
+  if (followButton) {
+    followButton.removeEventListener("click", followButtonHandler);
+    followButton.addEventListener("click", followButtonHandler);
+  }
 }
 attachFollowButtonListener();
 
-socket.on('followerCountUpdate', (count) => {
-    const followerElement = document.getElementById('followerCount');
-    if (followerElement) followerElement.textContent = `Followers: ${count}`;
+socket.on("followerCountUpdate", count => {
+  const el = document.getElementById("followerCount");
+  if (el) el.textContent = `Followers: ${count}`;
 });
 
-// --- Device & User Tracking ---
-const username = 'Guest' + Math.floor(Math.random() * 10000);
-const deviceInfo = detectDevice(navigator.userAgent);
-socket.emit('joinChat', { username, deviceInfo });
-
-window.addEventListener('beforeunload', () => {
-    socket.emit('leaveChat', username);
+// Active chatters
+socket.on("activeChattersUpdate", chatters => {
+  const chattersList = document.getElementById("chattersList");
+  if (!chattersList) return;
+  chattersList.textContent =
+    chatters && chatters.length
+      ? chatters.map(c => `${c.username} (${c.deviceInfo})`).join(", ")
+      : "None";
 });
 
-function detectDevice(userAgent) {
-    const ua = userAgent.toLowerCase();
-    if (ua.includes('iphone')) return 'iPhone';
-    if (ua.includes('android')) return 'Android Phone';
-    if (ua.includes('ipad')) return 'iPad';
-    if (ua.includes('windows')) return 'Windows PC';
-    if (ua.includes('mac')) return 'Mac';
-    if (ua.includes('linux')) return 'Linux PC';
-    return 'Unknown Device';
-}
+/* ===========================
+   CHAT UI + MESSAGES
+   =========================== */
 
-// --- Active Chatters ---
-socket.on('activeChattersUpdate', (chatters) => {
-    const chattersList = document.getElementById('chattersList');
-    if (chattersList) {
-        chattersList.textContent = chatters.length > 0
-            ? chatters.map(c => `${c.username} (${c.deviceInfo})`).join(', ')
-            : 'None';
-    }
-});
-
-// --- Messaging UI Setup ---
 document.addEventListener("DOMContentLoaded", () => {
-    const messageBox = document.getElementById("messageBox");
-    const messageIcon = document.getElementById("messageIcon");
-    const closeButton = document.querySelector(".message-button-close");
-    const messageInput = document.getElementById("messageInput");
-    const sendMessage = document.getElementById("sendMessage");
-    const messageContent = document.getElementById("messageContent");
+  const messageBox = document.getElementById("messageBox");
+  const messageIcon = document.getElementById("messageIcon");
+  const closeButton = document.querySelector(".message-button-close");
+  const messageInput = document.getElementById("messageInput");
+  const sendMessageBtn = document.getElementById("sendMessage");
+  const messageContent = document.getElementById("messageContent");
 
-    messageIcon?.addEventListener("click", () => messageBox.style.display = "flex");
-    closeButton?.addEventListener("click", () => messageBox.style.display = "none");
+  // Safeguard if chat UI not present
+  if (!messageContent) return;
 
-    sendMessage?.addEventListener("click", sendMainMessage);
+  messageIcon?.addEventListener("click", () => (messageBox.style.display = "flex"));
+  closeButton?.addEventListener("click", () => (messageBox.style.display = "none"));
 
-    messageInput?.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            sendMainMessage();
-        }
-    });
-
-    function sendMainMessage() {
-        const text = messageInput?.value.trim();
-        if (text) {
-            socket.emit("sendMessage", {
-                text,
-                messageId: generateUniqueId(),
-                sender: username
-            });
-            messageInput.value = "";
-        }
+  sendMessageBtn?.addEventListener("click", sendMainMessage);
+  messageInput?.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMainMessage();
     }
+  });
 
-    function generateUniqueId() {
-        return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    }
+  function sendMainMessage() {
+    const text = messageInput?.value.trim();
+    if (!text) return;
 
-    // --- Render Messages & Replies ---
-    function createMessageElement(text, isReply = false, sender = 'Someone', messageId = '', timestamp = Date.now()) {
-        const container = document.createElement('div');
-        container.classList.add(isReply ? "comment" : "message-thread");
-        container.dataset.messageId = messageId;
-        container.dataset.timestamp = timestamp;
-
-        const messageText = document.createElement("p");
-        messageText.classList.add("message-text");
-        messageText.textContent = isReply ? `${sender}: ${text}` : text;
-
-        const timeSpan = document.createElement("span");
-        timeSpan.classList.add("message-time");
-        timeSpan.textContent = ` (${formatTimeAgo(timestamp)})`;
-        messageText.appendChild(timeSpan);
-        container.appendChild(messageText);
-
-        // Buttons
-        const buttonsWrapper = document.createElement("div");
-        buttonsWrapper.classList.add("message-buttons");
-        buttonsWrapper.style.cssText = "display: flex; justify-content: flex-end; gap: 5px;";
-
-        const replyBtn = createButton("Reply...", "reply-button");
-        const editBtn = createButton("Edit", "edit-button");
-        const deleteBtn = createButton("Delete", "delete-button");
-
-        if (isOwner) buttonsWrapper.appendChild(deleteBtn);
-        buttonsWrapper.appendChild(replyBtn);
-        buttonsWrapper.appendChild(editBtn);
-        container.appendChild(buttonsWrapper);
-
-        // Reply Box
-        const replyBox = document.createElement("div");
-        replyBox.classList.add("reply-box");
-        replyBox.style.display = "none";
-
-        const replyInput = document.createElement("textarea");
-        replyInput.classList.add("reply-input");
-        replyInput.placeholder = "Write a reply...";
-        replyBox.appendChild(replyInput);
-
-        const replySend = createButton("Send Reply", "reply-send");
-        replyBox.appendChild(replySend);
-        container.appendChild(replyBox);
-
-        // Replies container
-        const repliesContainer = document.createElement("div");
-        repliesContainer.classList.add("replies-container");
-        container.appendChild(repliesContainer);
-
-        // Event Handlers
-        replyBtn.addEventListener("click", () => {
-            replyBox.style.display = replyBox.style.display === "none" ? "block" : "none";
-            replyInput.focus();
-        });
-
-        replyInput.addEventListener("keydown", (e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                const replyText = replyInput.value.trim();
-                if (replyText) {
-                    socket.emit('sendReply', { replyText, messageId });
-                    replyInput.value = "";
-                    replyBox.style.display = "none";
-                }
-            }
-        });
-
-        deleteBtn.addEventListener("click", () => {
-            if (confirm("Are you sure you want to delete this message?")) {
-                socket.emit('deleteMessage', { messageId });
-                container.remove();
-            }
-        });
-
-        editBtn.addEventListener("click", () => {
-            const editTextarea = document.createElement("textarea");
-            editTextarea.value = text;
-            editTextarea.classList.add("edit-textarea");
-
-            const saveBtn = createButton("Save", "save-button");
-            const cancelBtn = createButton("Cancel", "cancel-button");
-
-            container.innerHTML = "";
-            container.append(editTextarea, saveBtn, cancelBtn);
-
-            saveBtn.addEventListener("click", () => {
-                const newText = editTextarea.value.trim();
-                if (newText) {
-                    socket.emit('updateMessage', { newText, messageId });
-                    const updated = createMessageElement(newText, true, sender, messageId, Date.now());
-                    container.replaceWith(updated);
-                }
-            });
-
-            cancelBtn.addEventListener("click", () => {
-                const restored = createMessageElement(text, isReply, sender, messageId, timestamp);
-                container.replaceWith(restored);
-            });
-        });
-
-        return container;
-    }
-
-    function createButton(text, className) {
-        const btn = document.createElement("button");
-        btn.textContent = text;
-        btn.classList.add(className);
-        return btn;
-    }
-
-    // --- Message Socket Events ---
-    socket.on('loadMessages', (messages) => {
-        messageContent.innerHTML = '';
-        messages.forEach(({ text, sender, messageId, timestamp, replies }) => {
-            const messageEl = createMessageElement(text, false, sender, messageId, timestamp);
-            messageContent.appendChild(messageEl);
-
-            const replyContainer = messageEl.querySelector(".replies-container");
-            replies?.forEach(({ replyText, sender: replySender, timestamp: replyTime }) => {
-                const replyEl = createMessageElement(replyText, true, replySender, messageId, replyTime);
-                replyContainer?.appendChild(replyEl);
-            });
-        });
+    socket.emit("sendMessage", {
+      text,
+      messageId: generateUniqueId(),
+      sender: username,
+      timestamp: Date.now()
     });
 
-    socket.on('newMessage', ({ text, sender, messageId, timestamp }) => {
-        const newMessage = createMessageElement(text, false, sender, messageId, timestamp);
-        messageContent.appendChild(newMessage);
-    });
+    if (messageInput) messageInput.value = "";
+  }
 
-    socket.on('newReply', ({ replyText, sender, messageId, timestamp }) => {
-        const reply = createMessageElement(replyText, true, sender, messageId, timestamp);
-        const parent = document.querySelector(`[data-message-id='${messageId}'] .replies-container`);
-        parent?.appendChild(reply);
-    });
+  function generateUniqueId() {
+    return `msg-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+  }
 
-    socket.on('updateMessage', ({ newText, messageId }) => {
-        const msg = document.querySelector(`[data-message-id="${messageId}"]`);
-        const textNode = msg?.querySelector(".message-text")?.childNodes[0];
-        if (msg?.classList.contains("comment") && textNode) {
-            textNode.nodeValue = newText;
-        }
-    });
-});
-
-function formatTimeAgo(timestamp) {
+  // Time formatting
+  function formatTimeAgo(timestamp) {
     const now = Date.now();
     const diff = now - timestamp;
-
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(diff / (1000 * 60));
-    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const s = Math.floor(diff / 1000);
+    const m = Math.floor(diff / (1000 * 60));
+    const h = Math.floor(diff / (1000 * 60 * 60));
     const oneDay = 24 * 60 * 60 * 1000;
 
-    if (diff < 1000) return 'just now';
-    if (diff < 60000) return `${seconds} second${seconds !== 1 ? 's' : ''} ago`;
-    if (diff < 3600000) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
-    if (diff < oneDay) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+    if (diff < 1000) return "just now";
+    if (diff < 60000) return `${s} second${s !== 1 ? "s" : ""} ago`;
+    if (diff < 3600000) return `${m} minute${m !== 1 ? "s" : ""} ago`;
+    if (diff < oneDay) return `${h} hour${h !== 1 ? "s" : ""} ago`;
 
-    // If 24+ hours, show exact date
     const date = new Date(timestamp);
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    return date.toLocaleDateString(undefined, options);
-}
-// --- Update Times Periodically ---
-setInterval(() => {
-    document.querySelectorAll(".message-thread, .comment").forEach(msg => {
-        const timestamp = parseInt(msg.dataset.timestamp, 10);
-        const timeSpan = msg.querySelector(".message-time");
-        if (timestamp && timeSpan) {
-            timeSpan.textContent = ` (${formatTimeAgo(timestamp)})`;
-        }
+    return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  }
+
+  // Build a message (thread or reply)
+  function createMessageElement(text, isReply = false, sender = "Someone", messageId = "", timestamp = Date.now()) {
+    const container = document.createElement("div");
+    container.classList.add(isReply ? "comment" : "message-thread");
+    container.dataset.messageId = messageId;
+    container.dataset.timestamp = `${timestamp}`;
+
+    // Text line
+    const p = document.createElement("p");
+    p.classList.add("message-text");
+    const senderLabel = sender === username ? "You" : sender;
+    p.textContent = isReply ? `${senderLabel}: ${text}` : `${senderLabel}: ${text}`;
+
+
+    // Time chip
+    const timeSpan = document.createElement("span");
+    timeSpan.classList.add("message-time");
+    timeSpan.textContent = ` (${formatTimeAgo(timestamp)})`;
+    p.appendChild(timeSpan);
+
+    container.appendChild(p);
+
+    // Buttons
+    const buttons = document.createElement("div");
+    buttons.classList.add("message-buttons");
+    buttons.style.cssText = "display:flex;justify-content:flex-end;gap:5px;";
+
+    const replyBtn = createButton("Reply...", "reply-button");
+    const editBtn = createButton("Edit", "edit-button");
+    const deleteBtn = createButton("Delete", "delete-button");
+
+    // Owner-only visibility (syncs with toggleOwnerUI)
+    if (window.isOwner) {
+      buttons.appendChild(deleteBtn);
+      buttons.appendChild(editBtn);
+    } else {
+      editBtn.style.display = "none";
+      deleteBtn.style.display = "none";
+    }
+
+    buttons.appendChild(replyBtn);
+    container.appendChild(buttons);
+
+    // Reply box
+    const replyBox = document.createElement("div");
+    replyBox.classList.add("reply-box");
+    replyBox.style.display = "none";
+
+    const replyInput = document.createElement("textarea");
+    replyInput.classList.add("reply-input");
+    replyInput.placeholder = "Write a reply...";
+    replyBox.appendChild(replyInput);
+
+    const replySend = createButton("Send Reply", "reply-send");
+    replyBox.appendChild(replySend);
+    container.appendChild(replyBox);
+
+    // Replies container
+    const replies = document.createElement("div");
+    replies.classList.add("replies-container");
+    container.appendChild(replies);
+
+    // Events
+    replyBtn.addEventListener("click", () => {
+      replyBox.style.display = replyBox.style.display === "none" ? "block" : "none";
+      replyInput.focus();
     });
-}, 60000);
+
+    replyInput.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendReply();
+      }
+    });
+    replySend.addEventListener("click", sendReply);
+
+    function sendReply() {
+      const replyText = replyInput.value.trim();
+      if (!replyText) return;
+      socket.emit("sendReply", { replyText, messageId, timestamp: Date.now() });
+      replyInput.value = "";
+      replyBox.style.display = "none";
+    }
+
+    deleteBtn.addEventListener("click", () => {
+      if (!window.isOwner) return;
+      if (confirm("Are you sure you want to delete this message?")) {
+        socket.emit("deleteMessage", { messageId });
+        container.remove();
+      }
+    });
+
+    editBtn.addEventListener("click", () => {
+      if (!window.isOwner) return;
+
+      // Preserve identifiers
+      const oldText = text;
+      const oldTimestamp = timestamp;
+
+      // Inline editor (minimal DOM churn)
+      const editor = document.createElement("textarea");
+      editor.classList.add("edit-textarea");
+      editor.value = isReply ? oldText : oldText; // same text; prefix is rendered by UI, not stored
+      const saveBtn = createButton("Save", "save-button");
+      const cancelBtn = createButton("Cancel", "cancel-button");
+
+      // Clear only content children (keep dataset attributes)
+      while (container.firstChild) container.removeChild(container.firstChild);
+      container.append(editor, saveBtn, cancelBtn);
+
+      saveBtn.addEventListener("click", () => {
+        const newText = editor.value.trim();
+        if (!newText) return;
+        socket.emit("updateMessage", { newText, messageId });
+
+        // Rebuild node with updated text (keep same IDs)
+        const updated = createMessageElement(newText, isReply, sender, messageId, Date.now());
+        container.replaceWith(updated);
+      });
+
+      cancelBtn.addEventListener("click", () => {
+        const restored = createMessageElement(oldText, isReply, sender, messageId, oldTimestamp);
+        container.replaceWith(restored);
+      });
+    });
+
+    return container;
+  }
+
+  function createButton(text, className) {
+    const btn = document.createElement("button");
+    btn.textContent = text;
+    btn.classList.add(className);
+    return btn;
+  }
+
+  // Socket handlers for messages
+  socket.on("loadMessages", msgs => {
+    messageContent.innerHTML = "";
+    (msgs || []).forEach(({ text, sender, messageId, timestamp, replies }) => {
+      const thread = createMessageElement(text, false, sender, messageId, timestamp);
+      messageContent.appendChild(thread);
+
+      const repliesContainer = thread.querySelector(".replies-container");
+      (replies || []).forEach(({ replyText, sender: replySender, timestamp: replyTime }) => {
+        const replyEl = createMessageElement(replyText, true, replySender, messageId, replyTime);
+        repliesContainer?.appendChild(replyEl);
+      });
+    });
+
+    // Re-apply owner visibility after bulk render
+    toggleOwnerUI(window.isOwner);
+  });
+
+  socket.on("newMessage", ({ text, sender, messageId, timestamp }) => {
+    const thread = createMessageElement(text, false, sender, messageId, timestamp);
+    messageContent.appendChild(thread);
+    toggleOwnerUI(window.isOwner);
+  });
+
+  socket.on("newReply", ({ replyText, sender, messageId, timestamp }) => {
+    const parentReplies = document.querySelector(
+      `[data-message-id='${messageId}'] .replies-container`
+    );
+    if (!parentReplies) return;
+    const reply = createMessageElement(replyText, true, sender, messageId, timestamp);
+    parentReplies.appendChild(reply);
+    toggleOwnerUI(window.isOwner);
+  });
+
+  socket.on("updateMessage", ({ newText, messageId }) => {
+    const el = document.querySelector(`[data-message-id='${messageId}']`);
+    if (!el) return;
+    const textNode = el.querySelector(".message-text");
+    if (!textNode) return;
+
+    // If it's a reply, keep the "sender: " prefix visually (we don’t know it here; simplest is rebuild)
+    const isReply = el.classList.contains("comment");
+    const senderPrefix = isReply ? (textNode.textContent.split(":")[0] || "Someone") : null;
+
+    // Rebuild content text safely
+    textNode.textContent = isReply && senderPrefix ? `${senderPrefix}: ${newText}` : newText;
+
+    // Re-attach time chip
+    const ts = parseInt(el.dataset.timestamp || `${Date.now()}`, 10);
+    const timeSpan = document.createElement("span");
+    timeSpan.classList.add("message-time");
+    timeSpan.textContent = ` (${formatTimeAgo(ts)})`;
+    textNode.appendChild(timeSpan);
+  });
+
+  // Periodic time updates (lightweight)
+  setInterval(() => {
+    document.querySelectorAll(".message-thread, .comment").forEach(msg => {
+      const ts = parseInt(msg.dataset.timestamp || "0", 10);
+      const timeSpan = msg.querySelector(".message-time");
+      if (ts && timeSpan) timeSpan.textContent = ` (${formatTimeAgo(ts)})`;
+    });
+  }, 60000);
+});

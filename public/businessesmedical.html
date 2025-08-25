@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="MBD is a trusted directory for medical and business services, news, and opportunities.">
 
+    <!-- Google Search Console Verification -->
+    <meta name="google-site-verification" content="YOUR_UNIQUE_CODE" />
+
     <!-- Favicon -->
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <link rel="icon" type="image/png" href="/photos/favicon-mbd(1).png">
-
-
 
     <!-- Open Graph -->
     <meta property="og:title" content="Medical & Business Directory (MBD)">
@@ -40,11 +41,27 @@
     </script>
 
     <title>Medical & Business Directory</title>
+
+    <!-- CSS Files -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">    
     <link rel="stylesheet" href="businessesmedical.css">
-</head>
 
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-P2R7J80SXD"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-P2R7J80SXD');
+    </script>
+    <!-- End Google Analytics -->
+
+    <!-- Future JS/CSS placeholders -->
+    <!-- <link rel="stylesheet" href="future-styles.css"> -->
+    <!-- <script src="future-script.js" defer></script> -->
+
+</head>
 
 <body>  
     <div class="header">
@@ -52,13 +69,21 @@
         <h1 id="pageTitle">MBD-PAWRUGA WEBSITE</h1>
     </div>
       
-    <nav aria-label="Main Navigation" role="menubar">
+ <nav aria-label="Main Navigation" role="menubar">
+        <!-- Hamburger button -->
+        <div class="navbar__toggle" id="mobile__menu">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </div>
+
+        <!-- Nav links -->
         <ul role="menu" aria-labelledby="navigation-links">
             <li id="home" role="none">
-                <a href="businessesmedical.html#home" role="menuitem">Home</a>
+            <a href="businessesmedical.html#home" role="menuitem">Home</a>
             </li>
-            
-            <li id="advertisementIntention" role="none">
+
+          <li id="advertisementIntention" role="none">
                 <a href="businessesmedical.html" class="advertisement-link" role="menuitem" 
                    aria-haspopup="true" aria-expanded="false" id="advertisementButton">
                     Advertisement
@@ -101,39 +126,141 @@
                 </div>
             </li>
             
-            <li role="none">
-                <a href="#contact" role="menuitem">Contact</a>
-            </li>
-            <li role="none">
-                <a href="motivation.html" target="_blank" id="motivationLink" role="menuitem" title="Motivation behind the Medical Business Directory">Motivation</a>
-            </li>  
-            <li role="none">
-                <a href="news.html" target="_blank" id="newsLink" role="menuitem" title="Click to see medical and business news">MBNews
-                  <span class="tooltip"></span>
-                </a>
-              </li>
-              <li role="none">
-                <a href="document.html" target="_blank" id="documentsLink" role="menuitem" title="Click to see how to use the site">Documents                 
-                </a>
-              </li>          
-                        
+            <li role="none"><a href="#contact" role="menuitem">Contact</a></li>
+            <li role="none"><a href="motivation.html" target="_blank" id="motivationLink" role="menuitem">Motivation</a></li>
+            <li role="none"><a href="news.html" target="_blank" id="newsLink" role="menuitem">MBNews</a></li>
+            <li role="none"><a href="document.html" target="_blank" id="documentsLink" role="menuitem">Documents</a></li>
+            <li role="none"><a href="#" id="registeruser" role="menuitem">Register</a></li>
+            <li role="none"><a href="#" id="aboutsite" role="menuitem">About the Site</a></li>
+            <li role="none"><a href="#" id="policytitle" role="menuitem">Policy</a></li>
+            <li role="none"><a href="#" id="showcases" role="menuitem">ShowCases</a></li>
         </ul>
-    </nav>    
-    
-    <div class="language-dropdown">
-        <select name="selectLanguage" id="languageSelect" aria-label="Select language">
-            <option id="defaultLangOption" value="" disabled selected>Select Language...</option>
-            <option value="en">English</option>
-            <option value="am">አማርኛ</option>
-            <option value="om">Afaan Oromoo</option>
-            <option value="af">Afar</option>
-            <option value="ti">ትግርኛ (Tigrigna)</option>
-            <option value="so">Soomaali</option>
-            <option value="ar">عربي(Arabic)</option>
-        </select>
+ </nav>
+        
+    <!-- About & Policy Modal -->
+    <div id="aboutPolicyModal" class="about-policy-modal">
+    <div class="about-policy-modal-content">
+        <span class="about-policy-close-btn">&times;</span>
+        <div id="about-policy-text"></div>
     </div>
-      
-       
+    </div>
+    <!-- Showcase Modal -->
+
+   <div id="showcaseModal" class="modal showcase-modal">
+     <div class="modal-content showcase-modal-content">
+        <span id="closeShowcase" class="close">&times;</span>
+
+        <div id="showcase-content">
+        <!-- showcase items will load here -->
+        </div>
+
+        <!-- Upload Button -->
+        <button type="button" id="uploadShowcaseBtn" class="showcase-upload-btn">Upload Showcase</button>
+
+       <form id="uploadShowcaseForm" enctype="multipart/form-data">
+            <label for="authorName">Name</label>
+            <input type="text" id="authorName" name="authorName" placeholder="Your Organization Name" required>
+
+            <label for="authorContact">Email / Phone</label>
+            <input type="text" id="authorContact" name="authorContact" placeholder="Your Email or Phone" required>
+
+            <label for="showcaseTitle">Title</label>
+            <input type="text" id="showcaseTitle" name="title" placeholder="Enter title" required>
+
+            <label for="showcaseDescription">Description</label>
+            <textarea id="showcaseDescription" name="description" placeholder="Enter description" required></textarea>
+
+            <label for="showcaseImage">Upload Image</label>
+            <input type="file" id="showcaseImage" name="image">
+
+            <button type="submit">Submit Showcase</button>
+        </form>   
+    </div>
+</div>
+  
+    <div id="registrationContainer">
+            <form id="registrationForm">
+                    <button type="button" id="closeRegistration" class="close-btn">&times;</button>
+                    <input type="text" id="name" placeholder="Name of Organization" lang="en" required>
+                    <!--<span id="moreDetailsname" class="toggle-details">more...</span> -->
+                    <select name="categoryType" id="type" aria-label="Select Category" required>
+                        <option value="" disabled Selected>Select Category</option>
+                        <option value="medical">Medical Service</option>
+                        <option value="business">Business Organization</option>
+                    </select>
+                    <input type="text" id="industryOrService" placeholder="Service/Industry" lang="en" required>
+                    <input type="text" id="licenseNumber" placeholder="License Number" lang="en" required>
+                    <input type="text" id="location" placeholder="Area/Zone" lang="en" required>
+                    <input type="text" id="email_info" placeholder="Email" lang="en" required> 
+                    <input type="text" id="phone_info" placeholder="Phone" lang="en" required>        
+                    <select name="selectCities" id="regionFilter" class="regionFilter" aria-label="Select Cities" required>
+                        <option value="" disabled selected>Select Cities</option>                
+                        <option value="Adama">Adama</option>
+                        <option value="Addis Ababa">Addis Ababa</option>
+                        <option value="Arba Minchi">Arba Minchi</option>
+                        <option value="Assosa">Assosa</option>
+                        <option value="Bahirdar">Bahirdar</option>
+                        <option value="Dessie">Dessie</option>
+                        <option value="Dire Dawa">Dire Dawa</option>
+                        <option value="Gambella">Gambella</option>
+                        <option value="Gondar">Gondar</option>
+                        <option value="Harar">Harar</option>
+                        <option value="Hawassa">Hawassa</option>
+                        <option value="Jigjiga">Jigjiga</option>
+                        <option value="Jimma">Jimma</option>
+                        <option value="Jinka">Jinka</option>
+                        <option value="Mekele">Mekele</option>
+                        <option value="Semera">Semera</option>
+                        <option value="Wolita Sodo">Wolita Sodo</option> 
+                        <option value="addOther">Add Other</option>                                               
+                    </select>
+
+                    
+                    <select name="selectMedicalCategory" id="medicalCategory" aria-label="Select Medical category" required>
+                        <option value="" disabled selected>Select Medical Category</option>
+                        <option value="general">General Health Service</option>
+                        <option value="dental">Dental Health Service</option>
+                        <option value="eye">Eye Medication</option>
+                        <option value="heart">Heart Health service</option>
+                        <option value="kidney">Kidney Health Service</option>
+                        <option value="other">Other(Specify)</option>                         
+
+                    </select>
+                    <select name="selectBusinessCategory" id="businessCategory" aria-label="Select Business category" required>
+                        <option value="" disabled selected>Select business Category</option>
+                        <option value="consulting">consulting Service</option>
+                        <option value="internationalHotel">International Hotel Services</option>
+                        <option value="noninternationalHotel">Non-International Hotel Service</option>
+                        <option value="factoryproduct">Factory for Products</option>
+                        <option value="importer">Importers</option>
+                        <option value="other">Other(Specify)</option>
+                    </select>
+                    <button type="submit" id="register">Register/Submit</button>
+                </form>
+           </div>             
+    
+   
+    <div id="topRightButtons" class="top-right-buttons">
+            <button type="button" id="followBtn" class="follow-button">Follow</button>
+            <div id="followerCount" class="follower-count">Followers: 0</div>
+            <div id="viewerCount" class="viewer-count">Viewers: 0</div>            
+        </div>
+    <div id="dailyNewsUpdate">
+        <h2>Some News Links</h2>
+        <div class="news-source" id="nbe">
+            <a href="https://www.newbusinessethiopia.com/" target="_blank" rel="noopener">New Business Ethiopia</a>
+            <div class="news-articles"></div>
+        </div>
+       <div class="news-source" id="sd">
+            <a href="https://www.sciencedaily.com/news/health_medicine/" target="_blank" rel="noopener">ScienceDaily</a>
+                <div class="news-articles"></div>
+        </div>
+        <div class="news-source" id="ms">
+            <a href="https://www.medscape.com/" target="_blank" rel="noopener">MedScape</a>
+            <div class="news-articles"></div>
+        </div>
+    </div>
+     
     <!-- Search and Filter Section -->
     <div class="filter-section">
         <div class="search-container">          
@@ -168,11 +295,7 @@
          
         <div id="map">Map will be displayed here</div>
         
-        <div id="topRightButtons" class="top-right-buttons">
-            <button type="button" id="followBtn" class="follow-button">Follow</button>
-            <div id="followerCount" class="follower-count">Followers: 0</div>
-            <div id="viewerCount" class="viewer-count">Viewers: 0</div>            
-        </div>
+        
         
         <!-- Slideshow Container from registration form-->
         
@@ -197,19 +320,12 @@
                     <option value="Mekele">Mekele</option>
                     <option value="Semera">Semera</option>
                     <option value="Wolita Sodo">Wolita Sodo</option>
+                    <option value="otherCities">Other Cities(Add)</option>
                 </select>
              
             </div>
 
-           <!-- Modal for displaying stored data notice/advert modal window-->
-            <div id="dataModal">            
-                <div id="modalContent">                
-                      
-                    <!-- Data will be inserted here dynamically -->                    
-                </div>               
-                              
-               <button type="button" class="modal-close">&times;</button>   
-         </div>  
+          
     
             <!-- Modal for displaying stored data for registered medical or business users in the form -->
             <div id="categoryDataModal" class="category-modal">            
@@ -226,7 +342,7 @@
         </div>  
         
     </div> 
-      
+     
     <!-- Listings Section -->
     <div class="container">
         <div class="left">
@@ -254,28 +370,35 @@
                 
             </select>     
         </div>
-     </div>      
+     </div>
+     <!-- Modal for displaying stored data notice/advert modal window-->
+            <div id="dataModal">            
+                <div id="modalContent">                
+                      
+                    <!-- Data will be inserted here dynamically -->                    
+                </div>               
+                              
+               <button type="button" class="modal-close">&times;</button>   
+         </div>  
+            
   <!-- Adver-Notices Data -->      
-             </section>             
+        </section> 
+             <div id="advertNoticeField">
                 <select name="advertNotice" class="select-advert-notice" aria-label="Advert or Notice">
                     <option>Select Advert or Notice</option>
                     <option value="advert">Advertises</option>
                     <option value="notice">Notices</option>
                 </select> 
+             </div>            
+                
           
-    </div>
-        <!-- User Registration Form -->
-    <h2 id="registerTitle">Register Your Business/Medical Entity</h2>
+    </div>   
+            
                <!-- Registration Form -->              
-         
-                 <div class="form-container">
+         <div class="form-container">
                     <div class="ad-container">
                         <div id="advertisement">
                             <h3>Advertisements</h3>
-                            <div id="securityContainer">
-                                <input type="text" id="username" placeholder="Username">
-                                <input type="password" id="password" placeholder="Password">                               
-                            </div>
                             
                             
                         </div>
@@ -285,76 +408,17 @@
                             <input type="text" id="newAdvertMessage" placeholder="Enter advertisement">
                             <button type="button" onclick="addAdvertMessage()">Add Advertisement</button>
                         </div>
+                        
                 
                         <div class="ad-box" id="AdvertAd">Customers are searching where you are!!!</div> 
                         <button type="button" id="deleteAdvertBtn" onclick="removeAdvert()">❌</button>
-                        <div id="advertDots" class="dotContainer"></div>
-                    </div>
-                
-                <form id="registrationForm">
-                    <input type="text" id="name" placeholder="Name of Organization" lang="en" required>
-                    <!--<span id="moreDetailsname" class="toggle-details">more...</span> -->
-                    <select name="categoryType" id="type" aria-label="Select Category" required>
-                        <option value="" disabled Selected>Select Category</option>
-                        <option value="medical">Medical Service</option>
-                        <option value="business">Business Organization</option>
-                    </select>
-                    <input type="text" id="industryOrService" placeholder="Service/Industry" lang="en" required>
-                    <input type="text" id="licenseNumber" placeholder="License Number" lang="en" required>
-                    <input type="text" id="location" placeholder="Area/Zone" lang="en" required>
-                    <input type="text" id="contact_info" placeholder="Phone/email" lang="en" required>        
-                    <select name=selectCities" id="regionFilter" class="regionFilter" aria-label="Select Cities" required>
-                        <option value="" disabled Selected>Select Cities</option>                
-                        <option value="Adama">Adama</option>
-                        <option value="Addis Ababa">Addis Ababa</option>
-                        <option value="Arba Minchi">Arba Minchi</option>
-                        <option value="Assosa">Assosa</option>
-                        <option value="Bahirdar">Bahirdar</option>
-                        <option value="Dessie">Dessie</option>
-                        <option value="Dire Dawa">Dire Dawa</option>
-                        <option value="Gambella">Gambella</option>
-                        <option value="Gondar">Gondar</option>
-                        <option value="Harar">Harar</option>
-                        <option value="Hawassa">Hawassa</option>
-                        <option value="Jigjiga">Jigjiga</option>
-                        <option value="Jimma">Jimma</option>
-                        <option value="Jinka">Jinka</option>
-                        <option value="Mekele">Mekele</option>
-                        <option value="Semera">Semera</option>
-                        <option value="Wolita Sodo">Wolita Sodo</option>                                                
-                    </select> 
-                    
-                    <select name="selectMedicalCategory" id="medicalCategory" aria-label="Select Medical category" required>
-                        <option value="" disabled selected>Select Medical Category</option>
-                        <option value="general">General Health Service</option>
-                        <option value="dental">Dental Health Service</option>
-                        <option value="eye">Eye Medication</option>
-                        <option value="heart">Heart Health service</option>
-                        <option value="kidney">Kidney Health Service</option>
-                        <option value="other">Other(Specify)</option>                         
-
-                    </select>
-                    <select name="selectBusinessCategory" id="businessCategory" aria-label="Select Business category" required>
-                        <option value="" disabled selected>Select business Category</option>
-                        <option value="consulting">consulting Service</option>
-                        <option value="internationalHotel">International Hotel Services</option>
-                        <option value="noninternationalHotel">Non-International Hotel Service</option>
-                        <option value="factoryproduct">Factory for Products</option>
-                        <option value="importer">Importers</option>
-                        <option value="other">Other(Specify)</option>
-                    </select>
-                    <button type="submit" id="register">Register/Submit</button>
-                </form>
-               
-                                              
-                <div class="ad-container-notification">
+                        <div id="advertDots" class="dotContainer"></div> 
+                    </div>    
+        </div>
+         <div class="ad-container-notification">
                     <div id="notice">
                         <h3>Notices</h3>
-                        <div id="loginContainer">                            
-                            <button type="button" id="loginButton" onclick="login()">Login</button>
-                        </div>
-                        
-                        <button type="button" onclick="logout()">Logout</button>
+                       
                         
                     </div>            
                     <!-- Notice Section -->
@@ -362,17 +426,16 @@
                         <input type="text" id="newNoticeMessage" placeholder="Enter notice">
                         <button type="button" onclick="addNoticeMessage()">Add Notice</button>
                     </div>
-            
-                    <div class="ad-box" id="noticeAd">Reach Wide!/Any Notices?</div>
-                    <button type="button" id="deleteNoticeBtn" onclick="removeNotice()">❌</button>
-                    <div id="noticeDots" class="dotContainer"></div>
+                    <!--Notice Slideshow Box-->
+                    <div class="ad-box" id="noticeAd">Reach Wide!/Any Notices?</div>                   
+                    <div id="noticeDots" class="dotContainer"></div> 
+                     <button type="button" id="deleteNoticeBtn" onclick="removeNotice()">❌</button>
                 </div>
             
                 <!-- Admin Toggle Button (Only Admin Can Use) -->
+       </div>
+    </div>            
                 
-            </div>
-            </div>
-            </div>           
   <!-- Chat Header to Display Active Chatters -->
   <div id="chatHeader" class="chat-header">
     <p><strong>Chatters:</strong> <span id="chattersList">None</span></p>
@@ -419,7 +482,16 @@
         <div class="replies-container"></div>
     </div>
 </template>   
-        
+   <div id="loginlogout">  
+                <div id="securityContainer">
+                    <input type="text" id="username" placeholder="Username">
+                    <input type="password" id="password" placeholder="Password">                               
+                </div>
+                 <div id="loginContainer">                            
+                    <button type="button" id="loginButton" onclick="login()">Login</button>
+                    <button type="button" id="logoutButton" onclick="logout()">Logout</button>
+                </div>                                     
+            </div>      
 
     <footer id="footer">
         <p>© 2025 Business & Medical Directory. All rights reserved.</p>

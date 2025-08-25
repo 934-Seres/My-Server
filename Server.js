@@ -2,17 +2,19 @@
 require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
+const nodemailer = require("nodemailer");
 
 const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser'); 
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
+const multer = require("multer");
 
 const cors = require('cors');
 const http = require('http');
 const socketIO = require('socket.io');
-const nodemailer = require('nodemailer');
+
 
 const app = express();
 const server = http.createServer(app);
@@ -54,11 +56,37 @@ if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
 }
 
+
 const storedDataPath = path.join(dataDir, 'storedData.json');
 const followersFile = path.join(__dirname, 'followers.json');
 const viewerCountFile = path.join(__dirname, 'viewerCount.json');
 const messagesFile = path.join(__dirname, 'messages.json');
 const slideshowDataFile = path.join(__dirname, 'slideshowData.json');
+// --- Cities persistence ---
+const citiesFile = path.join(__dirname, "cities.json");
+
+// Ensure cities.json exists
+if (!fs.existsSync(citiesFile)) {
+    fs.writeFileSync(citiesFile, JSON.stringify({ customCities: [] }, null, 2), "utf8");
+}
+
+// Ensure showcaseData.json exists
+// ----------------------
+// Path to showcase JSON
+const showcaseFile = path.join(__dirname, 'showcaseData.json');
+
+// Multer setup
+const uploadDir = path.join(__dirname, "public/uploads");
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, uploadDir),
+    filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+});
+
+const upload = multer({ storage });
+
+
 
 let totalViewers = 0;
 let totalFollowers = 0;
@@ -71,17 +99,21 @@ let storedNoticeData = [];
 let storedMedicalData = [];
 let storedBusinessData = [];
 
+
+// ensure file persistence also includes showcase data
 try {
     if (!fs.existsSync(storedDataPath)) {
         fs.writeFileSync(storedDataPath, JSON.stringify({
             storedMedicalData: [],
-            storedBusinessData: []
+            storedBusinessData: [],
+        
         }, null, 2));
     }
     const fileContent = fs.readFileSync(storedDataPath, 'utf-8');
     const parsed = JSON.parse(fileContent);
     storedMedicalData = parsed.storedMedicalData || [];
     storedBusinessData = parsed.storedBusinessData || [];
+    
 } catch (err) {
     console.error('Error handling storedData.json:', err);
 }
@@ -122,6 +154,7 @@ const saveStoredData = () => {
     });
 };
 
+
 const saveMessages = () => saveToFile(messagesFile, messages);
 const saveViewerCount = () => saveToFile(viewerCountFile, { count: totalViewers });
 const saveFollowerCount = () => saveToFile(followersFile, { count: totalFollowers });
@@ -142,6 +175,8 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+
+
 function sendChatAlert(sender, messageText) {
   transporter.sendMail({
     from: process.env.EMAIL_USER,
@@ -159,6 +194,34 @@ function sendChatAlert(sender, messageText) {
 
 
 
+app.get('/get-advert-notice-data', (_req, res) => {
+    res.json({ advert: storedAdvertData, notice: storedNoticeData });
+});
+// Utility function to safely read storedData.json
+function readStoredData() {
+    const filePath = path.join(__dirname, 'storedData.json');
+    let fileData = { storedMedicalData: [], storedBusinessData: [] };
+
+    if (fs.existsSync(filePath)) {
+        try {
+            fileData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        } catch (err) {
+            console.error("Error parsing storedData.json:", err);
+        }
+    }
+
+    return fileData;
+}
+// Utility function to safely write storedData.json
+function writeStoredData(fileData) {
+    const filePath = path.join(__dirname, 'storedData.json');
+    try {
+        fs.writeFileSync(filePath, JSON.stringify(fileData, null, 2));
+    } catch (err) {
+        console.error("Error writing storedData.json:", err);
+    }
+}
+
 // --- API Routes ---
 app.post('/save-stored-data', (req, res) => {
     const { storedMedicalData: medical, storedBusinessData: business } = req.body;
@@ -167,7 +230,7 @@ app.post('/save-stored-data', (req, res) => {
     }
 
     storedMedicalData = medical;
-    storedBusinessData = business;
+    storedBusinessData = business;    
     saveStoredData();
     res.redirect('/thank-you');
 });
@@ -186,14 +249,128 @@ app.get('/get-stored-data', (req, res) => {
     }
 });
 
-app.get('/get-advert-notice-data', (_req, res) => {
-    res.json({ advert: storedAdvertData, notice: storedNoticeData });
+
+/*app.post('/delete-stored-data', (req, res) => {
+    const { type, index } = req.body;
+    if (!['medical', 'business'].includes(type)) {
+        return res.status(400).json({ error: "Invalid request type" });
+    }
+
+    const fileData = readStoredData();
+    let targetArray = type === 'medical' ? fileData.storedMedicalData : fileData.storedBusinessData;
+
+    if (index >= 0 && index < targetArray.length) {
+        targetArray.splice(index, 1);
+    }
+
+    writeStoredData(fileData);
+    res.json({ success: true, data: fileData });
+});*/
+
+
+app.post('/update-categories', (req, res) => {
+    const { type, category } = req.body;
+    if (type === "medical") {
+        if (!medicalCategories.includes(category)) {
+            medicalCategories.push(category);
+        }
+    } else if (type === "business") {
+        if (!businessCategories.includes(category)) {
+            businessCategories.push(category);
+        }
+    }
+    saveStoredData();
+    res.json({ success: true });
+});
+
+
+// Check registration based on storedMedicalData and storedBusinessData
+app.get("/check-registration", (req, res) => {
+  try {
+    const filePath = path.join(__dirname, "data", "storedData.json");
+    const fileContent = fs.readFileSync(filePath, "utf8");
+    const parsed = JSON.parse(fileContent);
+
+    const registeredData = [
+      ...(parsed.storedMedicalData || []),
+      ...(parsed.storedBusinessData || []),
+     
+
+    ];
+
+    res.json({ registered: registeredData.length > 0, registeredData });
+  } catch (err) {
+    console.error("Error reading registration data:", err);
+    res.json({ registered: false, registeredData: [] });
+  }
+});
+
+
+// Upload showcase
+app.post("/upload-showcase", upload.single("image"), (req, res) => {
+    const { title, description, authorName, authorContact } = req.body;
+
+    try {
+        const data = fs.readFileSync(showcaseFile, "utf8");
+        const showcases = JSON.parse(data || "[]");
+
+        const newShowcase = {
+            id: Date.now().toString(),
+            title,
+            description,
+            authorName,
+            authorContact,
+            image: req.file ? `/uploads/${req.file.filename}` : ""
+        };
+
+        showcases.push(newShowcase);
+        fs.writeFileSync(showcaseFile, JSON.stringify(showcases, null, 2), "utf8");
+
+        res.json({ success: true, newShowcase });
+    } catch (err) {
+        console.error("Error uploading showcase:", err);
+        res.json({ success: false, message: "Server error while saving showcase" });
+    }
+});
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads"))); 
+// Get showcases
+app.get("/get-showcases", (req, res) => {
+    try {
+        const data = fs.readFileSync(showcaseFile, "utf8");
+        const showcases = JSON.parse(data || "[]");
+        res.json({ storedShowcaseData: showcases });
+    } catch (err) {
+        console.error(err);
+        res.json({ storedShowcaseData: [] });
+    }
+});
+
+
+// Delete showcase
+app.delete("/delete-showcase/:id", (req, res) => {
+    try {
+        const data = fs.readFileSync(showcaseFile, "utf8");
+        let showcases = JSON.parse(data || "[]");
+        const id = req.params.id;
+
+        const index = showcases.findIndex(sc => sc.id === id);
+        if (index === -1) return res.json({ success: false, message: "Showcase not found" });
+
+        showcases.splice(index, 1);
+        fs.writeFileSync(showcaseFile, JSON.stringify(showcases, null, 2), "utf8");
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.json({ success: false, message: "Server error while deleting showcase" });
+    }
 });
 
 
 
 // GET route to load slideshow data
-app.get('/get-slideshow-data', (req, res) => {
+app.get('/get-slideshow-data', (_req, res) => {
     const filePath = path.join(__dirname, 'slideshowData.json');
     fs.readFile(filePath, 'utf8', (err, data) => {
         if (err) {
@@ -251,8 +428,40 @@ app.post('/register-business', (req, res) => {
     res.redirect('/thank-you');
 });
 
-app.get('/register-medical', (req, res) => res.json(storedMedicalData));
-app.get('/register-business', (req, res) => res.json(storedBusinessData));
+app.get('/register-medical', (_req, res) => res.json(storedMedicalData));
+app.get('/register-business', (_req, res) => res.json(storedBusinessData));
+// --- City filter routes ---
+app.get("/get-cities", (req, res) => {
+    try {
+        const data = JSON.parse(fs.readFileSync(citiesFile, "utf-8"));
+        res.json(data.customCities || []);
+    } catch (err) {
+        console.error("Error reading cities.json:", err);
+        res.status(500).json({ error: "Failed to load cities" });
+    }
+});
+
+app.post("/add-city", (req, res) => {
+    try {
+        const { city } = req.body;
+        if (!city || city.trim() === "") {
+            return res.status(400).json({ error: "City name required" });
+        }
+
+        const data = JSON.parse(fs.readFileSync(citiesFile, "utf-8"));
+        const formattedCity = city.trim();
+
+        if (!data.customCities.includes(formattedCity)) {
+            data.customCities.push(formattedCity);
+            fs.writeFileSync(citiesFile, JSON.stringify(data, null, 2), "utf8");
+        }
+
+        res.json({ success: true, city: formattedCity });
+    } catch (err) {
+        console.error("Error saving city:", err);
+        res.status(500).json({ error: "Failed to save city" });
+    }
+});
 
 // --- Auth ---
 app.post('/login', (req, res) => {
@@ -349,10 +558,11 @@ io.on('connection', (socket) => {
         io.emit('followerCountUpdate', totalFollowers);
     });
 
-   socket.on('sendMessage', ({ text, messageId, timestamp }) => {
+    // --- Message Handling --- 
+    socket.on('sendMessage', ({ text, messageId, timestamp }) => {
         const newMessage = {
             text,
-            sender: socket.username,
+            sender: socket.username, // keep original username
             messageId: messageId || uuidv4(),
             timestamp: timestamp || Date.now(),
             replies: []
@@ -364,12 +574,14 @@ io.on('connection', (socket) => {
         }
 
         saveMessages();
-        io.emit('newMessage', newMessage);
+
+        // ✅ Emit with extra flag: isSelf
+        io.to(socket.id).emit('newMessage', { ...newMessage, isSelf: true });
+        socket.broadcast.emit('newMessage', { ...newMessage, isSelf: false });
 
         // ✅ Email alert for new message only
         sendChatAlert(socket.username, text);
     });
-
 
     socket.on('sendReply', ({ replyText, messageId, timestamp }) => {
         const parent = messages.find(m => m.messageId === messageId);
@@ -381,7 +593,10 @@ io.on('connection', (socket) => {
             };
             parent.replies.push(reply);
             saveMessages();
-            io.emit('newReply', { ...reply, messageId });
+
+            // ✅ Emit with self flag
+            io.to(socket.id).emit('newReply', { ...reply, messageId, isSelf: true });
+            socket.broadcast.emit('newReply', { ...reply, messageId, isSelf: false });
         }
     });
 
@@ -390,7 +605,10 @@ io.on('connection', (socket) => {
         if (message) {
             message.text = newText;
             saveMessages();
-            io.emit('updateMessage', { newText, messageId });
+
+            // ✅ Send update with info if self
+            io.to(socket.id).emit('updateMessage', { newText, messageId, isSelf: true });
+            socket.broadcast.emit('updateMessage', { newText, messageId, isSelf: false });
         }
     });
 
@@ -399,7 +617,10 @@ io.on('connection', (socket) => {
         if (index !== -1) {
             messages.splice(index, 1);
             saveMessages();
-            io.emit('loadMessages', messages);
+
+            // ✅ reload with self/others flag not really needed, but kept consistent
+            io.to(socket.id).emit('loadMessages', messages.map(m => ({ ...m, isSelf: (m.sender === socket.username) })));
+            socket.broadcast.emit('loadMessages', messages.map(m => ({ ...m, isSelf: false })));
         }
     });
 
