@@ -488,33 +488,65 @@ app.post('/logout', (req, res) => {
 app.get('/check-owner', (req, res) => {
     res.json({ isOwner: !!req.session.isOwner });
 });
-app.get('/sitemap.xml', (req, res) => {
+app.get('/sitemap.xml', async (req, res) => {
+  try {
     const baseUrl = 'https://my-server-2xjg.onrender.com';
     const today = new Date().toISOString().split('T')[0];
 
-    const routes = [
-        { url: '/', changefreq: 'daily', priority: 1.0 },
-        { url: '/register-medical', changefreq: 'weekly', priority: 0.8 },
-        { url: '/register-business', changefreq: 'weekly', priority: 0.8 },
-        { url: '/chat', changefreq: 'daily', priority: 0.6 },
-        { url: '/about', changefreq: 'monthly', priority: 0.5 },
-        { url: '/contact', changefreq: 'monthly', priority: 0.5 },
-        { url: '/news', changefreq: 'daily', priority: 0.7 } // if available
+    // 1) Static routes
+    const staticRoutes = [
+      { url: '/', changefreq: 'daily', priority: 1.0 },
+      { url: '/register-medical', changefreq: 'weekly', priority: 0.8 },
+      { url: '/register-business', changefreq: 'weekly', priority: 0.8 },
+      { url: '/chat', changefreq: 'daily', priority: 0.6 },
+      { url: '/about', changefreq: 'monthly', priority: 0.5 },
+      { url: '/contact', changefreq: 'monthly', priority: 0.5 },
+      { url: '/news', changefreq: 'daily', priority: 0.7 }
     ];
 
+    // 2) Fetch dynamic routes (example if using PostgreSQL)
+    const { rows: medicalRows } = await pool.query('SELECT id, name FROM medical');
+    const { rows: businessRows } = await pool.query('SELECT id, name FROM business');
+
+    // Convert names into slugs (url-friendly)
+    const slugify = (text) =>
+      text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+    const dynamicRoutes = [
+      ...medicalRows.map(m => ({
+        url: `/listing/medical/${slugify(m.name)}-${m.id}`,
+        changefreq: 'monthly',
+        priority: 0.7
+      })),
+      ...businessRows.map(b => ({
+        url: `/listing/business/${slugify(b.name)}-${b.id}`,
+        changefreq: 'monthly',
+        priority: 0.7
+      }))
+    ];
+
+    // 3) Merge static + dynamic
+    const allRoutes = [...staticRoutes, ...dynamicRoutes];
+
+    // 4) Generate XML
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${routes.map(route => `
-    <url>
-        <loc>${baseUrl}${route.url}</loc>
-        <lastmod>${today}</lastmod>
-        <changefreq>${route.changefreq}</changefreq>
-        <priority>${route.priority}</priority>
-    </url>`).join('')}
+${allRoutes.map(route => `
+  <url>
+    <loc>${baseUrl}${route.url}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>${route.changefreq}</changefreq>
+    <priority>${route.priority}</priority>
+  </url>`).join('')}
 </urlset>`;
 
     res.header('Content-Type', 'application/xml');
     res.send(xml);
+
+  } catch (err) {
+    console.error("Error generating sitemap:", err);
+    res.status(500).send("Error generating sitemap");
+  }
 });
 
 // --- Socket.IO ---

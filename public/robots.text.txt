@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://my-server-2xjg.onrender.com/sitemap.xml
